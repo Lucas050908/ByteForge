@@ -1,0 +1,421 @@
+/* ============================================================
+   BYTEFORGE THEME  –  CasaOS custom.css override
+   Drop this in /var/lib/casaos/www/css/custom.css
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+/* ── Global CSS variables ── */
+:root {
+  --primary:            #FF6B1A !important;
+  --primary-light:      #FF9A3C !important;
+  --primary-dark:       #CC4E00 !important;
+  --bg-primary:         #0D0D0D !important;
+  --bg-secondary:       #141414 !important;
+  --bg-panel:           #1A1A1A !important;
+  --bg-card:            #1E1E1E !important;
+  --border-color:       #2A2A2A !important;
+  --text-primary:       #F5F0E8 !important;
+  --text-secondary:     #888880 !important;
+  --text-muted:         #444440 !important;
+  --danger:             #FF3333 !important;
+  --success:            #FF6B1A !important;
+  --warning:            #FF9A3C !important;
+
+  /* Vue/CasaOS specific vars */
+  --color-primary:      #FF6B1A !important;
+  --color-bg:           #0D0D0D !important;
+  --color-sidebar:      #141414 !important;
+  --color-card:         #1A1A1A !important;
+  --color-border:       #2A2A2A !important;
+  --el-color-primary:   #FF6B1A !important;
+}
+
+/* ── Base & body ── */
+html, body, #app {
+  background: #0D0D0D !important;
+  color: #F5F0E8 !important;
+  font-family: 'Rajdhani', sans-serif !important;
+}
+
+/* ── Hex-grid background pattern ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='115'%3E%3Cpolygon points='50,5 95,28.75 95,86.25 50,110 5,86.25 5,28.75' fill='none' stroke='%23FF6B1A' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 70px 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0D0D0D; }
+::-webkit-scrollbar-thumb { background: #FF6B1A; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: #FF9A3C; }
+
+/* ── ALL backgrounds ── */
+.el-container,
+.main-content,
+.home-page,
+.page-wrapper,
+[class*="container"],
+[class*="wrapper"],
+[class*="layout"],
+[class*="main"] {
+  background: #0D0D0D !important;
+}
+
+/* ── Sidebar / nav ── */
+.sidebar,
+.side-bar,
+.nav-bar,
+.left-sidebar,
+[class*="sidebar"],
+[class*="side-bar"] {
+  background: #141414 !important;
+  border-right: 1px solid #2A2A2A !important;
+}
+
+/* ── Cards & panels ── */
+.el-card,
+.card,
+.panel,
+.app-card,
+.storage-card,
+[class*="-card"],
+[class*="-panel"] {
+  background: #1A1A1A !important;
+  border: 1px solid #2A2A2A !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.el-card:hover,
+.app-card:hover,
+[class*="-card"]:hover {
+  border-color: #FF6B1A !important;
+  box-shadow: 0 0 0 1px #FF6B1A, 0 0 20px rgba(255,107,26,0.1) !important;
+}
+
+/* ── App icons / app grid ── */
+.app-item,
+.app-icon,
+[class*="app-item"],
+[class*="app-icon"] {
+  background: #1E1E1E !important;
+  border: 1px solid #2A2A2A !important;
+  border-radius: 0 !important;
+  transition: all 0.2s !important;
+}
+
+.app-item:hover,
+[class*="app-item"]:hover {
+  border-color: #FF6B1A !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 20px rgba(255,107,26,0.2) !important;
+}
+
+/* ── Buttons ── */
+.el-button--primary,
+.btn-primary,
+button[type="submit"],
+[class*="btn-primary"],
+[class*="button--primary"] {
+  background: #FF6B1A !important;
+  border-color: #FF6B1A !important;
+  color: #0D0D0D !important;
+  border-radius: 0 !important;
+  font-family: 'Bebas Neue', sans-serif !important;
+  letter-spacing: 2px !important;
+  font-size: 16px !important;
+  font-weight: normal !important;
+}
+
+.el-button--primary:hover,
+.btn-primary:hover {
+  background: #FF9A3C !important;
+  border-color: #FF9A3C !important;
+}
+
+.el-button,
+.btn {
+  border-radius: 0 !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  background: #1E1E1E !important;
+  border-color: #2A2A2A !important;
+  color: #F5F0E8 !important;
+}
+
+.el-button:hover {
+  border-color: #FF6B1A !important;
+  color: #FF6B1A !important;
+  background: #1E1E1E !important;
+}
+
+/* ── Inputs & forms ── */
+.el-input__wrapper,
+.el-input__inner,
+input, textarea, select {
+  background: #141414 !important;
+  border-color: #2A2A2A !important;
+  border-radius: 0 !important;
+  color: #F5F0E8 !important;
+  font-family: 'DM Mono', monospace !important;
+}
+
+.el-input__wrapper:focus-within,
+input:focus, textarea:focus {
+  border-color: #FF6B1A !important;
+  box-shadow: 0 0 0 2px rgba(255,107,26,0.15) !important;
+}
+
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px #FF6B1A !important;
+}
+
+/* ── Dialogs / modals ── */
+.el-dialog,
+.el-overlay-dialog,
+.modal,
+[class*="dialog"],
+[class*="modal"] {
+  background: #1A1A1A !important;
+  border: 1px solid #FF6B1A !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 40px rgba(255,107,26,0.2) !important;
+}
+
+.el-dialog__header,
+[class*="dialog__header"],
+[class*="modal-header"] {
+  background: #141414 !important;
+  border-bottom: 1px solid #2A2A2A !important;
+  padding: 16px 20px !important;
+}
+
+.el-dialog__title {
+  font-family: 'Bebas Neue', sans-serif !important;
+  font-size: 22px !important;
+  letter-spacing: 2px !important;
+  color: #FF6B1A !important;
+}
+
+/* ── Dropdowns & menus ── */
+.el-dropdown-menu,
+.el-select-dropdown,
+.el-popper,
+[class*="dropdown"],
+[class*="dropdown-menu"] {
+  background: #1A1A1A !important;
+  border: 1px solid #2A2A2A !important;
+  border-radius: 0 !important;
+}
+
+.el-dropdown-menu__item:hover,
+.el-select-dropdown__item:hover,
+.el-select-dropdown__item.is-hovering {
+  background: #FF6B1A !important;
+  color: #0D0D0D !important;
+}
+
+.el-select-dropdown__item.is-selected {
+  color: #FF6B1A !important;
+}
+
+/* ── Progress bars ── */
+.el-progress-bar__outer {
+  background: #2A2A2A !important;
+  border-radius: 0 !important;
+}
+
+.el-progress-bar__inner {
+  background: linear-gradient(90deg, #FF6B1A, #FF9A3C) !important;
+  border-radius: 0 !important;
+}
+
+/* ── Tags & badges ── */
+.el-tag,
+.badge,
+[class*="-tag"] {
+  background: rgba(255,107,26,0.15) !important;
+  border: 1px solid #FF6B1A !important;
+  color: #FF6B1A !important;
+  border-radius: 0 !important;
+}
+
+/* ── Tables ── */
+.el-table {
+  background: #1A1A1A !important;
+  color: #F5F0E8 !important;
+}
+
+.el-table th,
+.el-table__header-wrapper th {
+  background: #141414 !important;
+  color: #FF6B1A !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid #FF6B1A !important;
+}
+
+.el-table tr {
+  background: #1A1A1A !important;
+}
+
+.el-table tr:hover > td {
+  background: #222 !important;
+}
+
+.el-table td {
+  border-bottom: 1px solid #2A2A2A !important;
+}
+
+/* ── Notifications / alerts ── */
+.el-notification,
+.el-message {
+  background: #1A1A1A !important;
+  border: 1px solid #2A2A2A !important;
+  border-radius: 0 !important;
+  border-left: 3px solid #FF6B1A !important;
+}
+
+/* ── Tabs ── */
+.el-tabs__item {
+  color: #888 !important;
+  font-family: 'DM Mono', monospace !important;
+  letter-spacing: 1px !important;
+}
+
+.el-tabs__item.is-active {
+  color: #FF6B1A !important;
+}
+
+.el-tabs__active-bar {
+  background: #FF6B1A !important;
+  height: 2px !important;
+}
+
+.el-tabs__nav-wrap::after {
+  background: #2A2A2A !important;
+}
+
+/* ── Switches / toggles ── */
+.el-switch.is-checked .el-switch__core {
+  background: #FF6B1A !important;
+  border-color: #FF6B1A !important;
+}
+
+.el-switch__core {
+  border-radius: 0 !important;
+  background: #2A2A2A !important;
+}
+
+.el-switch__core .el-switch__action {
+  border-radius: 0 !important;
+}
+
+/* ── Checkboxes ── */
+.el-checkbox__inner {
+  background: #141414 !important;
+  border-color: #2A2A2A !important;
+  border-radius: 0 !important;
+}
+
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background: #FF6B1A !important;
+  border-color: #FF6B1A !important;
+}
+
+/* ── Sliders ── */
+.el-slider__runway {
+  background: #2A2A2A !important;
+  border-radius: 0 !important;
+}
+
+.el-slider__bar {
+  background: #FF6B1A !important;
+  border-radius: 0 !important;
+}
+
+.el-slider__button {
+  border-color: #FF6B1A !important;
+  background: #FF6B1A !important;
+  border-radius: 0 !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+
+/* ── Storage / disk usage ── */
+[class*="storage"],
+[class*="disk"],
+[class*="usage"] {
+  background: #1A1A1A !important;
+  border-color: #2A2A2A !important;
+}
+
+/* ── Top header / taskbar ── */
+.header,
+.top-bar,
+.taskbar,
+[class*="header"],
+[class*="topbar"],
+[class*="top-bar"] {
+  background: #141414 !important;
+  border-bottom: 1px solid #2A2A2A !important;
+}
+
+/* ── Login page override ── */
+.login-page,
+.login-container,
+[class*="login"] {
+  background: #0D0D0D !important;
+}
+
+/* ── Welcome / onboarding ── */
+.welcome-page,
+[class*="welcome"] {
+  background: #0D0D0D !important;
+}
+
+/* ── Text overrides ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Bebas Neue', sans-serif !important;
+  color: #F5F0E8 !important;
+  letter-spacing: 2px !important;
+}
+
+a { color: #FF6B1A !important; }
+a:hover { color: #FF9A3C !important; }
+
+/* ── Orange glow on active/selected ── */
+.is-active, .active, .selected, :focus-visible {
+  outline: none !important;
+}
+
+/* ── Status dots ── */
+[class*="status-"] {
+  border-radius: 0 !important;
+}
+
+/* ── Orange accent for any IceWhale branding ── */
+[class*="casaos"],
+[class*="icewhale"] {
+  color: #FF6B1A !important;
+}
+
+/* ── Bottom status bar style ── */
+.status-bar,
+.footer,
+[class*="footer"],
+[class*="status-bar"] {
+  background: #141414 !important;
+  border-top: 1px solid #2A2A2A !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 11px !important;
+  color: #444 !important;
+}

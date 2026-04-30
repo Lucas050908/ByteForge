@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="20" fill="#0D0D0D"/>
+  <polygon points="180,100 140,169.3 60,169.3 20,100 60,30.7 140,30.7"
+           fill="#1A1A1A" stroke="#FF6B1A" stroke-width="3.5"/>
+  <!-- anvil working surface with horn -->
+  <polygon points="22,92 50,75 150,75 150,108 50,108" fill="#FF6B1A"/>
+  <!-- anvil waist -->
+  <rect x="72" y="108" width="56" height="30" fill="#FF6B1A"/>
+  <!-- anvil base -->
+  <rect x="55" y="138" width="90" height="22" fill="#FF6B1A"/>
+  <!-- spark dots above anvil -->
+  <circle cx="100" cy="60" r="2.5" fill="#FF9A3C" opacity="0.9"/>
+  <circle cx="115" cy="52" r="1.8" fill="#FF9A3C" opacity="0.7"/>
+  <circle cx="85" cy="54" r="1.5" fill="#FF9A3C" opacity="0.6"/>
+</svg>

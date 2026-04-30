@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 220" width="500" height="220">
+  <defs>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=DM+Mono');</style>
+  </defs>
+
+  <!-- icon: hex + anvil (center 100,110, r=85) -->
+  <polygon points="185,110 142.5,183.6 57.5,183.6 15,110 57.5,36.4 142.5,36.4"
+           fill="#1A1A1A" stroke="#FF6B1A" stroke-width="3.5"/>
+  <!-- anvil working surface with horn -->
+  <polygon points="20,102 52,83 155,83 155,118 52,118" fill="#FF6B1A"/>
+  <!-- anvil waist -->
+  <rect x="76" y="118" width="48" height="32" fill="#FF6B1A"/>
+  <!-- anvil base -->
+  <rect x="58" y="150" width="84" height="22" fill="#FF6B1A"/>
+  <!-- sparks -->
+  <circle cx="100" cy="66" r="2.8" fill="#FF9A3C" opacity="0.9"/>
+  <circle cx="118" cy="57" r="2" fill="#FF9A3C" opacity="0.7"/>
+  <circle cx="82" cy="59" r="1.6" fill="#FF9A3C" opacity="0.6"/>
+
+  <!-- separator line -->
+  <line x1="210" y1="36" x2="210" y2="184" stroke="#2A2A2A" stroke-width="1"/>
+
+  <!-- wordmark -->
+  <text x="230" y="113"
+        font-family="'Bebas Neue', Impact, 'Arial Narrow', sans-serif"
+        font-size="78" letter-spacing="4" fill="#F5F0E8">BYTE</text>
+  <text x="230" y="183"
+        font-family="'Bebas Neue', Impact, 'Arial Narrow', sans-serif"
+        font-size="78" letter-spacing="4" fill="#FF6B1A">FORGE</text>
+
+  <!-- tagline -->
+  <text x="232" y="204"
+        font-family="'DM Mono', 'Courier New', monospace"
+        font-size="12" letter-spacing="3" fill="#555555">CRAFT YOUR CODE</text>
+</svg>
