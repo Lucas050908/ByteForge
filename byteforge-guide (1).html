@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ByteForge — Guide & Dokumentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --forge:#FF6B1A;--ember:#FF9A3C;--coal:#0D0D0D;--steel:#1A1A1A;
+  --iron:#242424;--ash:#8A8A8A;--smoke:#3A3A3A;--white:#F5F0E8;
+  --ok:#39D353;--mono:'DM Mono',monospace;--display:'Bebas Neue',sans-serif;--body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--coal);color:var(--white);overflow-x:hidden}
+
+/* ── GRID BG ── */
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(var(--iron) 1px,transparent 1px),linear-gradient(90deg,var(--iron) 1px,transparent 1px);
+  background-size:48px 48px;opacity:.2;pointer-events:none;z-index:0}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
+  background:rgba(13,13,13,.95);border-bottom:1px solid var(--iron);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;backdrop-filter:blur(16px)}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.nav-logo svg{display:block}
+.nav-brand{font-family:var(--display);font-size:24px;letter-spacing:4px;color:var(--white)}
+.nav-brand span{color:var(--white)}
+.nav-links{display:flex;gap:32px}
+.nav-links a{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ash);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--forge)}
+.nav-cta{font-family:var(--display);font-size:15px;letter-spacing:2px;background:var(--forge);color:#0D0D0D;padding:8px 20px;text-decoration:none;transition:background .2s}
+.nav-cta:hover{background:var(--ember)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 40px 60px;position:relative}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--forge);text-transform:uppercase;border:1px solid var(--forge);padding:6px 18px;margin-bottom:32px;animation:up .6s both}
+.hero h1{font-family:var(--display);font-size:clamp(80px,14vw,180px);letter-spacing:6px;line-height:.9;animation:up .6s .1s both}
+.hero h1 span{color:var(--forge)}
+.hero-sub{font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--ash);margin:24px 0 48px;animation:up .6s .2s both}
+.hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;animation:up .6s .3s both}
+.btn-primary{font-family:var(--display);font-size:18px;letter-spacing:3px;background:var(--forge);color:#0D0D0D;padding:13px 36px;text-decoration:none;transition:background .2s;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:10px}
+.btn-primary:hover{background:var(--ember)}
+.btn-secondary{font-family:var(--display);font-size:18px;letter-spacing:3px;background:transparent;color:var(--white);padding:13px 36px;text-decoration:none;border:1px solid var(--smoke);transition:all .2s;display:inline-flex;align-items:center;gap:10px}
+.btn-secondary:hover{border-color:var(--forge);color:var(--forge)}
+.hero-glow{position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.07) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:pulse 5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(1.15);opacity:.6}}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--forge),transparent)}
+
+/* ── SECTIONS ── */
+.section{padding:100px 40px;max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.section-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--forge);text-transform:uppercase;margin-bottom:12px}
+.section-title{font-family:var(--display);font-size:clamp(40px,6vw,72px);letter-spacing:4px;line-height:1;margin-bottom:20px}
+.section-title span{color:var(--forge)}
+.section-body{font-size:16px;line-height:1.8;color:var(--ash);max-width:600px}
+
+/* ── DOWNLOAD SECTION ── */
+.download-section{background:var(--steel);padding:80px 40px;position:relative;z-index:1;border-top:1px solid var(--iron);border-bottom:1px solid var(--iron)}
+.download-inner{max-width:1200px;margin:0 auto}
+.download-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-top:48px}
+.download-info h3{font-family:var(--display);font-size:32px;letter-spacing:3px;margin-bottom:16px;color:var(--white)}
+.download-info p{font-family:var(--mono);font-size:12px;line-height:2;color:var(--ash);margin-bottom:8px}
+.download-info p span{color:var(--white)}
+.download-box{background:var(--coal);border:1px solid var(--iron);border-left:3px solid var(--forge);padding:32px}
+.download-box-title{font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--forge);margin-bottom:8px}
+.download-box-ver{font-family:var(--mono);font-size:10px;color:var(--ash);letter-spacing:2px;margin-bottom:24px}
+.download-box-req{font-family:var(--mono);font-size:11px;line-height:2;color:var(--ash);margin-bottom:24px}
+.download-box-req .req-ok{color:var(--ok)}
+.download-btn{display:inline-flex;align-items:center;gap:12px;font-family:var(--display);font-size:22px;letter-spacing:3px;background:var(--forge);color:#0D0D0D;padding:14px 32px;text-decoration:none;transition:background .2s;width:100%;justify-content:center}
+.download-btn:hover{background:var(--ember)}
+.download-btn-secondary{display:inline-flex;align-items:center;gap:12px;font-family:var(--display);font-size:16px;letter-spacing:2px;background:transparent;color:var(--white);padding:10px 24px;text-decoration:none;border:1px solid var(--smoke);transition:all .2s;width:100%;justify-content:center;margin-top:10px}
+.download-btn-secondary:hover{border-color:var(--forge);color:var(--forge)}
+.req-row{display:flex;gap:8px;align-items:center}
+.req-label{color:var(--ash)}
+
+/* ── WHAT IS ── */
+.what-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-top:60px}
+.what-text p{font-size:16px;line-height:1.9;color:var(--ash);margin-bottom:16px}
+.what-text p strong{color:var(--white)}
+.what-visual{background:var(--steel);border:1px solid var(--iron);padding:28px}
+.what-visual .term-bar{display:flex;align-items:center;gap:6px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--iron)}
+.dot{width:8px;height:8px;background:var(--iron)}.dot.on{background:var(--forge)}
+.term-title{font-family:var(--mono);font-size:9px;color:var(--ash);margin-left:6px;letter-spacing:1px}
+.term-line{font-family:var(--mono);font-size:12px;line-height:2;color:#555}
+.term-line .ok{color:var(--ok)}.term-line .o{color:var(--forge)}.term-line .b{color:#888}
+
+/* ── FEATURES ── */
+.features-section{background:var(--steel);padding:100px 0}
+.features-inner{max-width:1200px;margin:0 auto;padding:0 40px}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--iron);border:1px solid var(--iron);margin-top:60px}
+.feat{background:var(--coal);padding:36px 32px;transition:background .2s;border-left:2px solid transparent;cursor:default}
+.feat:hover{background:#111;border-left-color:var(--forge)}
+.feat-icon{font-size:28px;margin-bottom:16px}
+.feat-title{font-family:var(--display);font-size:22px;letter-spacing:2px;color:var(--white);margin-bottom:10px}
+.feat-desc{font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--ash)}
+
+/* ── HOW IT WORKS ── */
+.steps{counter-reset:step;margin-top:60px}
+.step{display:grid;grid-template-columns:60px 1fr;gap:24px;margin-bottom:40px;align-items:start}
+.step-num{font-family:var(--display);font-size:48px;color:var(--forge);line-height:1;counter-increment:step}
+.step-title{font-family:var(--display);font-size:24px;letter-spacing:2px;margin-bottom:8px}
+.step-desc{font-size:14px;line-height:1.8;color:var(--ash)}
+.step-code{background:var(--steel);border:1px solid var(--iron);border-left:2px solid var(--forge);padding:12px 16px;font-family:var(--mono);font-size:12px;color:var(--ember);margin-top:12px;word-break:break-all}
+
+/* ── DETAILED GUIDE ── */
+.guide-section{padding:100px 0;position:relative;z-index:1}
+.guide-inner{max-width:1200px;margin:0 auto;padding:0 40px}
+.guide-chapter{margin-bottom:80px}
+.chapter-header{display:flex;align-items:center;gap:20px;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid var(--iron)}
+.chapter-num{font-family:var(--display);font-size:64px;color:var(--forge);line-height:1;min-width:60px}
+.chapter-meta{}
+.chapter-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--forge);text-transform:uppercase;margin-bottom:4px}
+.chapter-title{font-family:var(--display);font-size:clamp(28px,4vw,48px);letter-spacing:3px;color:var(--white)}
+.chapter-body{font-size:15px;line-height:1.9;color:var(--ash);margin-bottom:24px;max-width:800px}
+.chapter-body strong{color:var(--white)}
+.guide-steps{list-style:none;margin-bottom:24px}
+.guide-step{display:grid;grid-template-columns:28px 1fr;gap:16px;margin-bottom:20px;align-items:start}
+.gs-num{font-family:var(--mono);font-size:11px;color:var(--forge);font-weight:500;padding-top:3px}
+.gs-content{}
+.gs-title{font-family:var(--display);font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:6px}
+.gs-desc{font-size:14px;line-height:1.8;color:var(--ash)}
+.gs-desc strong{color:var(--white)}
+.gs-code{background:var(--steel);border:1px solid var(--iron);border-left:2px solid var(--forge);padding:10px 14px;font-family:var(--mono);font-size:12px;color:var(--ember);margin-top:8px;word-break:break-all}
+.gs-tip{background:rgba(255,107,26,.06);border:1px solid rgba(255,107,26,.25);padding:12px 16px;margin-top:10px;display:flex;gap:12px;align-items:flex-start}
+.gs-tip-icon{color:var(--forge);font-size:14px;margin-top:2px;flex-shrink:0}
+.gs-tip-text{font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--ash)}
+.guide-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:24px}
+.guide-card{background:var(--steel);border:1px solid var(--iron);padding:24px;transition:border-color .2s}
+.guide-card:hover{border-color:var(--forge)}
+.gc-icon{font-size:24px;margin-bottom:12px}
+.gc-title{font-family:var(--display);font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:8px}
+.gc-desc{font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--ash)}
+.gc-desc strong{color:var(--forge)}
+.warning-box{background:rgba(255,107,26,.08);border:1px solid rgba(255,107,26,.3);padding:16px 20px;margin:20px 0;display:flex;gap:14px;align-items:flex-start}
+.warn-icon{font-size:18px;flex-shrink:0}
+.warn-text{font-size:14px;line-height:1.8;color:var(--ash)}
+.warn-text strong{color:var(--white)}
+.storage-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px}
+.storage-card{background:var(--coal);border:1px solid var(--iron);padding:20px;border-left:3px solid var(--forge)}
+.sc-name{font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--white);margin-bottom:4px}
+.sc-path{font-family:var(--mono);font-size:10px;color:var(--forge);margin-bottom:8px}
+.sc-desc{font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--ash)}
+
+/* ── PORT TABLE ── */
+.port-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin-top:40px}
+.port-table th{text-align:left;padding:10px 16px;font-size:9px;letter-spacing:3px;color:var(--forge);text-transform:uppercase;border-bottom:1px solid var(--forge);background:var(--steel)}
+.port-table td{padding:12px 16px;border-bottom:1px solid var(--iron);color:var(--ash)}
+.port-table td:first-child{color:var(--white);font-weight:500}
+.port-table tr:hover td{background:rgba(255,107,26,.04)}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:2px 8px;border:1px solid}
+.b-ok{color:var(--ok);border-color:var(--ok)}
+.b-o{color:var(--forge);border-color:var(--forge)}
+
+/* ── FAQ ── */
+.faq{margin-top:48px}
+.faq-item{border-bottom:1px solid var(--iron);padding:20px 0;cursor:pointer}
+.faq-q{font-family:var(--display);font-size:20px;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.faq-q::after{content:'＋';color:var(--forge);font-size:20px;transition:transform .3s}
+.faq-item.open .faq-q::after{transform:rotate(45deg)}
+.faq-a{font-size:14px;line-height:1.8;color:var(--ash);max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s}
+.faq-item.open .faq-a{max-height:300px;padding-top:12px}
+
+/* ── STACK ── */
+.stack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:48px}
+.stack-card{background:var(--steel);border:1px solid var(--iron);padding:20px;transition:border-color .2s}
+.stack-card:hover{border-color:var(--forge)}
+.stack-name{font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--white)}
+.stack-role{font-family:var(--mono);font-size:10px;color:var(--ash);letter-spacing:1px;margin-top:4px}
+.stack-ver{font-family:var(--mono);font-size:10px;color:var(--forge);margin-top:8px}
+
+/* ── CTA ── */
+.cta-section{background:var(--steel);border-top:1px solid var(--iron);border-bottom:1px solid var(--iron);padding:80px 40px;text-align:center;position:relative;z-index:1}
+.cta-section h2{font-family:var(--display);font-size:clamp(40px,6vw,80px);letter-spacing:4px;margin-bottom:16px}
+.cta-section h2 span{color:var(--forge)}
+.cta-section p{font-family:var(--mono);font-size:12px;color:var(--ash);letter-spacing:2px;margin-bottom:36px}
+
+/* ── FOOTER ── */
+footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.footer-brand{font-family:var(--display);font-size:20px;letter-spacing:3px}
+.footer-brand span{color:var(--forge)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-family:var(--mono);font-size:10px;color:var(--ash);text-decoration:none;letter-spacing:1px}
+.footer-links a:hover{color:var(--forge)}
+.footer-copy{font-family:var(--mono);font-size:10px;color:var(--smoke);letter-spacing:1px}
+
+@media(max-width:768px){
+  .what-grid,.features-grid,.stack-grid,.download-grid,.storage-grid{grid-template-columns:1fr}
+  nav{padding:0 20px}.nav-links{display:none}
+  .section{padding:60px 20px}
+  .step{grid-template-columns:40px 1fr}
+  .guide-inner{padding:0 20px}
+  .chapter-header{flex-direction:column;align-items:flex-start;gap:8px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="34" height="34">
+      <rect width="200" height="200" rx="20" fill="#0D0D0D"/>
+      <polygon points="180,100 140,169.3 60,169.3 20,100 60,30.7 140,30.7" fill="#1A1A1A" stroke="#FF6B1A" stroke-width="3.5"/>
+      <polygon points="22,92 50,75 150,75 150,108 50,108" fill="#FF6B1A"/>
+      <rect x="72" y="108" width="56" height="30" fill="#FF6B1A"/>
+      <rect x="55" y="138" width="90" height="22" fill="#FF6B1A"/>
+      <circle cx="100" cy="60" r="2.5" fill="#FF9A3C" opacity="0.9"/>
+    </svg>
+    <div class="nav-brand">BYTE<span>FORGE</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="#hvad-er">Om</a>
+    <a href="#features">Features</a>
+    <a href="#download">Download</a>
+    <a href="#brugsguide">Guide</a>
+    <a href="#porte">Porte</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <a class="nav-cta" href="ByteForge.zip" download>⬇ DOWNLOAD</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-tag">⚒ Selvhostet homelab platform</div>
+  <h1>BYTE<br/><span>FORGE</span></h1>
+  <p class="hero-sub">// DIN SERVER · DIT DATA · DIN KONTROL</p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="ByteForge.zip" download>⬇ DOWNLOAD BYTEFORGE</a>
+    <a class="btn-secondary" href="#brugsguide">LÆS GUIDEN ↓</a>
+    <a class="btn-secondary" href="http://10.194.177.172:9090" target="_blank">ÅBEN PANEL ↗</a>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- HVAD ER BYTEFORGE -->
+<div class="section" id="hvad-er">
+  <div class="section-tag">// Hvad er ByteForge?</div>
+  <div class="section-title">EN SERVER<br/>DU <span>EJER</span></div>
+
+  <div class="what-grid">
+    <div class="what-text">
+      <p>ByteForge er et <strong>selvhostet homelab system</strong> bygget på en privatpersons computer. Tænk på det som dit eget private cloud – men uden månedlige abonnementer, uden at sende dine data til fremmede servere, og uden begrænsninger.</p>
+      <p>Systemet kører på <strong>Manjaro Linux</strong> med <strong>CasaOS</strong> som fundament, og er udvidet med NAS-deling, RAID-beskyttelse, en Minecraft-server og et komplet kontrolpanel bygget fra bunden.</p>
+      <p>Alt er tilgængeligt via din browser – fra hvilken som helst enhed på netværket. Ingen app-downloads, ingen cloud-login. Bare din server.</p>
+    </div>
+    <div class="what-visual">
+      <div class="term-bar"><div class="dot on"></div><div class="dot"></div><div class="dot"></div><span class="term-title">byteforge-server.py</span></div>
+      <div class="term-line"><span class="o">  ⚒  ByteForge v1.0 starter...</span></div>
+      <div class="term-line"><span class="ok">[  OK  ]</span> <span class="b">Python 3 runtime klar</span></div>
+      <div class="term-line"><span class="ok">[  OK  ]</span> <span class="b">Docker 29.3.0 registreret</span></div>
+      <div class="term-line"><span class="ok">[  OK  ]</span> <span class="b">Game servers indlæst</span></div>
+      <div class="term-line"><span class="ok">[  OK  ]</span> <span class="b">Filsystem monteret</span></div>
+      <div class="term-line"><span class="ok">[  OK  ]</span> <span class="b">Multi-user profiler klar</span></div>
+      <div class="term-line"><span class="ok">[  OK  ]</span> <span class="b">Panel tilgængeligt · port 8080</span></div>
+      <div class="term-line">&nbsp;</div>
+      <div class="term-line"><span class="o">  ⚒  NAS · RAID · MINECRAFT · BUILT BY LUCAS  ⚒</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<div class="features-section" id="features">
+  <div class="features-inner">
+    <div class="section-tag">// Hvad kan det?</div>
+    <div class="section-title">ALT HVAD DU<br/><span>BEHØVER</span></div>
+
+    <div class="features-grid">
+      <div class="feat">
+        <div class="feat-icon">🎮</div>
+        <div class="feat-title">GAME SERVERS</div>
+        <div class="feat-desc">Minecraft Vanilla, Paper, Spigot, Forge, Fabric, FiveM, Terraria og custom servere. Start, stop og restart med ét klik. CPU/RAM-grænser pr. server.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🗄</div>
+        <div class="feat-title">NAS STORAGE</div>
+        <div class="feat-desc">Del filer på tværs af alle enheder via NFS og Samba. Tilgå dine filer fra Windows, Mac og Linux med én central lagerplads på /mnt/nas-share.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">⚡</div>
+        <div class="feat-title">RAID BESKYTTELSE</div>
+        <div class="feat-desc">RAID 1 spejling duplikerer dine data på to diske automatisk. Hvis én disk fejler, overlever dine data på den anden.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">📁</div>
+        <div class="feat-title">FIL MANAGER</div>
+        <div class="feat-desc">Upload, slet, flyt, søg og opret mapper direkte i browseren. Virtuelt storage-layout med public, private, shared og per-server zoner.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">👤</div>
+        <div class="feat-title">MULTI-USER</div>
+        <div class="feat-desc">Opret profiler med individuelle adgangsniveauer. Styr hvem der kan se og administrere hvad på din server.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🌐</div>
+        <div class="feat-title">WEBSITE HOSTING</div>
+        <div class="feat-desc">Host dine egne hjemmesider direkte fra serveren via public storage. Video, PDF og fil-deling over HTTP.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🐳</div>
+        <div class="feat-title">DOCKER HUB</div>
+        <div class="feat-desc">Installer apps med ét klik via presets: Webdev Stack, Monitoring, AI Stack, Privacy Suite, Media Server og mere.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🤖</div>
+        <div class="feat-title">AI ASSISTANT</div>
+        <div class="feat-desc">Bygget med Claude API. Stil spørgsmål om din server, analysér logs, få performance-tips og code review direkte i dashboardet.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔐</div>
+        <div class="feat-title">PRIVACY SUITE</div>
+        <div class="feat-desc">Installer Bitwarden, Nextcloud, Pi-hole og WireGuard VPN med ét klik. Komplet privacy-setup der kører på din egen hardware.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- DOWNLOAD SECTION -->
+<div class="download-section" id="download">
+  <div class="download-inner">
+    <div class="section-tag">// Hent programmet</div>
+    <div class="section-title">DOWNLOAD<br/><span>BYTEFORGE</span></div>
+
+    <div class="download-grid">
+      <div class="download-info">
+        <h3>HVAD ER INKLUDERET?</h3>
+        <p><span>byteforge-platform.html</span> — Komplet web-panel med alle features</p>
+        <p><span>byteforge-server.py</span> — Python backend API-server</p>
+        <p><span>byteforge-install.sh</span> — Automatisk installations-script</p>
+        <p><span>byteforge-deploy.sh</span> — Deploy-script til din server</p>
+        <p><span>byteforge-custom.css</span> — CasaOS tema-filer</p>
+        <p><span>nowplaying.py</span> — Music-integration script</p>
+        <p><span>README.md</span> — Fuld dokumentation</p>
+        <br/>
+        <p style="color:var(--ash);font-family:var(--mono);font-size:11px;line-height:1.9">
+          ByteForge kræver ingen cloud-tjenester og ingen abonnement.<br/>
+          Alt kører lokalt på din hardware.
+        </p>
+      </div>
+
+      <div class="download-box">
+        <div class="download-box-title">BYTEFORGE v1.0</div>
+        <div class="download-box-ver">// STABIL UDGIVELSE · APRIL 2026</div>
+        <div class="download-box-req">
+          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Python 3.8+ påkrævet</span></div>
+          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Docker anbefalet (til game servers)</span></div>
+          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Linux / macOS / WSL understøttet</span></div>
+          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Ingen internetforbindelse nødvendig</span></div>
+        </div>
+        <a class="download-btn" href="ByteForge.zip" download>⬇ &nbsp;DOWNLOAD .ZIP</a>
+        <a class="download-btn-secondary" href="http://10.194.177.172:9090" target="_blank">↗ &nbsp;ÅBEN LIVE PANEL</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- QUICK SETUP STEPS -->
+<div class="section" id="guide">
+  <div class="section-tag">// Hurtig opsætning</div>
+  <div class="section-title">SÅDAN<br/><span>STARTER DU</span></div>
+  <p class="section-body">Alt kører automatisk. Her er en oversigt over hvad der sker bag kulisserne, og hvordan du tilgår de forskellige dele af systemet.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">DOWNLOAD OG UDPAK</div>
+        <div class="step-desc">Download ByteForge.zip via knappen ovenfor. Udpak ZIP-filen til en mappe på din computer eller server. Du kan placere den hvor du vil – f.eks. i din hjemmemappe.</div>
+        <div class="step-code">unzip ByteForge.zip &amp;&amp; cd ByteForge/ByteForge</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">START SERVEREN</div>
+        <div class="step-desc">Åbn en terminal i ByteForge-mappen og kør Python-serveren. Du behøver ikke installere noget ekstra – Python 3 er nok til at komme i gang.</div>
+        <div class="step-code">python3 byteforge-server.py</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">ÅBEN I BROWSER</div>
+        <div class="step-desc">Når serveren kører åbner du din browser og går til denne adresse. Panelet starter med det samme – ingen login nødvendig ved første start.</div>
+        <div class="step-code">http://localhost:8080</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">TILSLUT NAS-DREVET (VALGFRIT)</div>
+        <div class="step-desc">Del filer på tværs af alle enheder. NAS-mappen er tilgængelig for alle enheder på netværket. Windows bruger Stifinder, Mac bruger Finder → Cmd+K.</div>
+        <div class="step-code">Windows: \\10.194.177.172\nas-share</div>
+        <div class="step-code" style="margin-top:6px">Mac: nfs://10.194.177.172/mnt/nas-share</div>
+        <div class="step-code" style="margin-top:6px">Linux: mount -t nfs 10.194.177.172:/mnt/nas-share /mnt/remote</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">JOIN MINECRAFT SERVEREN</div>
+        <div class="step-desc">Åbn Minecraft → Multiplayer → Tilføj server. Brug IP-adressen nedenfor. Serveren kører PaperMC og starter automatisk ved genstart.</div>
+        <div class="step-code">10.194.177.172:25565</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-title">PORT FORWARD TIL INTERNET</div>
+        <div class="step-desc">Log ind på din router og forward portene til serverens IP-adresse. Så kan du tilgå alt udefra via din offentlige IP-adresse.</div>
+        <div class="step-code">Router IP: find med kommandoen: ip route | grep default | awk '{print $3}'</div>
+        <div class="step-code" style="margin-top:6px">Din offentlige IP: curl ifconfig.me</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- DETAILED USAGE GUIDE -->
+<div class="guide-section" id="brugsguide" style="background:var(--steel)">
+  <div class="guide-inner">
+    <div class="section-tag">// Komplet brugsguide</div>
+    <div class="section-title" style="margin-bottom:12px">SÅDAN BRUGER DU<br/><span>ALT I BYTEFORGE</span></div>
+    <p style="font-family:var(--mono);font-size:12px;color:var(--ash);letter-spacing:1px;margin-bottom:60px">// TRIN-FOR-TRIN · ALLE FUNKTIONER · IDIOTSIKKER GUIDE</p>
+
+    <!-- CHAPTER 1: INSTALLATION -->
+    <div class="guide-chapter">
+      <div class="chapter-header">
+        <div class="chapter-num">01</div>
+        <div class="chapter-meta">
+          <div class="chapter-tag">// Installation</div>
+          <div class="chapter-title">KOM I GANG PÅ 3 MINUTTER</div>
+        </div>
+      </div>
+      <p class="chapter-body">ByteForge kræver ingen kompleks opsætning. Du behøver kun Python 3 – som allerede er installeret på de fleste Linux-systemer og Mac. Følg disse trin præcist.</p>
+
+      <ol class="guide-steps">
+        <li class="guide-step">
+          <div class="gs-num">→ 1</div>
+          <div class="gs-content">
+            <div class="gs-title">DOWNLOAD OG UDPAK ZIP-FILEN</div>
+            <div class="gs-desc">Klik på "Download ByteForge" knappen øverst på siden. Filen hedder <strong>ByteForge.zip</strong> og fylder ca. 1 MB. Gem den et sted du kan finde den – f.eks. Skrivebord eller Downloads.</div>
+            <div class="gs-code"># I terminal – udpak filen
+unzip ByteForge.zip
+
+# Gå ind i mappen
+cd ByteForge/ByteForge</div>
+            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">På Windows: Højreklik på ZIP-filen → "Udpak alt" → Åbn mappen der dukker op, og gå ind i den indre "ByteForge" mappe.</div></div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 2</div>
+          <div class="gs-content">
+            <div class="gs-title">TJEK AT PYTHON 3 ER INSTALLERET</div>
+            <div class="gs-desc">Åbn en terminal (på Windows: søg efter "cmd" eller "PowerShell") og kør denne kommando. Du skal se noget som "Python 3.10.x" – så er du klar.</div>
+            <div class="gs-code">python3 --version
+# Forventet output: Python 3.10.x eller nyere</div>
+            <div class="gs-tip"><div class="gs-tip-icon">⚠</div><div class="gs-tip-text">Har du ikke Python 3? Hent det gratis fra python.org – vælg den nyeste version og sæt flueben ved "Add to PATH" under installation.</div></div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 3</div>
+          <div class="gs-content">
+            <div class="gs-title">START BYTEFORGE-SERVEREN</div>
+            <div class="gs-desc">Sørg for at din terminal er i ByteForge-mappen (cd ByteForge/ByteForge) og kør denne kommando. Lad terminalen stå åben – den skal køre så længe du bruger ByteForge.</div>
+            <div class="gs-code">python3 byteforge-server.py
+
+# Du ser dette når den er klar:
+# [OK] ByteForge kørende på http://localhost:8080</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 4</div>
+          <div class="gs-content">
+            <div class="gs-title">ÅBEN PANELET I DIN BROWSER</div>
+            <div class="gs-desc">Åbn Chrome, Firefox eller Edge og skriv denne adresse i adressefeltet. Tryk Enter. ByteForge-panelet åbner med det samme.</div>
+            <div class="gs-code">http://localhost:8080</div>
+            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Kører ByteForge på en anden computer på dit netværk? Brug computerens lokale IP-adresse i stedet for "localhost" – f.eks. http://10.194.177.172:8080</div></div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 5</div>
+          <div class="gs-content">
+            <div class="gs-title">SKIFT PORT ELLER DATA-MAPPE (VALGFRIT)</div>
+            <div class="gs-desc">Vil du bruge en anden port eller gemme data et andet sted, kan du sætte environment-variabler før du starter. Data gemmes som standard i <strong>~/.byteforge</strong> (eller /opt/byteforge som root).</div>
+            <div class="gs-code">BYTEFORGE_HOME="/din/mappe" BYTEFORGE_PORT=9000 python3 byteforge-server.py</div>
+          </div>
+        </li>
+      </ol>
+
+      <div class="warning-box">
+        <div class="warn-icon">🔴</div>
+        <div class="warn-text"><strong>Stop ikke terminalen!</strong> Terminalen hvor byteforge-server.py kører skal forblive åben. Lukker du den, stopper panelet. Vil du køre det permanent i baggrunden, se "Kør som service" i FAQ.</div>
+      </div>
+    </div>
+
+    <!-- CHAPTER 2: GAME SERVERS -->
+    <div class="guide-chapter">
+      <div class="chapter-header">
+        <div class="chapter-num">02</div>
+        <div class="chapter-meta">
+          <div class="chapter-tag">// Game Server Management</div>
+          <div class="chapter-title">OPRET OG ADMINISTRER GAME SERVERS</div>
+        </div>
+      </div>
+      <p class="chapter-body">ByteForge understøtter otte forskellige servertyper. Alle kører via Docker, som håndterer alt det tekniske automatisk. Du behøver ikke forstå Docker – ByteForge gør det for dig.</p>
+
+      <div class="guide-card-grid">
+        <div class="guide-card">
+          <div class="gc-icon">⛏</div>
+          <div class="gc-title">MINECRAFT VANILLA</div>
+          <div class="gc-desc">Standard Minecraft-server. Perfekt til normale spil uden mods. <strong>Port: 25565</strong></div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">📄</div>
+          <div class="gc-title">MINECRAFT PAPER</div>
+          <div class="gc-desc">Optimeret server med plugin-understøttelse. Bedre performance end Vanilla. <strong>Anbefalet til de fleste</strong></div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">🔌</div>
+          <div class="gc-title">SPIGOT / FORGE / FABRIC</div>
+          <div class="gc-desc">Avancerede servertyper til mods og plugins. Vælg efter hvad dine spillere bruger.</div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">🚗</div>
+          <div class="gc-title">FIVEM</div>
+          <div class="gc-desc">GTA V multiplayer-server. Kræver FiveM-licens fra cfx.re. <strong>Custom scripts understøttet</strong></div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">🌳</div>
+          <div class="gc-title">TERRARIA</div>
+          <div class="gc-desc">Terraria dedikeret server. Understøtter op til 255 spillere. <strong>Ingen mods påkrævet</strong></div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">⚙</div>
+          <div class="gc-title">CUSTOM SERVER</div>
+          <div class="gc-desc">Kør en hvilken som helst spilserver via Docker-image. Du angiver selv image og konfiguration.</div>
+        </div>
+      </div>
+
+      <br/>
+      <ol class="guide-steps">
+        <li class="guide-step">
+          <div class="gs-num">→ 1</div>
+          <div class="gs-content">
+            <div class="gs-title">OPRET EN NY SERVER</div>
+            <div class="gs-desc">Åbn ByteForge-panelet → Klik på <strong>"Game Servers"</strong> i venstremenuen → Klik på den store orange knap <strong>"+ NY SERVER"</strong>. En formular åbner sig.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 2</div>
+          <div class="gs-content">
+            <div class="gs-title">UDFYLD SERVER-INFORMATIONER</div>
+            <div class="gs-desc">Giv serveren et navn (f.eks. "Lucas Survival"), vælg servertype fra dropdown-menuen, og indstil RAM-grænse (anbefalet: 2048 MB til Minecraft). CPU-grænse kan efterlades på standard.</div>
+            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Start med 2GB RAM til Minecraft. Har du mange spillere eller mods, kan du øge det til 4GB bagefter via "Rediger server".</div></div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 3</div>
+          <div class="gs-content">
+            <div class="gs-title">START, STOP OG GENSTART</div>
+            <div class="gs-desc">I serverlisten har hver server tre knapper: <strong>▶ Start</strong>, <strong>■ Stop</strong> og <strong>↺ Genstart</strong>. Klik blot på den du vil bruge. Status-indikatoren bliver grøn når serveren kører.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 4</div>
+          <div class="gs-content">
+            <div class="gs-title">AUTO-RESTART VED SERVERFEJL</div>
+            <div class="gs-desc">Alle servere er konfigureret med <strong>unless-stopped</strong> – det betyder at Docker automatisk genstarter serveren hvis den crasher, men stopper den hvis du manuelt trykker Stop. Ingen ekstra opsætning nødvendig.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 5</div>
+          <div class="gs-content">
+            <div class="gs-title">TILSLUT TIL DIN SERVER</div>
+            <div class="gs-desc">Åbn Minecraft → Multiplayer → Tilføj server. Skriv serverens IP og port i feltet. Brug lokal IP på hjemmenetværk, offentlig IP udefra.</div>
+            <div class="gs-code"># Lokalt (hjemmenetværk):
+10.194.177.172:25565
+
+# Udefra (efter port forwarding):
+[DIN OFFENTLIGE IP]:25565</div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- CHAPTER 3: FILE MANAGER -->
+    <div class="guide-chapter">
+      <div class="chapter-header">
+        <div class="chapter-num">03</div>
+        <div class="chapter-meta">
+          <div class="chapter-tag">// Filhåndtering</div>
+          <div class="chapter-title">FIL MANAGER OG STORAGE</div>
+        </div>
+      </div>
+      <p class="chapter-body">ByteForge har en komplet filhåndtering direkte i browseren. Du kan uploade, slette, flytte og søge i filer uden at have adgang til terminalen. Filsystemet er inddelt i fire zoner.</p>
+
+      <div class="storage-grid">
+        <div class="storage-card">
+          <div class="sc-name">PUBLIC</div>
+          <div class="sc-path">// tilgængeligt uden login</div>
+          <div class="sc-desc">Filer her er tilgængelige for alle via HTTP. Brug til hjemmesider, delte billeder, offentlige downloads og video/PDF-filer du vil dele med andre.</div>
+        </div>
+        <div class="storage-card">
+          <div class="sc-name">PRIVATE</div>
+          <div class="sc-path">// kun din profil</div>
+          <div class="sc-desc">Dine personlige filer. Kun din bruger kan se og redigere disse filer. Andre brugere på systemet har ikke adgang.</div>
+        </div>
+        <div class="storage-card">
+          <div class="sc-name">SHARED</div>
+          <div class="sc-path">// alle loggede brugere</div>
+          <div class="sc-desc">Filer som alle brugere på systemet kan se og redigere. Perfekt til fælles projekter og delte ressourcer internt.</div>
+        </div>
+        <div class="storage-card">
+          <div class="sc-name">SERVER DATA</div>
+          <div class="sc-path">// pr. game server</div>
+          <div class="sc-desc">Hver game server har sin egen mappe til konfigurationsfiler, worlds, mods og plugins. Tilgås via den pågældende servers "Filer"-faneblad.</div>
+        </div>
+      </div>
+
+      <br/>
+      <ol class="guide-steps">
+        <li class="guide-step">
+          <div class="gs-num">→ 1</div>
+          <div class="gs-content">
+            <div class="gs-title">UPLOAD EN FIL</div>
+            <div class="gs-desc">Gå til <strong>Filer</strong> i menuen → Vælg din storage-zone (Public, Private eller Shared) → Klik på <strong>"Upload"</strong> knappen → Vælg filen fra din computer. Filen uploades øjeblikkeligt.</div>
+            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Du kan uploade flere filer på én gang ved at holde Ctrl nede mens du vælger dem i filvinduet.</div></div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 2</div>
+          <div class="gs-content">
+            <div class="gs-title">OPRET EN MAPPE</div>
+            <div class="gs-desc">I Fil Manager klik på <strong>"Ny mappe"</strong> ikonet (mappesymbol med + tegn) øverst i panelet. Skriv mappenavnet og tryk Enter. Mapper kan indeholde andre mapper – der er ingen grænse på dybden.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 3</div>
+          <div class="gs-content">
+            <div class="gs-title">FLYT EN FIL</div>
+            <div class="gs-desc">Højreklik på filen → Vælg <strong>"Flyt"</strong> → Naviger til destinationsmappen → Klik <strong>"Flyt hertil"</strong>. Du kan også flytte hele mapper på samme måde.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 4</div>
+          <div class="gs-content">
+            <div class="gs-title">SØG EFTER FILER</div>
+            <div class="gs-desc">Øverst i Fil Manager er der et søgefelt. Skriv noget af filnavnet og resultater filtreres øjeblikkeligt. Søgningen finder filer i alle undermapper automatisk.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 5</div>
+          <div class="gs-content">
+            <div class="gs-title">SLET EN FIL ELLER MAPPE</div>
+            <div class="gs-desc">Højreklik på filen eller mappen → Vælg <strong>"Slet"</strong> → Bekræft i den dialog der dukker op. <strong>Bemærk: Sletning kan ikke fortrydes!</strong> Tjek altid at du sletter den rigtige fil.</div>
+            <div class="gs-tip"><div class="gs-tip-icon">⚠</div><div class="gs-tip-text">Sletning er permanent. Der er ingen papirkurv. Overvej at flytte vigtige filer til PRIVATE zonen som backup inden du sletter fra SHARED.</div></div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- CHAPTER 4: MULTI-USER -->
+    <div class="guide-chapter">
+      <div class="chapter-header">
+        <div class="chapter-num">04</div>
+        <div class="chapter-meta">
+          <div class="chapter-tag">// Brugerstyring</div>
+          <div class="chapter-title">MULTI-USER PROFILER</div>
+        </div>
+      </div>
+      <p class="chapter-body">ByteForge understøtter flere brugere med individuelle adgangsniveauer. Perfekt til at give venner eller familiemedlemmer adgang til specifikke dele af systemet – uden at de kan rode med alt.</p>
+
+      <ol class="guide-steps">
+        <li class="guide-step">
+          <div class="gs-num">→ 1</div>
+          <div class="gs-content">
+            <div class="gs-title">OPRET EN NY BRUGER</div>
+            <div class="gs-desc">Åbn panelet → Klik på <strong>"Brugere"</strong> i menuen → Klik <strong>"+ Ny bruger"</strong> → Udfyld brugernavn og adgangskode → Vælg adgangsniveau → Klik <strong>"Gem"</strong>.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 2</div>
+          <div class="gs-content">
+            <div class="gs-title">ADGANGSNIVEAUER FORKLARET</div>
+            <div class="gs-desc"><strong>Admin</strong> — Fuld adgang til alt inkl. brugeroprettelse og sletning af servere.<br/><strong>Bruger</strong> — Kan starte/stoppe servere og uploade filer. Kan ikke slette eller ændre konfiguration.<br/><strong>Gæst</strong> — Kan kun se status. Ingen ændringer tilladt.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 3</div>
+          <div class="gs-content">
+            <div class="gs-title">SKIFT ELLER SLET BRUGER</div>
+            <div class="gs-desc">I brugerlisten klik på blyantsikonet ud for en bruger for at redigere adgangsniveau eller skifte adgangskode. Klik på skraldespandsikonet for at slette brugeren permanent.</div>
+            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Du kan ikke slette din egen admin-konto. Opret altid mindst én ekstra admin som backup i tilfælde af at du glemmer din adgangskode.</div></div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- CHAPTER 5: WEBSITE HOSTING -->
+    <div class="guide-chapter">
+      <div class="chapter-header">
+        <div class="chapter-num">05</div>
+        <div class="chapter-meta">
+          <div class="chapter-tag">// Web Hosting</div>
+          <div class="chapter-title">HOST DIN EGEN HJEMMESIDE</div>
+        </div>
+      </div>
+      <p class="chapter-body">ByteForge kan hoste statiske hjemmesider direkte fra PUBLIC storage-zonen. Upload dine HTML/CSS/JS-filer og de er øjeblikkeligt tilgængelige via HTTP – ingen ekstra webserver nødvendig.</p>
+
+      <ol class="guide-steps">
+        <li class="guide-step">
+          <div class="gs-num">→ 1</div>
+          <div class="gs-content">
+            <div class="gs-title">UPLOAD DIN HJEMMESIDE</div>
+            <div class="gs-desc">Gå til <strong>Filer → Public</strong> → Upload din <strong>index.html</strong> fil (og eventuelle CSS/JS-filer). Organiser dem i mapper hvis du vil.</div>
+            <div class="gs-code"># Din hjemmeside er nu tilgængeligt på:
+http://[SERVER-IP]:8080/public/index.html</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 2</div>
+          <div class="gs-content">
+            <div class="gs-title">SHARE VIDEOER OG FILER</div>
+            <div class="gs-desc">Upload videofiler, PDF'er eller andre filer til PUBLIC og del linket. Enhver med adgang til din server kan hente filen via det direkte link uden at logge ind.</div>
+            <div class="gs-code">http://[SERVER-IP]:8080/public/min-video.mp4
+http://[SERVER-IP]:8080/public/dokument.pdf</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 3</div>
+          <div class="gs-content">
+            <div class="gs-title">GØR DET TILGÆNGELIGT FRA INTERNET</div>
+            <div class="gs-desc">Vil du dele din hjemmeside med verden? Forward port 8080 i din router til serverens lokale IP-adresse. Derefter er siden tilgængeligt på din offentlige IP.</div>
+            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Brug en gratis DNS-tjeneste som DuckDNS eller No-IP for at få et domænenavn i stedet for en IP-adresse – f.eks. minserver.duckdns.org</div></div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- CHAPTER 6: SETTINGS -->
+    <div class="guide-chapter">
+      <div class="chapter-header">
+        <div class="chapter-num">06</div>
+        <div class="chapter-meta">
+          <div class="chapter-tag">// Indstillinger</div>
+          <div class="chapter-title">TILPAS BYTEFORGE</div>
+        </div>
+      </div>
+      <p class="chapter-body">ByteForge kan tilpasses med temaer, sprog og brugerdefineret baggrund direkte fra panelet – ingen koderedigering nødvendig.</p>
+
+      <ol class="guide-steps">
+        <li class="guide-step">
+          <div class="gs-num">→ 1</div>
+          <div class="gs-content">
+            <div class="gs-title">SKIFT TEMA</div>
+            <div class="gs-desc">Gå til <strong>Indstillinger</strong> (tandhjulsikon) → <strong>"Udseende"</strong> → Vælg et tema fra listen. Standardtemaet er det orange ByteForge-tema. Du kan skifte til mørkere eller lysere varianter.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 2</div>
+          <div class="gs-content">
+            <div class="gs-title">SKIFT SPROG</div>
+            <div class="gs-desc">Gå til <strong>Indstillinger → "Sprog"</strong> → Vælg dit foretrukne sprog fra dropdown-menuen. Panelet genindlæser automatisk med det valgte sprog.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 3</div>
+          <div class="gs-content">
+            <div class="gs-title">TILPASSET BAGGRUND</div>
+            <div class="gs-desc">Gå til <strong>Indstillinger → "Baggrund"</strong> → Klik <strong>"Upload billede"</strong> eller indsæt en URL til et billede. ByteForge bruger billedet som baggrund i hele panelet.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 4</div>
+          <div class="gs-content">
+            <div class="gs-title">API-NØGLER OG INTEGRATIONER</div>
+            <div class="gs-desc">Under <strong>Indstillinger → "Integrationer"</strong> kan du tilføje din Claude API-nøgle til AI-assistenten, Discord webhook til notifikationer og andre tredjepartstjenester.</div>
+            <div class="gs-code"># API endpoint oversigt:
+GET  /api/all              → Alt systemdata
+GET  /api/game-servers     → Liste over servere
+POST /api/game-servers/create → Opret server
+POST /api/game-servers/action → Start/stop/restart
+GET  /api/files?scope=public  → Filer i public
+POST /api/files/upload        → Upload fil
+POST /api/settings            → Gem indstillinger</div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- CHAPTER 7: DOCKER PRESETS -->
+    <div class="guide-chapter">
+      <div class="chapter-header">
+        <div class="chapter-num">07</div>
+        <div class="chapter-meta">
+          <div class="chapter-tag">// Docker Apps</div>
+          <div class="chapter-title">INSTALLER APPS MED ÉT KLIK</div>
+        </div>
+      </div>
+      <p class="chapter-body">Via CasaOS App Store og ByteForge Docker-presets kan du installere hundredevis af apps på få sekunder. Ingen terminal nødvendig – bare klik og vent.</p>
+
+      <div class="guide-card-grid">
+        <div class="guide-card">
+          <div class="gc-icon">🎬</div>
+          <div class="gc-title">MEDIA SERVER</div>
+          <div class="gc-desc"><strong>Jellyfin</strong> — Stream film og serier til alle enheder. Gratis alternativ til Plex.</div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">☁</div>
+          <div class="gc-title">CLOUD STORAGE</div>
+          <div class="gc-desc"><strong>Nextcloud</strong> — Din egen Google Drive. Fotosynkronisering, dokumenter og kalender.</div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">🔑</div>
+          <div class="gc-title">PASSWORD MANAGER</div>
+          <div class="gc-desc"><strong>Bitwarden</strong> — Gem alle dine adgangskoder sikkert på din egen server.</div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">🚫</div>
+          <div class="gc-title">AD BLOCKER</div>
+          <div class="gc-desc"><strong>Pi-hole</strong> — Blokér reklamer på hele dit netværk. Ingen browserudvidelse nødvendig.</div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">🔒</div>
+          <div class="gc-title">VPN SERVER</div>
+          <div class="gc-desc"><strong>WireGuard</strong> — Sikker fjernadgang til dit hjemmenetværk fra hvor som helst.</div>
+        </div>
+        <div class="guide-card">
+          <div class="gc-icon">📊</div>
+          <div class="gc-title">MONITORING</div>
+          <div class="gc-desc"><strong>Grafana + Prometheus</strong> — Detaljerede grafer over CPU, RAM, netværk og diskbrug.</div>
+        </div>
+      </div>
+
+      <br/>
+      <ol class="guide-steps">
+        <li class="guide-step">
+          <div class="gs-num">→ 1</div>
+          <div class="gs-content">
+            <div class="gs-title">ÅBEN CASAOS APP STORE</div>
+            <div class="gs-desc">Gå til <strong>http://10.194.177.172</strong> → Klik på App Store ikonet → Søg efter den app du vil installere → Klik <strong>"Installer"</strong>. CasaOS downloader og starter appen automatisk.</div>
+          </div>
+        </li>
+        <li class="guide-step">
+          <div class="gs-num">→ 2</div>
+          <div class="gs-content">
+            <div class="gs-title">BRUG BYTEFORGE DOCKER PRESETS</div>
+            <div class="gs-desc">I ByteForge panelet → Klik <strong>"Docker"</strong> i menuen → Vælg et preset (f.eks. "Privacy Suite") → Klik <strong>"Deploy"</strong>. ByteForge installerer automatisk alle apps i pakken på én gang.</div>
+            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Privacy Suite installerer Bitwarden + Nextcloud + Pi-hole + WireGuard i ét klik. Det er den nemmeste måde at komme i gang med privacy-apps.</div></div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- PORT OVERVIEW -->
+<div class="section" id="porte" style="background:var(--steel);max-width:100%;padding:80px 40px">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-tag">// Port oversigt</div>
+    <div class="section-title">ÅBNE <span>PORTE</span></div>
+    <p class="section-body">Her er en oversigt over alle porte der skal forwardes i din router for at tilgå ByteForge udefra.</p>
+
+    <table class="port-table">
+      <thead><tr><th>Service</th><th>Port</th><th>Protokol</th><th>Beskrivelse</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>ByteForge Panel</td><td>8080</td><td>TCP</td><td>Komplet kontrolpanel (standard)</td><td><span class="badge b-ok">AKTIV</span></td></tr>
+        <tr><td>ByteForge Panel (legacy)</td><td>9090</td><td>TCP</td><td>Legacy adresse</td><td><span class="badge b-ok">AKTIV</span></td></tr>
+        <tr><td>CasaOS</td><td>80</td><td>TCP</td><td>CasaOS dashboard og app store</td><td><span class="badge b-ok">AKTIV</span></td></tr>
+        <tr><td>Minecraft</td><td>25565</td><td>TCP/UDP</td><td>Minecraft spilserver (PaperMC)</td><td><span class="badge b-ok">AKTIV</span></td></tr>
+        <tr><td>NFS Server</td><td>2049</td><td>TCP</td><td>Network File System deling</td><td><span class="badge b-ok">AKTIV</span></td></tr>
+        <tr><td>Samba/SMB</td><td>445</td><td>TCP</td><td>Windows fil-deling</td><td><span class="badge b-o">VALGFRI</span></td></tr>
+        <tr><td>WireGuard VPN</td><td>51820</td><td>UDP</td><td>VPN adgang til hjemmenetværk</td><td><span class="badge b-o">INSTALLER VIA PANEL</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="section" id="stack">
+  <div class="section-tag">// Tech stack</div>
+  <div class="section-title">BYGGET MED<br/><span>DETTE</span></div>
+  <div class="stack-grid">
+    <div class="stack-card"><div class="stack-name">MANJARO LINUX</div><div class="stack-role">Operativsystem · Arch-baseret rolling release</div><div class="stack-ver">Kernel 6.x</div></div>
+    <div class="stack-card"><div class="stack-name">CASAOS</div><div class="stack-role">Dashboard & App management fundament</div><div class="stack-ver">v0.4.15</div></div>
+    <div class="stack-card"><div class="stack-name">DOCKER</div><div class="stack-role">Container runtime for alle apps</div><div class="stack-ver">v29.3.0</div></div>
+    <div class="stack-card"><div class="stack-name">NFS SERVER</div><div class="stack-role">Network File System · Deling til alle enheder</div><div class="stack-ver">/mnt/nas-share</div></div>
+    <div class="stack-card"><div class="stack-name">MDADM RAID</div><div class="stack-role">Software RAID 1 spejling</div><div class="stack-ver">/mnt/raid</div></div>
+    <div class="stack-card"><div class="stack-name">PAPERMC</div><div class="stack-role">Minecraft server via Docker</div><div class="stack-ver">Port 25565</div></div>
+    <div class="stack-card"><div class="stack-name">PYTHON 3</div><div class="stack-role">ByteForge backend API server</div><div class="stack-ver">Port 8080</div></div>
+    <div class="stack-card"><div class="stack-name">CLAUDE API</div><div class="stack-role">AI Assistant i ByteForge panelet</div><div class="stack-ver">claude-sonnet-4</div></div>
+    <div class="stack-card"><div class="stack-name">UFW FIREWALL</div><div class="stack-role">Netværkssikkerhed og port-styring</div><div class="stack-ver">Manjaro built-in</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- FAQ -->
+<div class="section" id="faq" style="background:var(--steel);max-width:100%;padding:80px 40px">
+  <div style="max-width:900px;margin:0 auto">
+    <div class="section-tag">// Ofte stillede spørgsmål</div>
+    <div class="section-title">FAQ</div>
+
+    <div class="faq">
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Hvad koster det at drive ByteForge?</div>
+        <div class="faq-a">ByteForge kører på din egen hardware – der er ingen månedlige abonnementer eller cloud-gebyrer. Du betaler kun for den strøm serveren bruger, typisk 15-30W for en moderne mini-PC. Det svarer til ca. 100-200 kr. om måneden i strøm.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Skal jeg have teknisk erfaring for at bruge det?</div>
+        <div class="faq-a">ByteForge panelet er designet til at være brugervenligt. De fleste funktioner kræver kun klik i browseren. Terminal-kommandoer er kun nødvendige ved den første opsætning, og guiden her forklarer præcist hvad du skal gøre.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Er mine data sikre?</div>
+        <div class="faq-a">Ja – fordi alt kører på din egen hardware i dit eget netværk. Dine filer forlader aldrig din server medmindre du aktivt sender dem videre. Med RAID 1 er dine data desuden beskyttet mod diskfejl.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Hvad sker der hvis strømmen går?</div>
+        <div class="faq-a">Alle services er konfigureret til at starte automatisk når serveren genstarter. Docker-containere, ByteForge panelet, NFS-serveren og Minecraft starter alle op af sig selv via systemd.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Kan jeg tilgå serveren udefra hjemmenet?</div>
+        <div class="faq-a">Ja – ved at port-forwarde portene i din router (se Port-oversigten ovenfor). Derefter kan du bruge din offentlige IP-adresse til at tilgå ByteForge fra hvor som helst i verden. For ekstra sikkerhed anbefales WireGuard VPN.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Kan jeg tilføje flere apps?</div>
+        <div class="faq-a">Absolut. Via CasaOS App Store kan du installere hundredevis af apps med ét klik – Jellyfin, Nextcloud, Grafana, Bitwarden og mange flere. Via ByteForge panelet kan du deploye komplette Docker-stacks med presets.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Hvordan kører jeg ByteForge permanent i baggrunden?</div>
+        <div class="faq-a">Opret en systemd service-fil så ByteForge starter automatisk med systemet. Kør: sudo nano /etc/systemd/system/byteforge.service — skriv service-konfigurationen og kør: sudo systemctl enable byteforge &amp;&amp; sudo systemctl start byteforge. Herefter starter ByteForge automatisk ved genstart.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Virker ByteForge på Windows?</div>
+        <div class="faq-a">Ja – men med begrænsninger. Python-serveren kører fint på Windows. Game servers via Docker kræver Docker Desktop for Windows. For den bedste oplevelse anbefales Linux (Manjaro, Ubuntu eller lignende) eller WSL2 på Windows.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>KOM I <span>GANG</span></h2>
+  <p>// DIT HOMELAB VENTER · DOWNLOAD BYTEFORGE OG ÅBEN PANELET</p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+    <a class="btn-primary" href="ByteForge.zip" download>⬇ DOWNLOAD BYTEFORGE</a>
+    <a class="btn-secondary" href="http://10.194.177.172:9090" target="_blank">⚒ ÅBEN LIVE PANEL ↗</a>
+    <a class="btn-secondary" href="http://10.194.177.172" target="_blank">CASAOS DASHBOARD ↗</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">BYTE<span>FORGE</span></div>
+  <div class="footer-links">
+    <a href="#hvad-er">Om</a>
+    <a href="#features">Features</a>
+    <a href="#download">Download</a>
+    <a href="#brugsguide">Guide</a>
+    <a href="#porte">Porte</a>
+    <a href="#faq">FAQ</a>
+    <a href="http://10.194.177.172:9090" target="_blank">Panel</a>
+  </div>
+  <div class="footer-copy">BUILT BY LUCAS // CRAFT YOUR CODE</div>
+</footer>
+
+<script>
+function toggleFaq(el) {
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+</script>
+</body>
+</html>
