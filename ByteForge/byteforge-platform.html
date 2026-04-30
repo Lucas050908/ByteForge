@@ -48,8 +48,8 @@ body::after{content:'';position:fixed;inset:0;
 .tick-val{color:var(--o2)}
 .topbar-right{display:flex;align-items:center;gap:12px;margin-left:auto}
 #clock{font-family:var(--mono);font-size:11px;color:var(--t3)}
-.casaos-btn{font-family:var(--display);font-size:14px;letter-spacing:2px;background:var(--o);color:#0D0D0D;padding:6px 16px;text-decoration:none;border:none;cursor:pointer;transition:background .2s}
-.casaos-btn:hover{background:var(--o2)}
+.forge-btn{font-family:var(--display);font-size:14px;letter-spacing:2px;background:var(--o);color:#0D0D0D;padding:6px 16px;text-decoration:none;border:none;cursor:pointer;transition:background .2s}
+.forge-btn:hover{background:var(--o2)}
 
 /* ── LAYOUT ── */
 #layout{display:grid;grid-template-columns:220px 1fr;height:100vh;padding-top:52px}
@@ -166,6 +166,24 @@ body::after{content:'';position:fixed;inset:0;
 .preset-tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .preset-tag{font-family:var(--mono);font-size:9px;background:var(--o3);color:var(--o);border:1px solid var(--o);padding:2px 8px}
 
+/* ── GAME SERVERS / FILES ── */
+.server-card{background:var(--p);border:1px solid var(--b);padding:16px;display:grid;gap:12px}
+.server-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.server-name{font-family:var(--display);font-size:24px;letter-spacing:2px;line-height:1;color:var(--t)}
+.server-kind{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:2px;margin-top:2px;text-transform:uppercase}
+.server-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.meta-box{background:var(--s);border:1px solid var(--b);padding:9px}
+.meta-label{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--t3);text-transform:uppercase}
+.meta-value{font-family:var(--mono);font-size:11px;color:var(--o2);margin-top:4px;word-break:break-word}
+.setup-grid{display:grid;grid-template-columns:1fr 160px 90px 90px 130px;gap:8px;align-items:end}
+.file-toolbar{display:grid;grid-template-columns:150px 1fr auto auto;gap:8px;margin-bottom:12px}
+.file-list{border:1px solid var(--b);background:var(--s)}
+.file-row{display:grid;grid-template-columns:28px 1fr 110px 150px auto;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--b);font-family:var(--mono);font-size:11px;color:var(--t2)}
+.file-row:last-child{border-bottom:none}
+.file-row strong{color:var(--t);font-weight:500}
+.access-row{display:grid;grid-template-columns:1fr 120px 1fr;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--b);font-family:var(--mono);font-size:11px}
+.access-row:last-child{border-bottom:none}
+
 /* ── METRIC RING ── */
 .ring-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
 .ring{position:relative;width:80px;height:80px}
@@ -211,7 +229,16 @@ body::after{content:'';position:fixed;inset:0;
 .mbar.down{background:var(--err)}
 .monitor-ping{font-family:var(--mono);font-size:10px;color:var(--t3);min-width:60px;text-align:right}
 
-@media(max-width:900px){#layout{grid-template-columns:1fr}#sidebar{display:none}}
+@media(max-width:1100px){.g4,.g3{grid-template-columns:1fr 1fr}.setup-grid{grid-template-columns:1fr 1fr}.server-meta{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){
+  html,body{overflow:auto}
+  #topbar{height:auto;min-height:52px;flex-wrap:wrap;padding:10px 14px;gap:10px}
+  #sys-ticker{order:3;width:100%;flex-basis:100%;overflow-x:auto;padding-bottom:2px}
+  #layout{display:block;height:auto;padding-top:98px}
+  #sidebar{display:flex;position:sticky;top:0;z-index:120;border-right:none;border-bottom:1px solid var(--b);overflow-x:auto;flex-direction:row;background:rgba(17,17,17,.98)}
+  .sb-section{display:flex;padding:0}.sb-label,.sb-bottom{display:none}.sb-item{white-space:nowrap;border-left:none;border-bottom:2px solid transparent;padding:10px 14px}.sb-item.active{border-bottom-color:var(--o);border-left-color:transparent}
+  .page{padding:18px}.ph{align-items:flex-start}.ph-left h1{font-size:36px}.g4,.g3,.g2{grid-template-columns:1fr}.setup-grid,.file-toolbar,.file-row,.access-row{grid-template-columns:1fr}.file-row{gap:5px}.topbar-sep{display:none}
+}
 </style>
 </head>
 <body>
@@ -241,7 +268,7 @@ body::after{content:'';position:fixed;inset:0;
   </div>
   <div class="topbar-right">
     <span id="clock"></span>
-    <a class="casaos-btn" href="http://10.194.177.172" target="_blank">CASAOS ↗</a>
+    <button class="forge-btn" onclick="nav('settings',document.querySelector('[data-nav=settings]'))">CONFIG</button>
   </div>
 </div>
 
@@ -263,9 +290,16 @@ body::after{content:'';position:fixed;inset:0;
   </div>
   <div class="sb-section">
     <div class="sb-label">Services</div>
-    <div class="sb-item" onclick="nav('docker',this)"><span class="si">🐳</span>Docker<span class="sb-badge" id="sb-docker-count">—</span></div>
-    <div class="sb-item" onclick="nav('minecraft',this)"><span class="si">⛏</span>Minecraft</div>
+    <div class="sb-item" onclick="nav('docker',this)"><span class="si">▣</span>Docker<span class="sb-badge" id="sb-docker-count">—</span></div>
+    <div class="sb-item" onclick="nav('minecraft',this)"><span class="si">▶</span>Game Servers<span class="sb-badge" id="sb-game-count">—</span></div>
+    <div class="sb-item" onclick="nav('websites',this)"><span class="si">⌂</span>Websites</div>
     <div class="sb-item" onclick="nav('privacy',this)"><span class="si">🔐</span>Privacy Suite</div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">Platform</div>
+    <div class="sb-item" onclick="nav('files',this)"><span class="si">▤</span>Filer</div>
+    <div class="sb-item" onclick="nav('access',this)"><span class="si">◎</span>Adgang</div>
+    <div class="sb-item" data-nav="settings" onclick="nav('settings',this)"><span class="si">⚙</span>Settings</div>
   </div>
   <div class="sb-section">
     <div class="sb-label">Tools</div>
@@ -274,7 +308,7 @@ body::after{content:'';position:fixed;inset:0;
     <div class="sb-item" onclick="nav('marketplace',this)"><span class="si">🔥</span>Marketplace</div>
   </div>
   <div class="sb-bottom">
-    <div class="sb-ver">BYTEFORGE v1.0 // LUCAS<br>10.194.177.172</div>
+    <div class="sb-ver">BYTEFORGE v1.1 // STANDALONE<br>CASAOS UAFHÆNGIG</div>
   </div>
 </nav>
 
@@ -524,37 +558,131 @@ body::after{content:'';position:fixed;inset:0;
   </div>
 </div>
 
-<!-- ████ MINECRAFT ████ -->
+<!-- ████ GAME SERVERS ████ -->
 <div class="page" id="page-minecraft">
-  <div class="ph"><div class="ph-left"><h1>MINE<span>CRAFT</span></h1><p>// PAPERMC SERVER · PORT 25565</p></div></div>
-  <div class="grid g2">
-    <div class="card">
-      <div class="ct">SERVER STATUS</div>
-      <div id="mc-badge" style="margin:8px 0"></div>
-      <div style="margin-top:12px">
-        <div class="form-label">Spillere online</div>
-        <div class="cv" style="font-size:36px;color:var(--o)" id="mc-players">—</div>
+  <div class="ph">
+    <div class="ph-left"><h1>GAME <span>SERVERS</span></h1><p>// MINECRAFT · FIVEM · TERRARIA · CUSTOM RUNTIMES</p></div>
+    <div class="ph-right"><button class="btn btn-o btn-sm" onclick="loadGameServers()">⟳ OPDATER</button></div>
+  </div>
+  <div class="grid g4" style="margin-bottom:12px">
+    <div class="card"><div class="ct">SERVER PROFILER</div><div class="cv" id="gs-total">—</div><div class="cs">Konfigurerede instanser</div></div>
+    <div class="card"><div class="ct">ONLINE</div><div class="cv" id="gs-online">—</div><div class="cs">Kørende nu</div></div>
+    <div class="card"><div class="ct">AUTO-RESTART</div><div class="cv" id="gs-restart">—</div><div class="cs">Crash recovery aktiv</div></div>
+    <div class="card"><div class="ct">RUNTIME</div><div class="cv" style="font-size:30px">DOCKER</div><div class="cs">CasaOS uafhængig</div></div>
+  </div>
+  <div class="st">ONE-CLICK <span>SETUP</span></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="setup-grid">
+      <div>
+        <div class="form-label">Server navn</div>
+        <input class="input" id="new-server-name" placeholder="Survival, FiveM RP, Terraria..."/>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-o btn-sm" onclick="mcAction('start')">▶ START</button>
-        <button class="btn btn-g btn-sm" onclick="mcAction('restart')">⟳ GENSTART</button>
-        <button class="btn btn-r btn-sm" onclick="mcAction('stop')">■ STOP</button>
+      <div>
+        <div class="form-label">Type</div>
+        <select class="select" id="new-server-type" style="width:100%">
+          <option value="minecraft-paper">Minecraft Paper</option>
+          <option value="minecraft-vanilla">Minecraft Vanilla</option>
+          <option value="minecraft-spigot">Minecraft Spigot</option>
+          <option value="minecraft-forge">Minecraft Forge</option>
+          <option value="minecraft-fabric">Minecraft Fabric</option>
+          <option value="fivem">FiveM</option>
+          <option value="terraria">Terraria</option>
+          <option value="custom">Custom</option>
+        </select>
       </div>
-    </div>
-    <div class="card">
-      <div class="ct">FORBIND</div>
-      <div class="form-label" style="margin-top:8px">Server adresse</div>
-      <div class="sbox">10.194.177.172:25565</div>
-      <div class="form-label" style="margin-top:10px">Data mappe</div>
-      <div class="sbox">/opt/minecraft/data</div>
-      <div class="form-label" style="margin-top:10px">Docker image</div>
-      <div class="sbox">itzg/minecraft-server (PaperMC)</div>
+      <div>
+        <div class="form-label">CPU</div>
+        <input class="input" id="new-server-cpu" value="2"/>
+      </div>
+      <div>
+        <div class="form-label">RAM</div>
+        <input class="input" id="new-server-ram" value="2g"/>
+      </div>
+      <button class="btn btn-o" onclick="createGameServer()">⚡ OPRET</button>
     </div>
   </div>
-  <div class="st">SERVER <span>LOGS</span></div>
+  <div class="st">SERVER <span>CONTROL</span></div>
+  <div class="grid g2" id="game-server-list">
+    <div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter serverprofiler...</div></div>
+  </div>
+  <div class="st">AKTIV <span>LOG</span></div>
   <div class="term">
-    <div class="term-bar"><div class="td on"></div><div class="td"></div><span class="term-lbl">minecraft-server</span><button class="btn btn-g btn-sm" style="margin-left:auto" onclick="loadMC()">⟳ OPDATER</button></div>
-    <div class="term-body" id="mc-logs">Indlæser...</div>
+    <div class="term-bar"><div class="td on"></div><div class="td"></div><span class="term-lbl" id="gs-log-title">game server</span><button class="btn btn-g btn-sm" style="margin-left:auto" onclick="loadGameServers(true)">⟳ LOGS</button></div>
+    <div class="term-body" id="mc-logs">Vælg en server for at se logs</div>
+  </div>
+</div>
+
+<!-- ████ FILES ████ -->
+<div class="page" id="page-files">
+  <div class="ph"><div class="ph-left"><h1>FILE<span>SYSTEM</span></h1><p>// UPLOAD · SLET · FLYT · SØG · PRIVATE / DELTE OMRÅDER</p></div></div>
+  <div class="card">
+    <div class="file-toolbar">
+      <select class="select" id="file-scope" onchange="loadFiles()">
+        <option value="public">Public</option>
+        <option value="private">Private</option>
+        <option value="shared">Shared</option>
+        <option value="servers">Servers</option>
+      </select>
+      <input class="input" id="file-query" placeholder="Søg eller angiv mappe..."/>
+      <button class="btn btn-g btn-sm" onclick="searchFiles()">⌕ SØG</button>
+      <button class="btn btn-o btn-sm" onclick="makeFolder()">+ MAPPE</button>
+    </div>
+    <div class="file-toolbar" style="grid-template-columns:1fr auto">
+      <input class="input" type="file" id="file-upload"/>
+      <button class="btn btn-o btn-sm" onclick="uploadFile()">UPLOAD</button>
+    </div>
+    <div class="file-list" id="file-list"><div class="file-row"><strong>Indlæser...</strong></div></div>
+  </div>
+</div>
+
+<!-- ████ ACCESS ████ -->
+<div class="page" id="page-access">
+  <div class="ph"><div class="ph-left"><h1>ACCESS <span>CONTROL</span></h1><p>// MULTI-USER PROFILER · PRIVATE OG DELTE FILER</p></div></div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">BRUGERE</div>
+      <div id="user-list"><div class="cs">Indlæser...</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">ADGANGSMODEL</div>
+      <div class="access-row"><span>Private filer</span><span class="badge b-ok"><span class="bd"></span>AKTIV</span><span>BYTEFORGE_HOME/files/private</span></div>
+      <div class="access-row"><span>Delte mapper</span><span class="badge b-ok"><span class="bd"></span>AKTIV</span><span>BYTEFORGE_HOME/files/shared</span></div>
+      <div class="access-row"><span>Server data</span><span class="badge b-ok"><span class="bd"></span>ISOLERET</span><span>Per game server</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ WEBSITES ████ -->
+<div class="page" id="page-websites">
+  <div class="ph"><div class="ph-left"><h1>WEB<span>SITES</span></h1><p>// HOST STATISKE SITES FRA BYTEFORGE STORAGE</p></div></div>
+  <div class="grid g3">
+    <div class="card highlight"><div class="ct">WEB ROOT</div><div class="sbox">BYTEFORGE_HOME/files/public/www</div><div class="cs">Upload HTML, CSS, JS og assets via filsystemet</div></div>
+    <div class="card"><div class="ct">PDF / VIDEO VIEWER</div><div class="cv" style="font-size:30px">READY</div><div class="cs">Filer kan åbnes direkte fra storage</div></div>
+    <div class="card"><div class="ct">DELING</div><div class="cv" style="font-size:30px">PUBLIC</div><div class="cs">Brug public scope til fælles filer</div></div>
+  </div>
+</div>
+
+<!-- ████ SETTINGS ████ -->
+<div class="page" id="page-settings">
+  <div class="ph"><div class="ph-left"><h1>PLATFORM <span>CONFIG</span></h1><p>// THEME · SPROG · CUSTOM BACKGROUND · PERFORMANCE</p></div></div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">UI / UX</div>
+      <div class="form-label">Theme</div>
+      <select class="select" id="set-theme" style="width:100%"><option value="forge-dark">Forge Dark</option><option value="high-contrast">High Contrast</option></select>
+      <div class="form-label" style="margin-top:10px">Sprog</div>
+      <select class="select" id="set-language" style="width:100%"><option value="da">Dansk</option><option value="en">English</option></select>
+      <div class="form-label" style="margin-top:10px">Background</div>
+      <input class="input" id="set-background" placeholder="grid eller URL til custom background"/>
+      <div class="btn-row"><button class="btn btn-o btn-sm" onclick="saveSettings()">GEM</button></div>
+    </div>
+    <div class="card">
+      <div class="ct">VIGTIGE KRAV</div>
+      <div class="smart-row"><span>Performance fokus</span><span class="smart-val">Lav JS, simple API calls</span></div>
+      <div class="smart-row"><span>Simplicitet</span><span class="smart-val">Docker runtime + JSON config</span></div>
+      <div class="smart-row"><span>CasaOS afhængighed</span><span class="smart-val">Ingen</span></div>
+      <div class="smart-row"><span>Stil</span><span class="smart-val">ByteForge dark/orange</span></div>
+    </div>
   </div>
 </div>
 
@@ -740,7 +868,7 @@ function nav(id, el) {
 }
 
 function loadPage(id) {
-  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadMC, diskheath:loadDiskHealth};
+  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth};
   if (map[id]) map[id]();
 }
 
@@ -783,6 +911,7 @@ async function updateTicker() {
   document.getElementById('tk-up').textContent = s.uptime;
   document.getElementById('tk-mc').textContent = d.minecraft.status === 'running' ? 'ONLINE' : 'OFFLINE';
   document.getElementById('sb-docker-count').textContent = d.docker.length;
+  document.getElementById('sb-game-count').textContent = d.game_servers?.length || 0;
   window._lastData = d;
 }
 
@@ -906,27 +1035,171 @@ function deployPreset(name) {
   toast('Deployer ' + (labels[name]||name) + ' via docker-compose...');
 }
 
-// ── MINECRAFT ──
-async function loadMC() {
-  const mc = await api('/api/minecraft');
-  if (!mc) return;
-  document.getElementById('mc-badge').innerHTML = mkbadge(mc.status,'Online','Offline');
-  document.getElementById('mc-players').textContent = mc.players || '—';
-  document.getElementById('mc-logs').innerHTML = mc.logs
-    ? mc.logs.split('\n').filter(Boolean).map(l=>`<div>${l}</div>`).join('')
-    : '<span style="color:var(--t3)">Ingen logs · Start serveren for at se output</span>';
+// ── GAME SERVERS ──
+function escapeHTML(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-async function mcAction(action) {
-  const labels = {start:'Starter',stop:'Stopper',restart:'Genstarter'};
-  toast(labels[action]+' Minecraft server...');
-  try {
-    const r = await fetch(BASE+'/api/minecraft/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
-    const d = await r.json();
-    toast(d.msg||'Udført!', d.ok);
-    setTimeout(loadMC, 2000);
-  } catch(e) { toast('Kunne ikke nå API. Kør byteforge-server.py på serveren.', false); }
+async function loadGameServers(withLogs=false) {
+  const data = await api('/api/game-servers' + (withLogs ? '?logs=1' : ''));
+  if (!data) return;
+  const servers = data.servers || [];
+  document.getElementById('gs-total').textContent = servers.length;
+  document.getElementById('gs-online').textContent = servers.filter(s => s.status === 'running').length;
+  document.getElementById('gs-restart').textContent = servers.filter(s => s.auto_restart).length;
+  document.getElementById('sb-game-count').textContent = servers.length;
+  const list = document.getElementById('game-server-list');
+  if (!servers.length) {
+    list.innerHTML = '<div class="card"><div class="ct">INGEN SERVER</div><div class="cs">Opret din første game server med one-click setup.</div></div>';
+    return;
+  }
+  list.innerHTML = servers.map(s => `
+    <div class="server-card">
+      <div class="server-head">
+        <div><div class="server-name">${escapeHTML(s.name)}</div><div class="server-kind">${escapeHTML(s.kind)} · ${escapeHTML(s.container)}</div></div>
+        ${mkbadge(s.status, 'Online', 'Offline')}
+      </div>
+      <div class="server-meta">
+        <div class="meta-box"><div class="meta-label">Port</div><div class="meta-value">${s.port || '-'}</div></div>
+        <div class="meta-box"><div class="meta-label">CPU Limit</div><div class="meta-value">${escapeHTML(s.cpu_limit)}</div></div>
+        <div class="meta-box"><div class="meta-label">RAM Limit</div><div class="meta-value">${escapeHTML(s.memory_limit)}</div></div>
+        <div class="meta-box"><div class="meta-label">Storage</div><div class="meta-value">${escapeHTML(s.visibility)}</div></div>
+      </div>
+      <div class="server-meta">
+        <div class="meta-box"><div class="meta-label">CPU Now</div><div class="meta-value">${escapeHTML(s.stats?.cpu)}</div></div>
+        <div class="meta-box"><div class="meta-label">Memory Now</div><div class="meta-value">${escapeHTML(s.stats?.memory)}</div></div>
+        <div class="meta-box"><div class="meta-label">Network</div><div class="meta-value">${escapeHTML(s.stats?.network)}</div></div>
+        <div class="meta-box"><div class="meta-label">Auto Restart</div><div class="meta-value">${s.auto_restart ? 'ON' : 'OFF'}</div></div>
+      </div>
+      <div class="sbox">${escapeHTML(s.path)}</div>
+      <div class="btn-row">
+        <button class="btn btn-o btn-sm" onclick="gameAction('${s.id}','start')">▶ START</button>
+        <button class="btn btn-g btn-sm" onclick="gameAction('${s.id}','restart')">⟳ RESTART</button>
+        <button class="btn btn-r btn-sm" onclick="gameAction('${s.id}','stop')">■ STOP</button>
+        <button class="btn btn-g btn-sm" onclick="showServerLog('${s.id}')">LOG</button>
+      </div>
+    </div>`).join('');
+  window._gameServers = servers;
+  if (withLogs && servers[0]) showServerLog(servers[0].id);
 }
+
+function showServerLog(id) {
+  const s = (window._gameServers || []).find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('gs-log-title').textContent = s.container;
+  document.getElementById('mc-logs').innerHTML = s.logs
+    ? s.logs.split('\n').filter(Boolean).map(l => `<div>${escapeHTML(l)}</div>`).join('')
+    : '<span style="color:var(--t3)">Ingen logs endnu. Tryk LOGS for at hente nyeste output.</span>';
+}
+
+async function gameAction(id, action) {
+  const labels = {start:'Starter',stop:'Stopper',restart:'Genstarter'};
+  toast((labels[action] || action) + ' server...');
+  try {
+    const r = await fetch(BASE+'/api/game-servers/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action})});
+    const d = await r.json();
+    toast(d.msg || 'Udført', d.ok);
+    setTimeout(() => loadGameServers(true), 1500);
+  } catch(e) { toast('Kunne ikke nå ByteForge API', false); }
+}
+
+async function createGameServer() {
+  const body = {
+    name: document.getElementById('new-server-name').value || 'ByteForge Server',
+    type: document.getElementById('new-server-type').value,
+    cpu_limit: document.getElementById('new-server-cpu').value || '2',
+    memory_limit: document.getElementById('new-server-ram').value || '2g',
+    auto_restart: true
+  };
+  toast('Opretter serverprofil...');
+  try {
+    const r = await fetch(BASE+'/api/game-servers/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    toast(d.msg || 'Server oprettet', d.ok);
+    loadGameServers(true);
+  } catch(e) { toast('Server kunne ikke oprettes', false); }
+}
+
+async function loadFiles() {
+  const scope = document.getElementById('file-scope')?.value || 'public';
+  const data = await api('/api/files?scope=' + encodeURIComponent(scope));
+  const out = document.getElementById('file-list');
+  if (!out || !data) return;
+  if (!data.items.length) { out.innerHTML = '<div class="file-row"><strong>Tom mappe</strong><span></span><span></span><span></span><span></span></div>'; return; }
+  out.innerHTML = data.items.map(item => `
+    <div class="file-row">
+      <span>${item.type === 'folder' ? '▸' : '□'}</span>
+      <strong>${escapeHTML(item.name)}</strong>
+      <span>${item.type}</span>
+      <span>${item.type === 'file' ? Math.ceil(item.size/1024) + ' KB' : '-'}</span>
+      <button class="btn btn-r btn-sm" onclick="deleteFile('${encodeURIComponent(item.name)}')">SLET</button>
+    </div>`).join('');
+}
+
+async function deleteFile(name) {
+  const scope = document.getElementById('file-scope').value;
+  const r = await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',scope,path:decodeURIComponent(name)})});
+  const d = await r.json();
+  toast(d.msg || 'Slettet', d.ok);
+  loadFiles();
+}
+
+async function makeFolder() {
+  const scope = document.getElementById('file-scope').value;
+  const name = document.getElementById('file-query').value.trim();
+  if (!name) { toast('Skriv et mappenavn først', false); return; }
+  const r = await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'mkdir',scope,path:name})});
+  const d = await r.json();
+  toast(d.msg || 'Mappe oprettet', d.ok);
+  loadFiles();
+}
+
+async function searchFiles() {
+  const scope = document.getElementById('file-scope').value;
+  const query = document.getElementById('file-query').value.trim();
+  const r = await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'search',scope,query})});
+  const d = await r.json();
+  const out = document.getElementById('file-list');
+  out.innerHTML = (d.matches || []).map(m => `<div class="file-row"><span>${m.type === 'folder' ? '▸' : '□'}</span><strong>${escapeHTML(m.path)}</strong><span>${m.type}</span><span></span><span></span></div>`).join('') || '<div class="file-row"><strong>Ingen resultater</strong></div>';
+}
+
+async function uploadFile() {
+  const input = document.getElementById('file-upload');
+  if (!input.files.length) { toast('Vælg en fil først', false); return; }
+  const form = new FormData();
+  form.append('scope', document.getElementById('file-scope').value);
+  form.append('file', input.files[0]);
+  const r = await fetch(BASE+'/api/files/upload',{method:'POST',body:form});
+  const d = await r.json();
+  toast(d.msg || 'Upload færdig', d.ok);
+  input.value = '';
+  loadFiles();
+}
+
+async function loadAccess() {
+  const data = await api('/api/users');
+  const out = document.getElementById('user-list');
+  if (!data || !out) return;
+  out.innerHTML = data.users.map(u => `<div class="access-row"><strong>${escapeHTML(u.name)}</strong><span>${escapeHTML(u.role)}</span><span>${escapeHTML((u.access || []).join(', '))}</span></div>`).join('');
+}
+
+async function loadSettings() {
+  const data = await api('/api/users');
+  if (!data?.settings) return;
+  document.getElementById('set-theme').value = data.settings.theme || 'forge-dark';
+  document.getElementById('set-language').value = data.settings.language || 'da';
+  document.getElementById('set-background').value = data.settings.background || 'grid';
+}
+
+async function saveSettings() {
+  const body = {theme:document.getElementById('set-theme').value,language:document.getElementById('set-language').value,background:document.getElementById('set-background').value};
+  const r = await fetch(BASE+'/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json();
+  toast(d.ok ? 'Settings gemt' : 'Kunne ikke gemme settings', d.ok);
+}
+
+async function loadMC() { loadGameServers(true); }
+async function mcAction(action) { gameAction('minecraft-main', action); }
 
 // ── DISK HEALTH ──
 async function loadDiskHealth() {
