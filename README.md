@@ -69,7 +69,6 @@ Screenshots
 Systemkrav
 - CasaOS 0.4 eller nyere  
 - Browser med CSS‑support (Chrome, Edge, Firefox, Safari)  
-- Hex‑grid baggrund bruger minimal CPU (1–3% på svag hardware)
 
 Hvorfor ByteForge?
 CasaOS mangler gode themes — ByteForge giver dig:
