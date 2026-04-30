@@ -1,7 +1,3 @@
-Selvfølgelig, Lucas — jeg laver en færdig README til dit ByteForge‑projekt, som du kan copy‑paste direkte ind i GitHub. Jeg bygger den, så den ser professionel ud, er let at forstå, og gør dit projekt attraktivt for brugere.
-
-Her kommer den:
-
 ByteForge – Custom CasaOS Theme
 Et moderne, mørkt og futuristisk tema til CasaOS, designet til at give dit dashboard et skarpt, teknisk og stilrent udtryk. ByteForge erstatter standard‑UI’et med en gennemført farvepalette, skarpe kanter, neon‑orange highlights og en subtil hex‑grid baggrund.
 
