@@ -289,39 +289,39 @@ body::after{content:'';position:fixed;inset:0;
 <!-- SIDEBAR -->
 <nav id="sidebar">
   <div class="sb-section">
-    <div class="sb-label">Overblik</div>
-    <div class="sb-item active" onclick="nav('overview',this)"><span class="si">◈</span>Dashboard</div>
-    <div class="sb-item" onclick="nav('system',this)"><span class="si">⚙</span>System</div>
-    <div class="sb-item" onclick="nav('network',this)"><span class="si">📡</span>Netværk</div>
+    <div class="sb-label" data-i18n="nav.overview">Overblik</div>
+    <div class="sb-item active" onclick="nav('overview',this)"><span class="si">◈</span><span data-i18n="nav.dashboard">Dashboard</span></div>
+    <div class="sb-item" onclick="nav('system',this)"><span class="si">⚙</span><span data-i18n="nav.system">System</span></div>
+    <div class="sb-item" onclick="nav('network',this)"><span class="si">📡</span><span data-i18n="nav.network">Netværk</span></div>
   </div>
   <div class="sb-section">
-    <div class="sb-label">Storage</div>
-    <div class="sb-item" onclick="nav('nas',this)"><span class="si">🗄</span>NAS<span class="sb-badge">NFS</span></div>
-    <div class="sb-item" onclick="nav('raid',this)"><span class="si">⚡</span>RAID</div>
-    <div class="sb-item" onclick="nav('backup',this)"><span class="si">💾</span>Backup & Sync</div>
-    <div class="sb-item" onclick="nav('diskheath',this)"><span class="si">❤</span>Disk Health</div>
+    <div class="sb-label" data-i18n="nav.storage">Storage</div>
+    <div class="sb-item" onclick="nav('nas',this)"><span class="si">🗄</span><span data-i18n="nav.nas">NAS</span><span class="sb-badge">NFS</span></div>
+    <div class="sb-item" onclick="nav('raid',this)"><span class="si">⚡</span><span data-i18n="nav.raid">RAID</span></div>
+    <div class="sb-item" onclick="nav('backup',this)"><span class="si">💾</span><span data-i18n="nav.backup">Backup & Sync</span></div>
+    <div class="sb-item" onclick="nav('diskheath',this)"><span class="si">❤</span><span data-i18n="nav.diskhealth">Disk Health</span></div>
   </div>
   <div class="sb-section">
-    <div class="sb-label">Services</div>
-    <div class="sb-item" onclick="nav('docker',this)"><span class="si">▣</span>Docker<span class="sb-badge" id="sb-docker-count">—</span></div>
-    <div class="sb-item" onclick="nav('minecraft',this)"><span class="si">▶</span>Game Servers<span class="sb-badge" id="sb-game-count">—</span></div>
-    <div class="sb-item" onclick="nav('websites',this)"><span class="si">⌂</span>Websites</div>
-    <div class="sb-item" onclick="nav('privacy',this)"><span class="si">🔐</span>Privacy Suite</div>
+    <div class="sb-label" data-i18n="nav.services">Services</div>
+    <div class="sb-item" onclick="nav('docker',this)"><span class="si">▣</span><span data-i18n="nav.docker">Docker</span><span class="sb-badge" id="sb-docker-count">—</span></div>
+    <div class="sb-item" onclick="nav('minecraft',this)"><span class="si">▶</span><span data-i18n="nav.gameservers">Game Servers</span><span class="sb-badge" id="sb-game-count">—</span></div>
+    <div class="sb-item" onclick="nav('websites',this)"><span class="si">⌂</span><span data-i18n="nav.websites">Websites</span></div>
+    <div class="sb-item" onclick="nav('privacy',this)"><span class="si">🔐</span><span data-i18n="nav.privacy">Privacy Suite</span></div>
   </div>
   <div class="sb-section">
-    <div class="sb-label">Platform</div>
-    <div class="sb-item" onclick="nav('files',this)"><span class="si">▤</span>Filer</div>
-    <div class="sb-item" onclick="nav('access',this)"><span class="si">◎</span>Adgang</div>
-    <div class="sb-item" data-nav="settings" onclick="nav('settings',this)"><span class="si">⚙</span>Settings</div>
+    <div class="sb-label" data-i18n="nav.platform">Platform</div>
+    <div class="sb-item" onclick="nav('files',this)"><span class="si">▤</span><span data-i18n="nav.files">Filer</span></div>
+    <div class="sb-item" onclick="nav('access',this)"><span class="si">◎</span><span data-i18n="nav.access">Adgang</span></div>
+    <div class="sb-item" data-nav="settings" onclick="nav('settings',this)"><span class="si">⚙</span><span data-i18n="nav.settings">Settings</span></div>
   </div>
   <div class="sb-section">
-    <div class="sb-label">Tools</div>
-    <div class="sb-item" onclick="nav('ai',this)"><span class="si">🤖</span>AI Assistant</div>
-    <div class="sb-item" onclick="nav('tools',this)"><span class="si">🔧</span>Dev Tools</div>
-    <div class="sb-item" onclick="nav('marketplace',this)"><span class="si">🔥</span>Marketplace</div>
+    <div class="sb-label" data-i18n="nav.tools">Tools</div>
+    <div class="sb-item" onclick="nav('ai',this)"><span class="si">🤖</span><span data-i18n="nav.ai">AI Assistant</span></div>
+    <div class="sb-item" onclick="nav('tools',this)"><span class="si">🔧</span><span data-i18n="nav.devtools">Dev Tools</span></div>
+    <div class="sb-item" onclick="nav('marketplace',this)"><span class="si">🔥</span><span data-i18n="nav.marketplace">Marketplace</span></div>
   </div>
   <div class="sb-bottom">
-    <div class="sb-ver">BYTEFORGE v1.1 // STANDALONE<br>CASAOS UAFHÆNGIG</div>
+    <div class="sb-ver">BYTEFORGE v1.2 // STANDALONE<br><span data-i18n="ver.tagline">CASAOS UAFHÆNGIG</span></div>
   </div>
 </nav>
 
@@ -523,7 +523,24 @@ body::after{content:'';position:fixed;inset:0;
 <!-- ████ DOCKER ████ -->
 <div class="page" id="page-docker">
   <div class="ph"><div class="ph-left"><h1>DOCKER <span>HUB</span></h1><p>// CONTAINERS · PRESETS · LOGS</p></div></div>
-  <div class="st">KØRENDE <span>CONTAINERS</span></div>
+  <div id="docker-install-banner" style="display:none;background:rgba(255,176,32,.1);border:1px solid var(--warn);padding:16px 20px;margin-bottom:16px;border-radius:0">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <span style="font-size:24px">⚠</span>
+      <div style="flex:1">
+        <div style="font-family:var(--display);font-size:18px;letter-spacing:2px;color:var(--warn)" data-i18n="docker.notinstalled">DOCKER IKKE INSTALLERET</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:3px" data-i18n="docker.notinstalled.desc">Docker kræves for at køre containers og game servers.</div>
+      </div>
+      <button class="btn btn-o" onclick="runDockerInstall()" id="docker-install-btn">
+        <span data-i18n="docker.btn.install">▣ INSTALLER DOCKER NU</span>
+      </button>
+    </div>
+    <div id="docker-install-progress" style="display:none;margin-top:12px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--warn);letter-spacing:1px" data-i18n="docker.installing">Installerer Docker, vent venligst...</div>
+      <div class="bar" style="margin-top:6px"><div class="bar-f" style="width:100%;animation:progress 2s infinite"></div></div>
+    </div>
+  </div>
+  <style>@keyframes progress{0%{width:0%}100%{width:100%}}</style>
+  <div class="st"><span data-i18n="docker.running">KØRENDE</span> <span>CONTAINERS</span></div>
   <div class="card" style="margin-bottom:16px">
     <table class="tbl">
       <thead><tr><th>Container</th><th>Image</th><th>Status</th><th>Porte</th><th></th></tr></thead>
@@ -713,10 +730,14 @@ body::after{content:'';position:fixed;inset:0;
   <div class="grid g2">
     <div class="card">
       <div class="ct">UI / UX</div>
-      <div class="form-label">Theme</div>
-      <select class="select" id="set-theme" style="width:100%"><option value="forge-dark">Forge Dark</option><option value="high-contrast">High Contrast</option></select>
-      <div class="form-label" style="margin-top:10px">Sprog</div>
-      <select class="select" id="set-language" style="width:100%"><option value="da">Dansk</option><option value="en">English</option></select>
+      <div class="form-label" data-i18n="set.theme">Theme</div>
+      <select class="select" id="set-theme" style="width:100%" onchange="applyTheme(this.value)">
+        <option value="forge-dark">Forge Dark</option>
+        <option value="forge-light">Forge Light</option>
+        <option value="high-contrast">High Contrast</option>
+      </select>
+      <div class="form-label" style="margin-top:10px" data-i18n="set.language">Sprog</div>
+      <select class="select" id="set-language" style="width:100%" onchange="applyLanguage(this.value)"><option value="da">Dansk</option><option value="en">English</option></select>
       <div class="form-label" style="margin-top:10px">Background</div>
       <div class="bg-preset-row">
         <div style="text-align:center">
@@ -1088,10 +1109,79 @@ async function loadRAID() {
 }
 
 // ── DOCKER ──
+// ── LANGUAGE SYSTEM ──
+const LANG = {
+  da: {
+    'nav.overview':'Overblik','nav.dashboard':'Dashboard','nav.system':'System','nav.network':'Netværk',
+    'nav.storage':'Storage','nav.nas':'NAS','nav.raid':'RAID','nav.backup':'Backup & Sync','nav.diskhealth':'Disk Health',
+    'nav.services':'Services','nav.docker':'Docker','nav.gameservers':'Game Servers','nav.websites':'Websites','nav.privacy':'Privacy Suite',
+    'nav.platform':'Platform','nav.files':'Filer','nav.access':'Adgang','nav.settings':'Settings',
+    'nav.tools':'Tools','nav.ai':'AI Assistant','nav.devtools':'Dev Tools','nav.marketplace':'Marketplace',
+    'ver.tagline':'CASAOS UAFHÆNGIG',
+    'set.theme':'Theme','set.language':'Sprog','set.background':'Baggrund',
+    'docker.notinstalled':'DOCKER IKKE INSTALLERET',
+    'docker.notinstalled.desc':'Docker kræves for at køre containers og game servers.',
+    'docker.btn.install':'▣ INSTALLER DOCKER NU',
+    'docker.installing':'Installerer Docker, vent venligst...',
+    'docker.running':'KØRENDE',
+    'gs.servername':'Server navn','gs.type':'Type',
+  },
+  en: {
+    'nav.overview':'Overview','nav.dashboard':'Dashboard','nav.system':'System','nav.network':'Network',
+    'nav.storage':'Storage','nav.nas':'NAS','nav.raid':'RAID','nav.backup':'Backup & Sync','nav.diskhealth':'Disk Health',
+    'nav.services':'Services','nav.docker':'Docker','nav.gameservers':'Game Servers','nav.websites':'Websites','nav.privacy':'Privacy Suite',
+    'nav.platform':'Platform','nav.files':'Files','nav.access':'Access','nav.settings':'Settings',
+    'nav.tools':'Tools','nav.ai':'AI Assistant','nav.devtools':'Dev Tools','nav.marketplace':'Marketplace',
+    'ver.tagline':'CASAOS INDEPENDENT',
+    'set.theme':'Theme','set.language':'Language','set.background':'Background',
+    'docker.notinstalled':'DOCKER NOT INSTALLED',
+    'docker.notinstalled.desc':'Docker is required to run containers and game servers.',
+    'docker.btn.install':'▣ INSTALL DOCKER NOW',
+    'docker.installing':'Installing Docker, please wait...',
+    'docker.running':'RUNNING',
+    'gs.servername':'Server name','gs.type':'Type',
+  }
+};
+
+function applyLanguage(lang) {
+  const dict = LANG[lang] || LANG.da;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key] !== undefined) el.textContent = dict[key];
+  });
+  window._currentLang = lang;
+}
+
+// ── THEME SYSTEM ──
+function applyTheme(theme) {
+  const styleId = 'bf-theme-style';
+  let el = document.getElementById(styleId);
+  if (!el) { el = document.createElement('style'); el.id = styleId; document.head.appendChild(el); }
+  if (theme === 'forge-dark') {
+    el.textContent = '';
+  } else if (theme === 'forge-light') {
+    el.textContent = `
+      :root{--bg:#f0ece6;--s:#e8e2d9;--p:#ddd7cc;--b:#c0b8ad;--b2:#a89f93;
+        --t:#1a1208;--t2:#4a3f30;--t3:#8a7a65;--o:#d45a00;--o2:#e07020;--o3:rgba(212,90,0,.1)}
+      body::before{background-image:linear-gradient(var(--b) 1px,transparent 1px),linear-gradient(90deg,var(--b) 1px,transparent 1px);opacity:.4}
+      #topbar{background:rgba(240,236,230,.96)}
+      #sidebar{background:var(--s)}`;
+  } else if (theme === 'high-contrast') {
+    el.textContent = `
+      :root{--bg:#000;--s:#0a0a0a;--p:#111;--b:#fff;--b2:#ccc;
+        --t:#fff;--t2:#eee;--t3:#aaa;--o:#ff6b1a;--o2:#ff9a3c;--o3:rgba(255,107,26,.15)}
+      body::before{opacity:.15}`;
+  }
+  window._currentTheme = theme;
+}
+
+// ── DOCKER WITH INSTALL BANNER ──
 async function loadDocker() {
-  const c = await api('/api/docker');
+  const [c, setup] = await Promise.all([api('/api/docker'), api('/api/setup')]);
+  const banner = document.getElementById('docker-install-banner');
+  if (banner) banner.style.display = (setup && !setup.docker_ok) ? 'block' : 'none';
   const tb = document.getElementById('docker-tbl');
-  if (!c||!c.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">Ingen containere kørende</td></tr>'; return; }
+  if (!c||!c.length) { tb.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">${LANG[window._currentLang||'da']['docker.running']||'Ingen containere kørende'}</td></tr>`; return; }
   tb.innerHTML = c.map(x => {
     const ok = x.status.includes('Up');
     return `<tr>
@@ -1099,9 +1189,33 @@ async function loadDocker() {
       <td>${x.image}</td>
       <td>${mkbadge(ok?'running':'stopped',x.status,x.status)}</td>
       <td style="color:var(--t3)">—</td>
-      <td><button class="btn btn-r btn-sm" onclick="stopContainer('${x.name}')">■ STOP</button></td>
+      <td>
+        <button class="btn btn-o btn-sm" onclick="containerAction('${x.name}','start')" style="margin-right:4px">▶</button>
+        <button class="btn btn-r btn-sm" onclick="containerAction('${x.name}','stop')">■ STOP</button>
+      </td>
     </tr>`;
   }).join('');
+}
+
+async function runDockerInstall() {
+  const btn = document.getElementById('docker-install-btn');
+  const prog = document.getElementById('docker-install-progress');
+  if (btn) btn.disabled = true;
+  if (prog) prog.style.display = 'block';
+  toast('Installerer Docker... Dette kan tage op til 2 minutter.');
+  try {
+    const r = await fetch(BASE+'/api/setup/docker',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const d = await r.json();
+    toast(d.msg||'Docker installeret', d.ok);
+    if (d.ok) {
+      if (prog) prog.style.display = 'none';
+      document.getElementById('docker-install-banner').style.display = 'none';
+    }
+  } catch(e) {
+    toast('Fejl: '+e.message, false);
+  }
+  if (btn) btn.disabled = false;
+  if (prog) prog.style.display = 'none';
 }
 
 async function containerAction(name, action) {
@@ -1304,8 +1418,12 @@ async function loadAccess() {
 async function loadSettings() {
   const [userData, setup] = await Promise.all([api('/api/users'), api('/api/setup')]);
   if (userData?.settings) {
-    document.getElementById('set-theme').value = userData.settings.theme || 'forge-dark';
-    document.getElementById('set-language').value = userData.settings.language || 'da';
+    const theme = userData.settings.theme || 'forge-dark';
+    const lang = userData.settings.language || 'da';
+    document.getElementById('set-theme').value = theme;
+    document.getElementById('set-language').value = lang;
+    applyTheme(theme);
+    applyLanguage(lang);
     const bg = userData.settings.background || 'grid';
     document.getElementById('set-background').value = ['grid','none','forge','matrix','nebula'].includes(bg) ? '' : bg;
     applyBackground(bg);
@@ -1543,7 +1661,12 @@ function runBackup(job) { toast('Backup job kørende: ' + job + '...'); }
 updateTicker();
 setInterval(updateTicker, 15000);
 loadOverview();
-api('/api/users').then(d => { if (d?.settings?.background) applyBackground(d.settings.background); });
+api('/api/users').then(d => {
+  if (!d?.settings) return;
+  applyTheme(d.settings.theme || 'forge-dark');
+  applyLanguage(d.settings.language || 'da');
+  if (d.settings.background) applyBackground(d.settings.background);
+});
 api('/api/game-servers').then(d => { if (d?.types) { window._serverTypes = d.types; updateCoverPreview(document.getElementById('new-server-type')?.value); } });
 </script>
 </body>
