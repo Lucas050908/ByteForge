@@ -242,6 +242,45 @@ body::after{content:'';position:fixed;inset:0;
 .mbar.down{background:var(--err)}
 .monitor-ping{font-family:var(--mono);font-size:10px;color:var(--t3);min-width:60px;text-align:right}
 
+/* ── APP STORE ── */
+.app-card{background:var(--s);border:1px solid var(--b);padding:16px;display:flex;flex-direction:column;gap:10px;transition:all .2s;position:relative}
+.app-card:hover{border-color:var(--o);background:rgba(255,107,26,.04)}
+.app-card.installed{border-color:var(--ok)}
+.app-icon{font-size:32px;line-height:1}
+.app-name{font-family:var(--display);font-size:18px;letter-spacing:2px;color:var(--t)}
+.app-cat{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--o);text-transform:uppercase;margin-top:-6px}
+.app-desc{font-family:var(--mono);font-size:10px;color:var(--t3);line-height:1.6;flex:1}
+.app-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}
+.app-status{font-family:var(--mono);font-size:9px;letter-spacing:1px}
+.store-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.cat-btn{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:5px 12px;border:1px solid var(--b);background:transparent;color:var(--t3);cursor:pointer;transition:all .15s;text-transform:uppercase}
+.cat-btn:hover,.cat-btn.active{background:var(--o3);border-color:var(--o);color:var(--o)}
+#store-search{background:var(--s);border:1px solid var(--b);color:var(--t);font-family:var(--mono);font-size:12px;padding:10px 14px;width:100%;outline:none;margin-bottom:14px;transition:border-color .2s}
+#store-search:focus{border-color:var(--o)}
+
+/* ── TERMINAL ── */
+.term-input-row{display:flex;gap:0;margin-top:0;border-top:1px solid var(--b)}
+.term-prompt{font-family:var(--mono);font-size:12px;color:var(--o);padding:10px 12px;background:#080808;white-space:nowrap;border-right:1px solid var(--b)}
+#term-input{flex:1;background:#080808;border:none;color:var(--ok);font-family:var(--mono);font-size:12px;padding:10px 12px;outline:none}
+.term-out-line{padding:1px 0;word-break:break-all}
+.term-out-line.err{color:var(--err)}
+.term-out-line.ok{color:var(--ok)}
+
+/* ── GRAPHS ── */
+.graph-canvas{width:100%;height:80px;display:block;border-top:1px solid var(--b);margin-top:8px}
+
+/* ── NOTIFICATION BELL ── */
+.notif-wrap{position:relative;cursor:pointer}
+.notif-bell{font-size:18px;color:var(--t3);transition:color .2s;background:none;border:none;cursor:pointer;padding:4px}
+.notif-bell:hover{color:var(--o)}
+.notif-badge{position:absolute;top:-2px;right:-2px;background:var(--err);color:#fff;font-family:var(--mono);font-size:8px;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;display:none}
+.notif-drop{position:absolute;right:0;top:36px;width:280px;background:var(--p);border:1px solid var(--b);z-index:500;display:none;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.notif-item{padding:10px 14px;border-bottom:1px solid var(--b);font-family:var(--mono);font-size:10px;display:flex;gap:8px;align-items:flex-start}
+.notif-item:last-child{border-bottom:none}
+.notif-item.warn{border-left:2px solid var(--warn)}
+.notif-item.err{border-left:2px solid var(--err)}
+.notif-empty{padding:14px;font-family:var(--mono);font-size:10px;color:var(--t3);text-align:center}
+
 @media(max-width:1100px){.g4,.g3{grid-template-columns:1fr 1fr}.setup-grid{grid-template-columns:1fr 1fr}.server-meta{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){
   html,body{overflow:auto}
@@ -280,6 +319,14 @@ body::after{content:'';position:fixed;inset:0;
     <span class="tick-item"><span>MC</span><span class="tick-val" id="tk-mc">—</span></span>
   </div>
   <div class="topbar-right">
+    <div class="notif-wrap" onclick="toggleNotif()">
+      <button class="notif-bell">🔔</button>
+      <div class="notif-badge" id="notif-badge">0</div>
+      <div class="notif-drop" id="notif-drop">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--b);font-family:var(--display);font-size:14px;letter-spacing:2px">ALERTS</div>
+        <div id="notif-list"><div class="notif-empty">Ingen alerts</div></div>
+      </div>
+    </div>
     <span id="clock"></span>
     <button class="forge-btn" onclick="nav('settings',document.querySelector('[data-nav=settings]'))">CONFIG</button>
   </div>
@@ -316,9 +363,10 @@ body::after{content:'';position:fixed;inset:0;
   </div>
   <div class="sb-section">
     <div class="sb-label" data-i18n="nav.tools">Tools</div>
+    <div class="sb-item" onclick="nav('appstore',this)"><span class="si">🛒</span><span data-i18n="nav.appstore">App Store</span></div>
+    <div class="sb-item" onclick="nav('terminal',this)"><span class="si">⌨</span><span data-i18n="nav.terminal">Terminal</span></div>
     <div class="sb-item" onclick="nav('ai',this)"><span class="si">🤖</span><span data-i18n="nav.ai">AI Assistant</span></div>
     <div class="sb-item" onclick="nav('tools',this)"><span class="si">🔧</span><span data-i18n="nav.devtools">Dev Tools</span></div>
-    <div class="sb-item" onclick="nav('marketplace',this)"><span class="si">🔥</span><span data-i18n="nav.marketplace">Marketplace</span></div>
   </div>
   <div class="sb-bottom">
     <div class="sb-ver">BYTEFORGE v1.2 // STANDALONE<br><span data-i18n="ver.tagline">CASAOS UAFHÆNGIG</span></div>
@@ -334,10 +382,10 @@ body::after{content:'';position:fixed;inset:0;
     <div class="ph-left"><h1>BYTE<span>FORGE</span></h1><p>// ALL-IN-ONE HOMELAB PLATFORM · BUILT BY LUCAS</p></div>
   </div>
   <div class="grid g4" id="ov-stats">
-    <div class="card"><div class="ct">CPU <span id="ov-cpu-b"></span></div><div class="cv" id="ov-cpu">—<span class="u">%</span></div><div class="bar"><div class="bar-f" id="ov-cpu-bar" style="width:0%"></div></div></div>
-    <div class="card"><div class="ct">RAM</div><div class="cv" id="ov-ram">—<span class="u">%</span></div><div class="cs" id="ov-ram-s"></div><div class="bar"><div class="bar-f" id="ov-ram-bar" style="width:0%"></div></div></div>
+    <div class="card"><div class="ct">CPU <span id="ov-cpu-b"></span></div><div class="cv" id="ov-cpu">—<span class="u">%</span></div><canvas class="graph-canvas" id="graph-cpu" height="80"></canvas></div>
+    <div class="card"><div class="ct">RAM</div><div class="cv" id="ov-ram">—<span class="u">%</span></div><div class="cs" id="ov-ram-s"></div><canvas class="graph-canvas" id="graph-ram" height="80"></canvas></div>
     <div class="card"><div class="ct">TEMPERATUR</div><div class="cv" id="ov-temp">—<span class="u">°C</span></div><div class="cs" id="ov-up"></div></div>
-    <div class="card"><div class="ct">MINECRAFT</div><div id="ov-mc-b" style="margin:6px 0"></div><div class="cs" id="ov-mc-p"></div></div>
+    <div class="card"><div class="ct">GAME SERVERS</div><div id="ov-mc-b" style="margin:6px 0"></div><div class="cs" id="ov-mc-p"></div></div>
   </div>
   <div class="st">SERVICES <span>STATUS</span></div>
   <div class="grid g3" id="ov-services">
@@ -901,9 +949,56 @@ body::after{content:'';position:fixed;inset:0;
   </div>
 </div>
 
-<!-- ████ MARKETPLACE ████ -->
-<div class="page" id="page-marketplace">
-  <div class="ph"><div class="ph-left"><h1>MARKET<span>PLACE</span></h1><p>// HOMELAB TEMPLATES · COMMUNITY SETUPS</p></div></div>
+<!-- ████ APP STORE ████ -->
+<div class="page" id="page-appstore">
+  <div class="ph">
+    <div class="ph-left"><h1>APP <span>STORE</span></h1><p>// 40+ APPS · ONE-CLICK INSTALL · DOCKER POWERED</p></div>
+    <div class="ph-right"><button class="btn btn-g btn-sm" onclick="loadAppStore()">⟳ REFRESH</button></div>
+  </div>
+  <input id="store-search" placeholder="🔍 Search apps..." oninput="filterApps()"/>
+  <div class="store-cats" id="store-cats">
+    <button class="cat-btn active" onclick="filterApps('All')" data-cat="All">ALL</button>
+    <button class="cat-btn" onclick="filterApps('Media')" data-cat="Media">🎬 MEDIA</button>
+    <button class="cat-btn" onclick="filterApps('Development')" data-cat="Development">💻 DEV</button>
+    <button class="cat-btn" onclick="filterApps('Network')" data-cat="Network">🌐 NETWORK</button>
+    <button class="cat-btn" onclick="filterApps('Cloud')" data-cat="Cloud">☁ CLOUD</button>
+    <button class="cat-btn" onclick="filterApps('Monitoring')" data-cat="Monitoring">📊 MONITORING</button>
+    <button class="cat-btn" onclick="filterApps('Security')" data-cat="Security">🔐 SECURITY</button>
+    <button class="cat-btn" onclick="filterApps('Database')" data-cat="Database">🗄 DATABASE</button>
+    <button class="cat-btn" onclick="filterApps('Home')" data-cat="Home">🏠 HOME</button>
+    <button class="cat-btn" onclick="filterApps('Productivity')" data-cat="Productivity">📋 PRODUCTIVITY</button>
+    <button class="cat-btn" onclick="filterApps('AI')" data-cat="AI">🤖 AI</button>
+  </div>
+  <div class="grid g3" id="app-store-grid" style="align-items:start">
+    <div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter app catalog...</div></div>
+  </div>
+</div>
+
+<!-- ████ TERMINAL ████ -->
+<div class="page" id="page-terminal">
+  <div class="ph"><div class="ph-left"><h1>WEB <span>TERMINAL</span></h1><p>// KØR KOMMANDOER DIREKTE PÅ SERVEREN</p></div></div>
+  <div class="grid g4" style="margin-bottom:14px">
+    <button class="btn btn-g btn-sm" onclick="quickCmd('df -h')">💾 DISK BRUG</button>
+    <button class="btn btn-g btn-sm" onclick="quickCmd('free -h')">🧠 RAM INFO</button>
+    <button class="btn btn-g btn-sm" onclick="quickCmd('docker ps')">▣ DOCKER PS</button>
+    <button class="btn btn-g btn-sm" onclick="quickCmd('uptime')">⏱ UPTIME</button>
+    <button class="btn btn-g btn-sm" onclick="quickCmd('ip addr show')">📡 NETVÆRK</button>
+    <button class="btn btn-g btn-sm" onclick="quickCmd('systemctl list-units --state=failed')">⚠ FEJL SERVICES</button>
+    <button class="btn btn-g btn-sm" onclick="quickCmd('ls -la /opt/byteforge')">📁 BYTEFORGE DIR</button>
+    <button class="btn btn-r btn-sm" onclick="clearTerm()">✕ RYD</button>
+  </div>
+  <div class="term" style="height:calc(100vh - 320px);display:flex;flex-direction:column">
+    <div class="term-bar"><div class="td on"></div><div class="td"></div><span class="term-lbl">ByteForge Terminal // SSH-free command runner</span></div>
+    <div class="term-body" id="term-output" style="flex:1;overflow-y:auto;max-height:none;font-size:11px"></div>
+    <div class="term-input-row">
+      <span class="term-prompt">byteforge $</span>
+      <input id="term-input" placeholder="Skriv en kommando..." onkeydown="handleTermKey(event)" autocomplete="off" spellcheck="false"/>
+    </div>
+  </div>
+</div>
+
+<!-- ████ MARKETPLACE (kept for compat) ████ -->
+<div class="page" id="page-marketplace" style="display:none!important">
   <div class="grid g3">
     <div class="preset-card">
       <div class="preset-title">⭐ LUCAS' SETUP</div>
@@ -965,7 +1060,7 @@ function nav(id, el) {
 }
 
 function loadPage(id) {
-  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth};
+  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth, appstore:loadAppStore, terminal:initTerminal};
   if (map[id]) map[id]();
 }
 
@@ -1010,6 +1105,8 @@ async function updateTicker() {
   document.getElementById('sb-docker-count').textContent = d.docker.length;
   document.getElementById('sb-game-count').textContent = d.game_servers?.length || 0;
   window._lastData = d;
+  checkNotifications(s);
+  updateGraphs();
 }
 
 // ── OVERVIEW ──
@@ -1125,6 +1222,7 @@ const LANG = {
     'docker.installing':'Installerer Docker, vent venligst...',
     'docker.running':'KØRENDE',
     'gs.servername':'Server navn','gs.type':'Type',
+    'nav.appstore':'App Store','nav.terminal':'Terminal',
   },
   en: {
     'nav.overview':'Overview','nav.dashboard':'Dashboard','nav.system':'System','nav.network':'Network',
@@ -1140,6 +1238,7 @@ const LANG = {
     'docker.installing':'Installing Docker, please wait...',
     'docker.running':'RUNNING',
     'gs.servername':'Server name','gs.type':'Type',
+    'nav.appstore':'App Store','nav.terminal':'Terminal',
   }
 };
 
@@ -1656,6 +1755,208 @@ async function nasRestart() {
 }
 
 function runBackup(job) { toast('Backup job kørende: ' + job + '...'); }
+
+// ── REAL-TIME GRAPHS ──
+const _graphData = {cpu:[], ram:[]};
+
+function drawGraph(canvasId, data, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width) return;
+  canvas.width = rect.width * dpr;
+  canvas.height = 80 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = 80;
+  ctx.clearRect(0, 0, W, H);
+  // grid
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--b').trim() || '#242424';
+  ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75].forEach(f => { ctx.beginPath(); ctx.moveTo(0, H*f); ctx.lineTo(W, H*f); ctx.stroke(); });
+  if (data.length < 2) return;
+  const step = W / (data.length - 1);
+  // fill
+  ctx.beginPath();
+  data.forEach((v, i) => { const x = i*step, y = H - v/100*H; i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.fillStyle = color + '28'; ctx.fill();
+  // line
+  ctx.beginPath();
+  data.forEach((v, i) => { const x = i*step, y = H - v/100*H; i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+}
+
+async function updateGraphs() {
+  const h = await api('/api/metrics/history');
+  if (!h || !h.length) return;
+  _graphData.cpu = h.map(p => p.cpu);
+  _graphData.ram = h.map(p => p.ram);
+  drawGraph('graph-cpu', _graphData.cpu, '#FF6B1A');
+  drawGraph('graph-ram', _graphData.ram, '#FF9A3C');
+}
+
+// ── NOTIFICATIONS ──
+let _notifs = [];
+
+function toggleNotif() {
+  const d = document.getElementById('notif-drop');
+  d.style.display = d.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.notif-wrap')) document.getElementById('notif-drop').style.display = 'none';
+});
+
+function checkNotifications(sysData) {
+  if (!sysData) return;
+  _notifs = [];
+  if (sysData.cpu > 90) _notifs.push({type:'err', msg:`CPU kritisk høj: ${sysData.cpu}%`});
+  else if (sysData.cpu > 75) _notifs.push({type:'warn', msg:`CPU høj: ${sysData.cpu}%`});
+  if (sysData.ram_pct > 90) _notifs.push({type:'err', msg:`RAM kritisk høj: ${sysData.ram_pct}%`});
+  else if (sysData.ram_pct > 80) _notifs.push({type:'warn', msg:`RAM høj: ${sysData.ram_pct}%`});
+  const badge = document.getElementById('notif-badge');
+  const list = document.getElementById('notif-list');
+  if (_notifs.length) {
+    badge.style.display = 'flex'; badge.textContent = _notifs.length;
+    list.innerHTML = _notifs.map(n => `<div class="notif-item ${n.type}"><span>${n.type==='err'?'🔴':'🟡'}</span><span>${escapeHTML(n.msg)}</span></div>`).join('');
+  } else {
+    badge.style.display = 'none';
+    list.innerHTML = '<div class="notif-empty">Ingen alerts</div>';
+  }
+}
+
+// ── APP STORE ──
+let _allApps = [], _currentCat = 'All';
+
+async function loadAppStore() {
+  const grid = document.getElementById('app-store-grid');
+  grid.innerHTML = '<div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter app catalog...</div></div>';
+  const apps = await api('/api/appstore');
+  if (!apps) { grid.innerHTML = '<div class="card"><div class="ct">FEJL</div><div class="cs">Kunne ikke hente app catalog</div></div>'; return; }
+  _allApps = apps;
+  renderApps(apps);
+}
+
+function filterApps(cat) {
+  if (cat !== undefined) _currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-cat') === _currentCat));
+  const q = (document.getElementById('store-search')?.value || '').toLowerCase();
+  let apps = _allApps;
+  if (_currentCat !== 'All') apps = apps.filter(a => a.category === _currentCat);
+  if (q) apps = apps.filter(a => a.name.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q));
+  renderApps(apps);
+}
+
+function renderApps(apps) {
+  const grid = document.getElementById('app-store-grid');
+  if (!apps.length) { grid.innerHTML = '<div class="card"><div class="ct">INGEN RESULTATER</div><div class="cs">Prøv et andet søgeord eller kategori.</div></div>'; return; }
+  grid.innerHTML = apps.map(a => {
+    const installed = a.installed;
+    const running = a.status === 'running';
+    const statusHtml = installed
+      ? `<span class="app-status" style="color:${running?'var(--ok)':'var(--warn)'}">${running?'● KØRENDE':'○ STOPPET'}</span>`
+      : `<span class="app-status" style="color:var(--t3)">○ IKKE INSTALLERET</span>`;
+    const btnHtml = installed
+      ? `<div style="display:flex;gap:6px">
+           <button class="btn btn-g btn-sm" onclick="appAction('${a.id}','${running?'stop':'start'}')">${running?'■ STOP':'▶ START'}</button>
+           <button class="btn btn-r btn-sm" onclick="appUninstall('${a.id}')">🗑</button>
+         </div>`
+      : `<button class="btn btn-o btn-sm" onclick="appInstall('${a.id}')">⚡ INSTALL</button>`;
+    return `<div class="app-card ${installed?'installed':''}" id="appcard-${a.id}">
+      <div class="app-icon">${escapeHTML(a.icon)}</div>
+      <div>
+        <div class="app-name">${escapeHTML(a.name)}</div>
+        <div class="app-cat">${escapeHTML(a.category)}</div>
+      </div>
+      <div class="app-desc">${escapeHTML(a.desc)}</div>
+      <div class="app-footer">${statusHtml}${btnHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+async function appInstall(id) {
+  const app = _allApps.find(a => a.id === id);
+  toast(`Installerer ${app?.name || id}...`);
+  const r = await fetch(BASE+'/api/appstore/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app:id})});
+  const d = await r.json();
+  toast(d.msg || (d.ok ? 'Installeret' : 'Fejl'), d.ok);
+  if (d.ok) setTimeout(loadAppStore, 1000);
+}
+
+async function appUninstall(id) {
+  const app = _allApps.find(a => a.id === id);
+  toast(`Afinstallerer ${app?.name || id}...`);
+  const r = await fetch(BASE+'/api/appstore/uninstall',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app:id})});
+  const d = await r.json();
+  toast(d.msg || (d.ok ? 'Afinstalleret' : 'Fejl'), d.ok);
+  if (d.ok) setTimeout(loadAppStore, 800);
+}
+
+async function appAction(id, action) {
+  const r = await fetch(BASE+'/api/docker/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({container:`byteforge-${id}`,action})});
+  const d = await r.json();
+  toast(d.msg||'Udført', d.ok);
+  setTimeout(loadAppStore, 800);
+}
+
+// ── WEB TERMINAL ──
+let _termHistory = [], _termHistoryIdx = -1;
+
+function initTerminal() {
+  const out = document.getElementById('term-output');
+  if (!out.innerHTML) {
+    out.innerHTML = '<div class="term-out-line" style="color:var(--o)">ByteForge Terminal — skriv en kommando og tryk Enter</div>';
+  }
+  document.getElementById('term-input')?.focus();
+}
+
+async function handleTermKey(e) {
+  const input = e.target;
+  if (e.key === 'Enter') {
+    const cmd = input.value.trim();
+    if (!cmd) return;
+    _termHistory.unshift(cmd); _termHistoryIdx = -1;
+    input.value = '';
+    appendTermLine(`$ ${cmd}`, 'color:var(--o)');
+    try {
+      const r = await fetch(BASE+'/api/terminal/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd})});
+      const d = await r.json();
+      const lines = (d.output || '').split('\n');
+      lines.forEach(l => appendTermLine(l, d.ok ? '' : 'color:var(--err)'));
+    } catch(err) {
+      appendTermLine('Fejl: ' + err.message, 'color:var(--err)');
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _termHistoryIdx = Math.min(_termHistoryIdx + 1, _termHistory.length - 1);
+    input.value = _termHistory[_termHistoryIdx] || '';
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _termHistoryIdx = Math.max(_termHistoryIdx - 1, -1);
+    input.value = _termHistoryIdx >= 0 ? _termHistory[_termHistoryIdx] : '';
+  }
+}
+
+function appendTermLine(text, style='') {
+  const out = document.getElementById('term-output');
+  const div = document.createElement('div');
+  div.className = 'term-out-line';
+  if (style) div.style.cssText = style;
+  div.textContent = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function quickCmd(cmd) {
+  const input = document.getElementById('term-input');
+  if (input) { input.value = cmd; handleTermKey({key:'Enter', target:input, preventDefault:()=>{}}); }
+}
+
+function clearTerm() {
+  const out = document.getElementById('term-output');
+  out.innerHTML = '<div class="term-out-line" style="color:var(--o)">Terminal ryddet.</div>';
+}
 
 // ── INIT ──
 updateTicker();
