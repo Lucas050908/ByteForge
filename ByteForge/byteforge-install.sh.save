@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 #
 #           ByteForge Installer v1.0
-#   Built on CasaOS – customized by Lucas
+#   Built on CasaOS – customized for Admin
 #   Requires: bash, mv, rm, tr, grep, sed, curl/wget, tar, smartmontools, parted, ntfs-3g, net-tools
 #
 #   This script installs ByteForge (CasaOS) with NAS, RAID and Minecraft support.
@@ -26,10 +26,28 @@ echo '
   ╚═════╝    ╚═╝      ╚═╝   ╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
 '
 echo -e '\e[0m'
-echo -e '\e[38;5;208m        ⚒  NAS  •  RAID  •  Minecraft  •  Built by Lucas Valentin ⚒\e[0m'
+echo -e '\e[38;5;208m        ⚒  NAS  •  RAID  •  Minecraft  •  Admin Console ⚒\e[0m'
 echo ''
 export PATH=/usr/sbin:$PATH
 export DEBIAN_FRONTEND=noninteractive
+
+if [ -z "${BYTEFORGE_ADMIN_PASSWORD:-}" ] && [ -t 0 ]; then
+    while true; do
+        read -rsp "Choose ByteForge ADMIN password: " BYTEFORGE_ADMIN_PASSWORD
+        echo
+        read -rsp "Confirm ByteForge ADMIN password: " BYTEFORGE_ADMIN_PASSWORD_CONFIRM
+        echo
+        if [ "${#BYTEFORGE_ADMIN_PASSWORD}" -lt 8 ]; then
+            echo "Password must be at least 8 characters."
+        elif [ "$BYTEFORGE_ADMIN_PASSWORD" != "$BYTEFORGE_ADMIN_PASSWORD_CONFIRM" ]; then
+            echo "Passwords do not match."
+        else
+            export BYTEFORGE_ADMIN_PASSWORD
+            unset BYTEFORGE_ADMIN_PASSWORD_CONFIRM
+            break
+        fi
+    done
+fi
 
 set -e
 

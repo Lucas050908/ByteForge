@@ -49,6 +49,32 @@ python3 byteforge-server.py
 http://localhost:8080
 ```
 
+Første gang opretter ByteForge en `ADMIN` konto. Hvis du bruger installer-scriptet, bliver du bedt om at vælge ADMIN-adgangskoden under installationen:
+
+```bash
+sudo ./install.sh
+```
+
+På macOS bruges samme terminal-installer:
+
+```bash
+./install.sh
+```
+
+På Windows skal installeren køres fra PowerShell eller Windows Terminal:
+
+```powershell
+.\install.ps1
+```
+
+Alternativt kan `install.bat` startes fra terminal eller Explorer; den kalder PowerShell-installeren.
+
+Hvis du starter manuelt, kan du enten vælge password i første login-skærm eller sætte det på forhånd:
+
+```bash
+BYTEFORGE_ADMIN_PASSWORD="vælg-et-stærkt-password" python3 byteforge-server.py
+```
+
 Som standard gemmes data i `~/.byteforge` for almindelige brugere og `/opt/byteforge` når serveren køres som root.
 
 ```text

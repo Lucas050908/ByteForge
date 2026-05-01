@@ -10,7 +10,7 @@ ByteForge is an all-in-one homelab server management platform — the goal is to
 It runs as a **single Python file backend** + **single HTML file frontend** with zero install dependencies.
 It works on **Windows, macOS, and Linux** (Ubuntu, Arch, Fedora, etc.).
 
-The owner (Lucas) wants ByteForge to eventually combine the best of:
+The owner (Admin) wants ByteForge to eventually combine the best of:
 - **Proxmox** (VM/container management)
 - **CasaOS** (app store, Docker UI)
 - **Nextcloud** (file storage)

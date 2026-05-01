@@ -226,8 +226,8 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
     <a href="#kontakt">Kontakt</a>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <a class="nav-cta-ghost" href="https://lucas050908.github.io/ByteForge/ByteForge/byteforge-platform.html" target="_blank">👁 PREVIEW</a>
-    <a class="nav-cta-ghost" href="https://github.com/Lucas050908/ByteForge" target="_blank">GITHUB ↗</a>
+    <a class="nav-cta-ghost" href="https://byteforge-admin.github.io/ByteForge/ByteForge/byteforge-platform.html" target="_blank">👁 PREVIEW</a>
+    <a class="nav-cta-ghost" href="https://github.com/ByteForgeAdmin/ByteForge" target="_blank">GITHUB ↗</a>
     <a class="nav-cta" href="ByteForge.zip" download>⬇ DOWNLOAD</a>
   </div>
 </nav>
@@ -240,9 +240,9 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
   <p class="hero-sub">// DIN SERVER · DIT DATA · DIN KONTROL</p>
   <div class="hero-btns">
     <a class="btn-primary" href="ByteForge.zip" download>⬇ DOWNLOAD BYTEFORGE</a>
-    <a class="btn-secondary" href="https://lucas050908.github.io/ByteForge/ByteForge/byteforge-platform.html" target="_blank">👁 SE PREVIEW</a>
+    <a class="btn-secondary" href="https://byteforge-admin.github.io/ByteForge/ByteForge/byteforge-platform.html" target="_blank">👁 SE PREVIEW</a>
     <a class="btn-secondary" href="#brugsguide">LÆS GUIDEN ↓</a>
-    <a class="btn-secondary" href="https://github.com/Lucas050908/ByteForge" target="_blank">GITHUB ↗</a>
+    <a class="btn-secondary" href="https://github.com/ByteForgeAdmin/ByteForge" target="_blank">GITHUB ↗</a>
   </div>
 </div>
 
@@ -344,10 +344,11 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
       <div class="download-info">
         <h3>HVAD ER INKLUDERET?</h3>
         <p><span>byteforge-platform.html</span> — Komplet web-panel med alle features</p>
+        <p><span>byteforge-platform.css / .js</span> — Frontend assets adskilt fra HTML</p>
         <p><span>byteforge-server.py</span> — Python backend API-server</p>
-        <p><span>byteforge-install.sh</span> — Automatisk installations-script</p>
-        <p><span>byteforge-deploy.sh</span> — Deploy-script til din server</p>
-        <p><span>nowplaying.py</span> — Music-integration script</p>
+        <p><span>install.sh</span> — Terminal-installer til Linux og macOS</p>
+        <p><span>install.ps1 / install.bat</span> — Terminal-installer til Windows</p>
+        <p><span>byteforge-deploy.sh</span> — Legacy CasaOS theme deploy-script</p>
         <p><span>README.md</span> — Fuld dokumentation</p>
         <br/>
         <p style="color:var(--ash);font-family:var(--mono);font-size:11px;line-height:1.9">
@@ -361,12 +362,12 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
         <div class="download-box-ver">// STABIL UDGIVELSE · APRIL 2026</div>
         <div class="download-box-req">
           <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Python 3.8+ påkrævet</span></div>
-          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Docker anbefalet (til game servers)</span></div>
-          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Linux / macOS / WSL understøttet</span></div>
-          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Ingen internetforbindelse nødvendig</span></div>
+          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Terminal-installer vælger ADMIN password</span></div>
+          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Docker kan installeres under terminal setup</span></div>
+          <div class="req-row"><span class="req-ok">✓</span>&nbsp;<span class="req-label">Linux / macOS / Windows understøttet</span></div>
         </div>
         <a class="download-btn" href="ByteForge.zip" download>⬇ &nbsp;DOWNLOAD .ZIP</a>
-        <a class="download-btn-secondary" href="https://github.com/Lucas050908/ByteForge" target="_blank">↗ &nbsp;SE PÅ GITHUB</a>
+        <a class="download-btn-secondary" href="https://github.com/ByteForgeAdmin/ByteForge" target="_blank">↗ &nbsp;SE PÅ GITHUB</a>
       </div>
     </div>
   </div>
@@ -385,24 +386,27 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
       <div class="step-num">1</div>
       <div>
         <div class="step-title">DOWNLOAD OG UDPAK</div>
-        <div class="step-desc">Download ByteForge.zip via knappen ovenfor. Udpak ZIP-filen til en mappe på din computer eller server. Du kan placere den hvor du vil – f.eks. i din hjemmemappe.</div>
-        <div class="step-code">unzip ByteForge.zip &amp;&amp; cd ByteForge/ByteForge</div>
+        <div class="step-desc">Download ByteForge.zip via knappen ovenfor. Udpak ZIP-filen til en mappe på din computer eller server. Installerne skal køres fra den yderste ByteForge-mappe.</div>
+        <div class="step-code">unzip ByteForge.zip &amp;&amp; cd ByteForge</div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
       <div>
-        <div class="step-title">START SERVEREN</div>
-        <div class="step-desc">Åbn en terminal i ByteForge-mappen og kør Python-serveren. Du behøver ikke installere noget ekstra – Python 3 er nok til at komme i gang.</div>
-        <div class="step-code">python3 byteforge-server.py</div>
+        <div class="step-title">KØR TERMINAL-INSTALLEREN</div>
+        <div class="step-desc">Installeren spørger efter et ADMIN password, kopierer filerne, tilbyder Docker-installation og opsætter ByteForge som system-service hvor operativsystemet understøtter det.</div>
+        <div class="step-code">Linux: sudo ./install.sh
+macOS: ./install.sh
+Windows: .\install.ps1</div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
       <div>
-        <div class="step-title">ÅBEN I BROWSER</div>
-        <div class="step-desc">Når serveren kører åbner du din browser og går til denne adresse. Panelet starter med det samme – ingen login nødvendig ved første start.</div>
-        <div class="step-code">http://localhost:8080</div>
+        <div class="step-title">LOG IND SOM ADMIN</div>
+        <div class="step-desc">Når serveren kører åbner du din browser og logger ind med brugernavnet ADMIN og det password du valgte i terminalen.</div>
+        <div class="step-code">http://127.0.0.1:8080
+Username: ADMIN</div>
       </div>
     </div>
     <div class="step">
@@ -453,49 +457,55 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
           <div class="chapter-title">KOM I GANG PÅ 3 MINUTTER</div>
         </div>
       </div>
-      <p class="chapter-body">ByteForge kræver ingen kompleks opsætning. Du behøver kun Python 3 – som allerede er installeret på de fleste Linux-systemer og Mac. Følg disse trin præcist.</p>
+      <p class="chapter-body">ByteForge installeres fra terminalen på Linux, macOS og Windows. Installeren vælger ADMIN password, opsætter service og håndterer Docker som en system-opgave i stedet for at forsøge at hæve rettigheder fra browseren.</p>
 
       <ol class="guide-steps">
         <li class="guide-step">
           <div class="gs-num">→ 1</div>
           <div class="gs-content">
             <div class="gs-title">DOWNLOAD OG UDPAK ZIP-FILEN</div>
-            <div class="gs-desc">Klik på "Download ByteForge" knappen øverst på siden. Filen hedder <strong>ByteForge.zip</strong> og fylder ca. 1 MB. Gem den et sted du kan finde den – f.eks. Skrivebord eller Downloads.</div>
+            <div class="gs-desc">Klik på "Download ByteForge" knappen øverst på siden. Filen hedder <strong>ByteForge.zip</strong>. Gem den et sted du kan finde den – f.eks. Skrivebord eller Downloads.</div>
             <div class="gs-code"># I terminal – udpak filen
 unzip ByteForge.zip
 
-# Gå ind i mappen
-cd ByteForge/ByteForge</div>
-            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">På Windows: Højreklik på ZIP-filen → "Udpak alt" → Åbn mappen der dukker op, og gå ind i den indre "ByteForge" mappe.</div></div>
+# Gå ind i projektmappen
+cd ByteForge</div>
+            <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">På Windows: Højreklik på ZIP-filen → "Udpak alt" → Åbn mappen der dukker op. Kør install.ps1 fra den yderste ByteForge-mappe.</div></div>
           </div>
         </li>
         <li class="guide-step">
           <div class="gs-num">→ 2</div>
           <div class="gs-content">
-            <div class="gs-title">TJEK AT PYTHON 3 ER INSTALLERET</div>
-            <div class="gs-desc">Åbn en terminal (på Windows: søg efter "cmd" eller "PowerShell") og kør denne kommando. Du skal se noget som "Python 3.10.x" – så er du klar.</div>
-            <div class="gs-code">python3 --version
-# Forventet output: Python 3.10.x eller nyere</div>
-            <div class="gs-tip"><div class="gs-tip-icon">⚠</div><div class="gs-tip-text">Har du ikke Python 3? Hent det gratis fra python.org – vælg den nyeste version og sæt flueben ved "Add to PATH" under installation.</div></div>
+            <div class="gs-title">KØR INSTALLEREN I TERMINALEN</div>
+            <div class="gs-desc">Vælg kommandoen for dit operativsystem. Installeren spørger efter ADMIN password og tilbyder at installere Docker, fordi Docker-installation kræver systemrettigheder.</div>
+            <div class="gs-code"># Linux
+sudo ./install.sh
+
+# macOS
+./install.sh
+
+# Windows PowerShell
+.\install.ps1</div>
+            <div class="gs-tip"><div class="gs-tip-icon">⚠</div><div class="gs-tip-text">Har du ikke Python 3? Installeren stopper og fortæller det. På Windows skal Python være i PATH.</div></div>
           </div>
         </li>
         <li class="guide-step">
           <div class="gs-num">→ 3</div>
           <div class="gs-content">
-            <div class="gs-title">START BYTEFORGE-SERVEREN</div>
-            <div class="gs-desc">Sørg for at din terminal er i ByteForge-mappen (cd ByteForge/ByteForge) og kør denne kommando. Lad terminalen stå åben – den skal køre så længe du bruger ByteForge.</div>
-            <div class="gs-code">python3 byteforge-server.py
-
-# Du ser dette når den er klar:
-# [OK] ByteForge kørende på http://localhost:8080</div>
+            <div class="gs-title">ÅBEN BYTEFORGE</div>
+            <div class="gs-desc">Når installationen er færdig, starter ByteForge som service. Åbn browseren og brug ADMIN som brugernavn.</div>
+            <div class="gs-code">http://127.0.0.1:8080
+Username: ADMIN
+Password: det du valgte i terminalen</div>
           </div>
         </li>
         <li class="guide-step">
           <div class="gs-num">→ 4</div>
           <div class="gs-content">
-            <div class="gs-title">ÅBEN PANELET I DIN BROWSER</div>
-            <div class="gs-desc">Åbn Chrome, Firefox eller Edge og skriv denne adresse i adressefeltet. Tryk Enter. ByteForge-panelet åbner med det samme.</div>
-            <div class="gs-code">http://localhost:8080</div>
+            <div class="gs-title">MANUEL START (VALGFRIT)</div>
+            <div class="gs-desc">Vil du teste uden service, kan du starte backend manuelt. Første login-skærm lader dig vælge ADMIN password hvis det ikke allerede findes.</div>
+            <div class="gs-code">cd ByteForge/ByteForge
+python3 byteforge-server.py</div>
             <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Kører ByteForge på en anden computer på dit netværk? Brug computerens lokale IP-adresse i stedet for "localhost" – f.eks. http://10.194.177.172:8080</div></div>
           </div>
         </li>
@@ -511,7 +521,7 @@ cd ByteForge/ByteForge</div>
 
       <div class="warning-box">
         <div class="warn-icon">🔴</div>
-        <div class="warn-text"><strong>Stop ikke terminalen!</strong> Terminalen hvor byteforge-server.py kører skal forblive åben. Lukker du den, stopper panelet. Vil du køre det permanent i baggrunden, se "Kør som service" i FAQ.</div>
+        <div class="warn-text"><strong>Docker skal installeres fra terminalen.</strong> Browseren kan ikke hæve rettigheder til root/admin. Derfor spørger ByteForge-installeren om Docker under setup, ligesom CasaOS gør.</div>
       </div>
     </div>
 
@@ -548,7 +558,7 @@ cd ByteForge/ByteForge</div>
           <div class="gs-num">→ 2</div>
           <div class="gs-content">
             <div class="gs-title">UDFYLD SERVER-INFORMATIONER</div>
-            <div class="gs-desc">Giv serveren et navn (f.eks. "Lucas Survival"), vælg servertype fra dropdown-menuen, og indstil RAM-grænse (anbefalet: 2048 MB til Minecraft). CPU-grænse kan efterlades på standard.</div>
+            <div class="gs-desc">Giv serveren et navn (f.eks. "Admin Survival"), vælg servertype fra dropdown-menuen, og indstil RAM-grænse (anbefalet: 2048 MB til Minecraft). CPU-grænse kan efterlades på standard.</div>
             <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Start med 2GB RAM til Minecraft. Har du mange spillere eller mods, kan du øge det til 4GB bagefter via "Rediger server".</div></div>
           </div>
         </li>
@@ -783,11 +793,11 @@ cd ByteForge/ByteForge</div>
       </div>
       <div class="faq-item" onclick="toggleFaq(this)">
         <div class="faq-q">Hvordan kører jeg ByteForge permanent i baggrunden?</div>
-        <div class="faq-a">Opret en systemd service-fil så ByteForge starter automatisk med systemet. Kør: sudo nano /etc/systemd/system/byteforge.service — skriv service-konfigurationen og kør: sudo systemctl enable byteforge &amp;&amp; sudo systemctl start byteforge. Herefter starter ByteForge automatisk ved genstart.</div>
+        <div class="faq-a">Kør terminal-installeren. På Linux opretter install.sh en systemd-service. På macOS opretter den en launchd-service. På Windows opretter install.ps1 en Scheduled Task. Herefter starter ByteForge automatisk ved login eller boot.</div>
       </div>
       <div class="faq-item" onclick="toggleFaq(this)">
         <div class="faq-q">Virker ByteForge på Windows?</div>
-        <div class="faq-a">Ja – men med begrænsninger. Python-serveren kører fint på Windows. Game servers via Docker kræver Docker Desktop for Windows. For den bedste oplevelse anbefales Linux (Manjaro, Ubuntu eller lignende) eller WSL2 på Windows.</div>
+        <div class="faq-a">Ja. Kør install.ps1 fra PowerShell eller brug install.bat. Game servers og app store kræver Docker Desktop for Windows, som installeren kan hjælpe med via winget.</div>
       </div>
     </div>
   </div>
@@ -798,14 +808,14 @@ cd ByteForge/ByteForge</div>
   <div style="max-width:700px;margin:0 auto;text-align:center">
     <div class="section-tag">// Kontakt</div>
     <div class="section-title">KOM I <span>KONTAKT</span></div>
-    <p style="font-family:var(--mono);font-size:13px;color:var(--ash);line-height:1.8;margin-bottom:48px">Spørgsmål, feedback eller bare nysgerrig på projektet?<br/>Tag fat i Lucas Valentin direkte.</p>
+    <p style="font-family:var(--mono);font-size:13px;color:var(--ash);line-height:1.8;margin-bottom:48px">Spørgsmål, feedback eller bare nysgerrig på projektet?<br/>Tag fat i Admin direkte.</p>
     <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
-      <a class="btn-primary" href="mailto:andersenlucas84@gmail.com">✉ SEND EN MAIL</a>
-      <a class="btn-secondary" href="https://github.com/Lucas050908/ByteForge" target="_blank">GITHUB ↗</a>
+      <a class="btn-primary" href="mailto:admin@byteforge.local">✉ SEND EN MAIL</a>
+      <a class="btn-secondary" href="https://github.com/ByteForgeAdmin/ByteForge" target="_blank">GITHUB ↗</a>
     </div>
     <div style="margin-top:32px;display:flex;flex-direction:column;gap:10px;align-items:center">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--ash);letter-spacing:1px">andersenlucas84@gmail.com</div>
-      <div style="font-family:var(--mono);font-size:11px;color:var(--ash);letter-spacing:1px">github.com/Lucas050908/ByteForge</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--ash);letter-spacing:1px">admin@byteforge.local</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--ash);letter-spacing:1px">github.com/ByteForgeAdmin/ByteForge</div>
     </div>
   </div>
 </div>
@@ -819,7 +829,7 @@ cd ByteForge/ByteForge</div>
   <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
     <a class="btn-primary" href="ByteForge.zip" download>⬇ DOWNLOAD BYTEFORGE</a>
     <a class="btn-secondary" href="http://10.194.177.172:9090" target="_blank">⚒ ÅBEN LIVE PANEL ↗</a>
-    <a class="btn-secondary" href="https://github.com/Lucas050908/ByteForge" target="_blank">GITHUB ↗</a>
+    <a class="btn-secondary" href="https://github.com/ByteForgeAdmin/ByteForge" target="_blank">GITHUB ↗</a>
   </div>
 </div>
 
@@ -834,8 +844,8 @@ cd ByteForge/ByteForge</div>
     <a href="#porte">Porte</a>
     <a href="#faq">FAQ</a>
     <a href="#kontakt">Kontakt</a>
-    <a href="https://github.com/Lucas050908/ByteForge" target="_blank">GitHub</a>
-    <a href="mailto:andersenlucas84@gmail.com">Mail</a>
+    <a href="https://github.com/ByteForgeAdmin/ByteForge" target="_blank">GitHub</a>
+    <a href="mailto:admin@byteforge.local">Mail</a>
   </div>
   <div class="footer-copy">BUILT BY LUCAS VALENTIN // CRAFT YOUR CODE</div>
 </footer>
