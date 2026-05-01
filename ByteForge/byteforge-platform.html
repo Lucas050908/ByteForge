@@ -166,8 +166,21 @@ body::after{content:'';position:fixed;inset:0;
 .preset-tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .preset-tag{font-family:var(--mono);font-size:9px;background:var(--o3);color:var(--o);border:1px solid var(--o);padding:2px 8px}
 
+/* ── GAME COVER PREVIEW ── */
+#cover-preview{display:none;width:100%;height:90px;object-fit:cover;border:1px solid var(--b);margin-top:8px;background:var(--s)}
+
+/* ── BG PRESETS ── */
+.bg-preset-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.bg-preset{width:72px;height:44px;border:2px solid var(--b);cursor:pointer;transition:border-color .2s;flex-shrink:0;overflow:hidden}
+.bg-preset:hover{border-color:var(--o)}
+.bg-preset.active{border-color:var(--o);box-shadow:0 0 0 1px var(--o)}
+.bg-preset-lbl{font-family:var(--mono);font-size:8px;color:var(--t3);text-align:center;margin-top:3px;letter-spacing:1px}
+
 /* ── GAME SERVERS / FILES ── */
-.server-card{background:var(--p);border:1px solid var(--b);padding:16px;display:grid;gap:12px}
+.server-card{background:var(--p);border:1px solid var(--b);padding:0;display:grid;gap:0;overflow:hidden}
+.server-cover{width:100%;height:120px;object-fit:cover;display:block}
+.server-cover-placeholder{width:100%;height:120px;background:linear-gradient(135deg,var(--s),var(--b));display:flex;align-items:center;justify-content:center;font-size:40px}
+.server-body{padding:16px;display:grid;gap:12px}
 .server-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .server-name{font-family:var(--display);font-size:24px;letter-spacing:2px;line-height:1;color:var(--t)}
 .server-kind{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:2px;margin-top:2px;text-transform:uppercase}
@@ -579,16 +592,48 @@ body::after{content:'';position:fixed;inset:0;
       </div>
       <div>
         <div class="form-label">Type</div>
-        <select class="select" id="new-server-type" style="width:100%">
-          <option value="minecraft-paper">Minecraft Paper</option>
-          <option value="minecraft-vanilla">Minecraft Vanilla</option>
-          <option value="minecraft-spigot">Minecraft Spigot</option>
-          <option value="minecraft-forge">Minecraft Forge</option>
-          <option value="minecraft-fabric">Minecraft Fabric</option>
-          <option value="fivem">FiveM</option>
-          <option value="terraria">Terraria</option>
-          <option value="custom">Custom</option>
+        <select class="select" id="new-server-type" style="width:100%" onchange="updateCoverPreview(this.value)">
+          <optgroup label="── Minecraft ──">
+            <option value="minecraft-paper">Minecraft Paper</option>
+            <option value="minecraft-vanilla">Minecraft Vanilla</option>
+            <option value="minecraft-spigot">Minecraft Spigot</option>
+            <option value="minecraft-forge">Minecraft Forge</option>
+            <option value="minecraft-fabric">Minecraft Fabric</option>
+          </optgroup>
+          <optgroup label="── Survival / Open World ──">
+            <option value="ark-survival-evolved">ARK Survival Evolved</option>
+            <option value="palworld">Palworld</option>
+            <option value="rust">Rust</option>
+            <option value="7-days-to-die">7 Days to Die</option>
+            <option value="dayz">DayZ</option>
+            <option value="valheim">Valheim</option>
+            <option value="project-zomboid">Project Zomboid</option>
+            <option value="v-rising">V Rising</option>
+            <option value="sons-of-the-forest">Sons of the Forest</option>
+          </optgroup>
+          <optgroup label="── Shooter / Action ──">
+            <option value="counter-strike-2">Counter-Strike 2</option>
+            <option value="team-fortress-2">Team Fortress 2</option>
+            <option value="left4dead2">Left 4 Dead 2</option>
+            <option value="gmod">Garry's Mod</option>
+          </optgroup>
+          <optgroup label="── Simulation / Builder ──">
+            <option value="satisfactory">Satisfactory</option>
+            <option value="factorio">Factorio</option>
+            <option value="astroneer">Astroneer</option>
+            <option value="space-engineers">Space Engineers</option>
+            <option value="farming-simulator-22">Farming Simulator 22</option>
+            <option value="farming-simulator-25">Farming Simulator 25</option>
+          </optgroup>
+          <optgroup label="── Andre ──">
+            <option value="fivem">FiveM</option>
+            <option value="terraria">Terraria</option>
+            <option value="unturned">Unturned</option>
+            <option value="euro-truck-simulator-2">Euro Truck Simulator 2</option>
+            <option value="custom">Custom</option>
+          </optgroup>
         </select>
+        <img id="cover-preview" src="" alt="Game cover" onerror="this.style.display='none'"/>
       </div>
       <div>
         <div class="form-label">CPU</div>
@@ -673,15 +718,46 @@ body::after{content:'';position:fixed;inset:0;
       <div class="form-label" style="margin-top:10px">Sprog</div>
       <select class="select" id="set-language" style="width:100%"><option value="da">Dansk</option><option value="en">English</option></select>
       <div class="form-label" style="margin-top:10px">Background</div>
-      <input class="input" id="set-background" placeholder="grid eller URL til custom background"/>
-      <div class="btn-row"><button class="btn btn-o btn-sm" onclick="saveSettings()">GEM</button></div>
+      <div class="bg-preset-row">
+        <div style="text-align:center">
+          <div class="bg-preset" id="bgp-grid" onclick="setBgPreset('grid')" title="Grid (standard)" style="background:#0D0D0D;background-image:linear-gradient(#242424 1px,transparent 1px),linear-gradient(90deg,#242424 1px,transparent 1px);background-size:12px 12px"></div>
+          <div class="bg-preset-lbl">GRID</div>
+        </div>
+        <div style="text-align:center">
+          <div class="bg-preset" id="bgp-none" onclick="setBgPreset('none')" title="Ingen baggrund" style="background:#0D0D0D"></div>
+          <div class="bg-preset-lbl">MØRK</div>
+        </div>
+        <div style="text-align:center">
+          <div class="bg-preset" id="bgp-forge" onclick="setBgPreset('forge')" title="Forge gløde" style="background:radial-gradient(ellipse at center,rgba(255,107,26,.3) 0%,#0D0D0D 70%)"></div>
+          <div class="bg-preset-lbl">FORGE</div>
+        </div>
+        <div style="text-align:center">
+          <div class="bg-preset" id="bgp-matrix" onclick="setBgPreset('matrix')" title="Matrix" style="background:linear-gradient(135deg,#001100,#003300)"></div>
+          <div class="bg-preset-lbl">MATRIX</div>
+        </div>
+        <div style="text-align:center">
+          <div class="bg-preset" id="bgp-nebula" onclick="setBgPreset('nebula')" title="Nebula" style="background:linear-gradient(135deg,#0d0d2b,#1a0533)"></div>
+          <div class="bg-preset-lbl">NEBULA</div>
+        </div>
+      </div>
+      <input class="input" id="set-background" placeholder="URL til custom baggrundsbillede" style="margin-top:4px"/>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:6px">eller upload et billede:</div>
+      <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+        <input class="input" type="file" id="bg-upload" accept="image/*" style="flex:1"/>
+        <button class="btn btn-g btn-sm" onclick="uploadBackground()">UPLOAD</button>
+      </div>
+      <div class="btn-row"><button class="btn btn-o btn-sm" onclick="saveSettings()">GEM INDSTILLINGER</button></div>
     </div>
     <div class="card">
-      <div class="ct">VIGTIGE KRAV</div>
-      <div class="smart-row"><span>Performance fokus</span><span class="smart-val">Lav JS, simple API calls</span></div>
-      <div class="smart-row"><span>Simplicitet</span><span class="smart-val">Docker runtime + JSON config</span></div>
-      <div class="smart-row"><span>CasaOS afhængighed</span><span class="smart-val">Ingen</span></div>
-      <div class="smart-row"><span>Stil</span><span class="smart-val">ByteForge dark/orange</span></div>
+      <div class="ct">SYSTEM SETUP</div>
+      <div class="smart-row"><span>Docker</span><span class="smart-val" id="setup-docker">Tjekker...</span></div>
+      <div class="smart-row"><span>Service</span><span class="smart-val" id="setup-service">Tjekker...</span></div>
+      <div class="smart-row"><span>Port</span><span class="smart-val" id="setup-port">—</span></div>
+      <div class="smart-row"><span>Data mappe</span><span class="smart-val" id="setup-basedir" style="font-size:10px;word-break:break-all">—</span></div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn btn-o btn-sm" onclick="installService()">⚙ INSTALLER SOM SERVICE</button>
+        <button class="btn btn-g btn-sm" onclick="installDockerSystem()">▣ INSTALLER DOCKER</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1028,11 +1104,32 @@ async function loadDocker() {
   }).join('');
 }
 
-function stopContainer(name) { toast('Stopper container: ' + name); }
+async function containerAction(name, action) {
+  toast((action==='stop'?'Stopper':'Starter') + ' container: ' + name);
+  try {
+    const r = await fetch(BASE+'/api/docker/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({container:name,action})});
+    const d = await r.json();
+    toast(d.msg||'Udført', d.ok);
+    setTimeout(loadDocker, 1200);
+  } catch(e) { toast('Fejl: '+e.message, false); }
+}
 
-function deployPreset(name) {
-  const labels = {webdev:'Webdev Stack',monitoring:'Monitoring Stack',ai:'AI Stack',privacy:'Privacy Suite',media:'Media Stack',custom:'Custom Stack'};
-  toast('Deployer ' + (labels[name]||name) + ' via docker-compose...');
+function stopContainer(name) { containerAction(name, 'stop'); }
+
+async function deployPreset(name) {
+  const presetApps = {webdev:['portainer'], monitoring:['grafana'], ai:['ollama'], privacy:['bitwarden','pihole'], media:['jellyfin'], custom:null};
+  if (name === 'custom') { toast('Upload din docker-compose.yml via Filer-siden', true); return; }
+  const apps = presetApps[name];
+  if (!apps) { toast('Preset ikke tilgængeligt endnu', false); return; }
+  for (const app of apps) {
+    toast('Deployer ' + app + '...');
+    try {
+      const r = await fetch(BASE+'/api/apps/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app})});
+      const d = await r.json();
+      toast(d.msg||app+' deployet', d.ok);
+    } catch(e) { toast('Fejl ved '+app+': '+e.message, false); }
+  }
+  setTimeout(loadDocker, 2000);
 }
 
 // ── GAME SERVERS ──
@@ -1043,6 +1140,7 @@ function escapeHTML(v) {
 async function loadGameServers(withLogs=false) {
   const data = await api('/api/game-servers' + (withLogs ? '?logs=1' : ''));
   if (!data) return;
+  if (data.types) window._serverTypes = data.types;
   const servers = data.servers || [];
   document.getElementById('gs-total').textContent = servers.length;
   document.getElementById('gs-online').textContent = servers.filter(s => s.status === 'running').length;
@@ -1053,34 +1151,54 @@ async function loadGameServers(withLogs=false) {
     list.innerHTML = '<div class="card"><div class="ct">INGEN SERVER</div><div class="cs">Opret din første game server med one-click setup.</div></div>';
     return;
   }
-  list.innerHTML = servers.map(s => `
+  list.innerHTML = servers.map(s => {
+    const typeInfo = (window._serverTypes || {})[s.type] || {};
+    const cover = typeInfo.cover || '';
+    const coverHTML = cover
+      ? `<img class="server-cover" src="${escapeHTML(cover)}" alt="${escapeHTML(s.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        + `<div class="server-cover-placeholder" style="display:none">🎮</div>`
+      : `<div class="server-cover-placeholder">🎮</div>`;
+    return `
     <div class="server-card">
-      <div class="server-head">
-        <div><div class="server-name">${escapeHTML(s.name)}</div><div class="server-kind">${escapeHTML(s.kind)} · ${escapeHTML(s.container)}</div></div>
-        ${mkbadge(s.status, 'Online', 'Offline')}
+      ${coverHTML}
+      <div class="server-body">
+        <div class="server-head">
+          <div><div class="server-name">${escapeHTML(s.name)}</div><div class="server-kind">${escapeHTML(s.kind)} · ${escapeHTML(s.container)}</div></div>
+          ${mkbadge(s.status, 'Online', 'Offline')}
+        </div>
+        <div class="server-meta">
+          <div class="meta-box"><div class="meta-label">Port</div><div class="meta-value">${s.port || '-'}</div></div>
+          <div class="meta-box"><div class="meta-label">CPU Limit</div><div class="meta-value">${escapeHTML(s.cpu_limit)}</div></div>
+          <div class="meta-box"><div class="meta-label">RAM Limit</div><div class="meta-value">${escapeHTML(s.memory_limit)}</div></div>
+          <div class="meta-box"><div class="meta-label">Storage</div><div class="meta-value">${escapeHTML(s.visibility)}</div></div>
+        </div>
+        <div class="server-meta">
+          <div class="meta-box"><div class="meta-label">CPU Now</div><div class="meta-value">${escapeHTML(s.stats?.cpu)}</div></div>
+          <div class="meta-box"><div class="meta-label">Memory Now</div><div class="meta-value">${escapeHTML(s.stats?.memory)}</div></div>
+          <div class="meta-box"><div class="meta-label">Network</div><div class="meta-value">${escapeHTML(s.stats?.network)}</div></div>
+          <div class="meta-box"><div class="meta-label">Auto Restart</div><div class="meta-value">${s.auto_restart ? 'ON' : 'OFF'}</div></div>
+        </div>
+        <div class="sbox">${escapeHTML(s.path)}</div>
+        <div class="btn-row">
+          <button class="btn btn-o btn-sm" onclick="gameAction('${s.id}','start')">▶ START</button>
+          <button class="btn btn-g btn-sm" onclick="gameAction('${s.id}','restart')">⟳ RESTART</button>
+          <button class="btn btn-r btn-sm" onclick="gameAction('${s.id}','stop')">■ STOP</button>
+          <button class="btn btn-g btn-sm" onclick="showServerLog('${s.id}')">LOG</button>
+        </div>
       </div>
-      <div class="server-meta">
-        <div class="meta-box"><div class="meta-label">Port</div><div class="meta-value">${s.port || '-'}</div></div>
-        <div class="meta-box"><div class="meta-label">CPU Limit</div><div class="meta-value">${escapeHTML(s.cpu_limit)}</div></div>
-        <div class="meta-box"><div class="meta-label">RAM Limit</div><div class="meta-value">${escapeHTML(s.memory_limit)}</div></div>
-        <div class="meta-box"><div class="meta-label">Storage</div><div class="meta-value">${escapeHTML(s.visibility)}</div></div>
-      </div>
-      <div class="server-meta">
-        <div class="meta-box"><div class="meta-label">CPU Now</div><div class="meta-value">${escapeHTML(s.stats?.cpu)}</div></div>
-        <div class="meta-box"><div class="meta-label">Memory Now</div><div class="meta-value">${escapeHTML(s.stats?.memory)}</div></div>
-        <div class="meta-box"><div class="meta-label">Network</div><div class="meta-value">${escapeHTML(s.stats?.network)}</div></div>
-        <div class="meta-box"><div class="meta-label">Auto Restart</div><div class="meta-value">${s.auto_restart ? 'ON' : 'OFF'}</div></div>
-      </div>
-      <div class="sbox">${escapeHTML(s.path)}</div>
-      <div class="btn-row">
-        <button class="btn btn-o btn-sm" onclick="gameAction('${s.id}','start')">▶ START</button>
-        <button class="btn btn-g btn-sm" onclick="gameAction('${s.id}','restart')">⟳ RESTART</button>
-        <button class="btn btn-r btn-sm" onclick="gameAction('${s.id}','stop')">■ STOP</button>
-        <button class="btn btn-g btn-sm" onclick="showServerLog('${s.id}')">LOG</button>
-      </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   window._gameServers = servers;
   if (withLogs && servers[0]) showServerLog(servers[0].id);
+}
+
+function updateCoverPreview(typeKey) {
+  const types = window._serverTypes || {};
+  const cover = (types[typeKey] || {}).cover || '';
+  const img = document.getElementById('cover-preview');
+  if (!img) return;
+  if (cover) { img.src = cover; img.style.display = 'block'; }
+  else { img.style.display = 'none'; }
 }
 
 function showServerLog(id) {
@@ -1184,18 +1302,102 @@ async function loadAccess() {
 }
 
 async function loadSettings() {
-  const data = await api('/api/users');
-  if (!data?.settings) return;
-  document.getElementById('set-theme').value = data.settings.theme || 'forge-dark';
-  document.getElementById('set-language').value = data.settings.language || 'da';
-  document.getElementById('set-background').value = data.settings.background || 'grid';
+  const [userData, setup] = await Promise.all([api('/api/users'), api('/api/setup')]);
+  if (userData?.settings) {
+    document.getElementById('set-theme').value = userData.settings.theme || 'forge-dark';
+    document.getElementById('set-language').value = userData.settings.language || 'da';
+    const bg = userData.settings.background || 'grid';
+    document.getElementById('set-background').value = ['grid','none','forge','matrix','nebula'].includes(bg) ? '' : bg;
+    applyBackground(bg);
+    highlightBgPreset(bg);
+  }
+  if (setup) {
+    document.getElementById('setup-docker').innerHTML = setup.docker_ok
+      ? '<span style="color:var(--ok)">✓ Installeret</span>'
+      : '<span style="color:var(--warn)">✗ Ikke installeret</span>';
+    document.getElementById('setup-service').innerHTML = setup.service_ok
+      ? '<span style="color:var(--ok)">✓ Aktiv</span>'
+      : '<span style="color:var(--t3)">Ikke installeret</span>';
+    document.getElementById('setup-port').textContent = setup.port;
+    document.getElementById('setup-basedir').textContent = setup.base_dir;
+  }
+}
+
+function applyBackground(bg) {
+  const styleId = 'bf-bg-style';
+  let el = document.getElementById(styleId);
+  if (!el) { el = document.createElement('style'); el.id = styleId; document.head.appendChild(el); }
+  if (bg === 'grid' || !bg) {
+    el.textContent = '';
+  } else if (bg === 'none') {
+    el.textContent = 'body::before{display:none!important}';
+  } else if (bg === 'forge') {
+    el.textContent = 'body::before{background-image:none!important;background:radial-gradient(ellipse 80% 80% at 50% 50%,rgba(255,107,26,.18) 0%,transparent 70%)!important;opacity:1!important}';
+  } else if (bg === 'matrix') {
+    el.textContent = 'body{background:linear-gradient(135deg,#001100,#003300)!important}body::before{background-image:linear-gradient(rgba(0,255,0,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,0,.07) 1px,transparent 1px)!important;background-size:30px 30px!important;opacity:1!important}';
+  } else if (bg === 'nebula') {
+    el.textContent = 'body{background:linear-gradient(135deg,#0d0d2b,#1a0533)!important}body::before{background-image:linear-gradient(rgba(120,60,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(120,60,255,.08) 1px,transparent 1px)!important;background-size:30px 30px!important;opacity:1!important}';
+  } else {
+    el.textContent = `body::before{background-image:none!important;background:url(${JSON.stringify(bg)}) center/cover fixed no-repeat!important;opacity:.25!important}`;
+  }
+}
+
+function highlightBgPreset(bg) {
+  document.querySelectorAll('.bg-preset').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('bgp-' + bg);
+  if (el) el.classList.add('active');
+}
+
+function setBgPreset(preset) {
+  applyBackground(preset);
+  highlightBgPreset(preset);
+  document.getElementById('set-background').value = '';
+  fetch(BASE+'/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({background:preset})});
+}
+
+async function uploadBackground() {
+  const fileInput = document.getElementById('bg-upload');
+  if (!fileInput.files[0]) { toast('Vælg et billede først', false); return; }
+  const fd = new FormData();
+  fd.append('file', fileInput.files[0]);
+  toast('Uploader baggrundsbillede...');
+  try {
+    const r = await fetch(BASE+'/api/background/upload', {method:'POST', body:fd});
+    const d = await r.json();
+    if (d.ok) { applyBackground(d.url); document.getElementById('set-background').value = d.url; toast('Baggrund opdateret!', true); }
+    else { toast(d.msg || 'Upload fejlede', false); }
+  } catch(e) { toast('Fejl: '+e.message, false); }
+}
+
+async function installService() {
+  toast('Installerer ByteForge som service...');
+  try {
+    const r = await fetch(BASE+'/api/setup/service',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const d = await r.json();
+    toast(d.msg||'Service installeret', d.ok);
+    loadSettings();
+  } catch(e) { toast('Fejl: '+e.message, false); }
+}
+
+async function installDockerSystem() {
+  toast('Installerer Docker... Dette kan tage op til 2 minutter.');
+  try {
+    const r = await fetch(BASE+'/api/setup/docker',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const d = await r.json();
+    toast(d.msg||'Docker installeret', d.ok);
+    loadSettings();
+  } catch(e) { toast('Fejl: '+e.message, false); }
 }
 
 async function saveSettings() {
-  const body = {theme:document.getElementById('set-theme').value,language:document.getElementById('set-language').value,background:document.getElementById('set-background').value};
+  const urlBg = document.getElementById('set-background').value.trim();
+  const activePr = document.querySelector('.bg-preset.active');
+  const bg = urlBg || (activePr ? activePr.id.replace('bgp-','') : 'grid');
+  const body = {theme:document.getElementById('set-theme').value, language:document.getElementById('set-language').value, background:bg};
   const r = await fetch(BASE+'/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const d = await r.json();
-  toast(d.ok ? 'Settings gemt' : 'Kunne ikke gemme settings', d.ok);
+  if (d.ok) applyBackground(bg);
+  toast(d.ok ? 'Indstillinger gemt' : 'Kunne ikke gemme indstillinger', d.ok);
 }
 
 async function loadMC() { loadGameServers(true); }
@@ -1316,9 +1518,23 @@ async function loadLog() {
   } catch { out.innerHTML = '<span class="t-err">Fejl ved hentning af logs</span>'; }
 }
 
-function installPrivacy(app) {
+async function installPrivacy(app) {
   const n = {bitwarden:'Bitwarden',nextcloud:'Nextcloud',pihole:'Pi-hole',wireguard:'WireGuard'};
-  toast('Installerer ' + n[app] + ' via Docker...'); 
+  toast('Installerer ' + (n[app]||app) + ' via Docker...');
+  try {
+    const r = await fetch(BASE+'/api/apps/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app})});
+    const d = await r.json();
+    toast(d.msg||(n[app]||app)+' deployet', d.ok);
+  } catch(e) { toast('Fejl: '+e.message, false); }
+}
+
+async function nasRestart() {
+  toast('Genstarter NFS server...');
+  try {
+    const r = await fetch(BASE+'/api/nas/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'restart'})});
+    const d = await r.json();
+    toast(d.msg||'NFS genstartet', d.ok);
+  } catch(e) { toast('Fejl: '+e.message, false); }
 }
 
 function runBackup(job) { toast('Backup job kørende: ' + job + '...'); }
@@ -1327,6 +1543,8 @@ function runBackup(job) { toast('Backup job kørende: ' + job + '...'); }
 updateTicker();
 setInterval(updateTicker, 15000);
 loadOverview();
+api('/api/users').then(d => { if (d?.settings?.background) applyBackground(d.settings.background); });
+api('/api/game-servers').then(d => { if (d?.types) { window._serverTypes = d.types; updateCoverPreview(document.getElementById('new-server-type')?.value); } });
 </script>
 </body>
 </html>
