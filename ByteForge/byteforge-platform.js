@@ -1155,12 +1155,49 @@ async function appAction(id, action) {
 // ── WEB TERMINAL ──
 let _termHistory = [], _termHistoryIdx = -1;
 
-function initTerminal() {
+async function initTerminal() {
   const out = document.getElementById('term-output');
-  if (!out.innerHTML) {
-    out.innerHTML = '<div class="term-out-line" style="color:var(--o)">ByteForge Terminal — skriv en kommando og tryk Enter</div>';
-  }
   document.getElementById('term-input')?.focus();
+  if (out._loaded) return;
+  out._loaded = true;
+  out.innerHTML = '';
+
+  // Header banner
+  const banner = [
+    '╔══════════════════════════════════════════════════╗',
+    '║          BYTEFORGE WEB TERMINAL                  ║',
+    '║  Kør kommandoer direkte på serveren              ║',
+    '╚══════════════════════════════════════════════════╝',
+  ];
+  banner.forEach(l => appendTermLine(l, 'color:var(--o)'));
+  appendTermLine('', '');
+
+  // Fetch system info
+  const hw = await api('/api/hardware');
+  const sys = await api('/api/system');
+  if (hw) {
+    const osLine = hw.platform === 'Linux'
+      ? `OS       : ${hw.os_name}${hw.kernel ? ` (${hw.kernel})` : ''}`
+      : hw.platform === 'Darwin'
+      ? `OS       : ${hw.os_name}`
+      : `OS       : ${hw.os_name}`;
+    const lines = [
+      osLine,
+      `Platform : ${hw.platform}`,
+      `Hostname : ${hw.hostname}`,
+      `CPU      : ${hw.cpu_model} (${hw.cpu_cores} tråde)`,
+      `GPU      : ${hw.gpu}`,
+    ];
+    if (sys) {
+      lines.push(`RAM      : ${sys.ram_used_mb} MB / ${sys.ram_total_mb} MB (${sys.ram_pct}%)`);
+      lines.push(`CPU Load : ${sys.cpu}%`);
+      lines.push(`Uptime   : ${sys.uptime}`);
+    }
+    lines.forEach(l => appendTermLine(l, 'color:var(--t2)'));
+  }
+  appendTermLine('', '');
+  appendTermLine('Skriv en kommando og tryk Enter. Pil op/ned = historik.', 'color:var(--t3)');
+  appendTermLine('─'.repeat(52), 'color:var(--b2)');
 }
 
 async function handleTermKey(e) {
@@ -1207,7 +1244,9 @@ function quickCmd(cmd) {
 
 function clearTerm() {
   const out = document.getElementById('term-output');
-  out.innerHTML = '<div class="term-out-line" style="color:var(--o)">Terminal ryddet.</div>';
+  out._loaded = false;
+  out.innerHTML = '';
+  initTerminal();
 }
 
 // ── INIT ──

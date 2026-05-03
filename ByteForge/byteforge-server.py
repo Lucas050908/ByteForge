@@ -517,7 +517,7 @@ def appstore_install(app_id):
     if app["data"]:
         cmd += ["-v", f"{data_path}:{app['data']}"]
     cmd.append(app["image"])
-    out, err, code = run(cmd, timeout=120, shell=False)
+    out, err, code = run(cmd, timeout=300, shell=False)
     host_port = app["ports"][0].split(":")[0] if app["ports"] else ""
     url = f" → http://localhost:{host_port}" if host_port else ""
     return {"ok": code == 0, "msg": (out or err or f"{app['name']} installeret") + url}
@@ -907,6 +907,23 @@ def get_hardware():
         mb_o, _, _ = run("wmic baseboard get manufacturer,product /value", shell=True)
         parts = {l.split("=")[0].strip(): l.split("=")[1].strip() for l in mb_o.splitlines() if "=" in l and l.split("=")[1].strip()}
         mb = f"{parts.get('Manufacturer','')} {parts.get('Product','')}".strip()
+    # Distro / OS name
+    os_name = PLATFORM
+    if PLATFORM == "Linux":
+        pr, _, _ = run("grep '^PRETTY_NAME' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '\"'")
+        if not pr:
+            pr, _, _ = run("lsb_release -ds 2>/dev/null")
+        os_name = pr.strip() or "Linux"
+    elif PLATFORM == "Darwin":
+        pn, _, _ = run("sw_vers -productName 2>/dev/null")
+        pv, _, _ = run("sw_vers -productVersion 2>/dev/null")
+        os_name = f"{pn.strip()} {pv.strip()}".strip() or "macOS"
+    elif PLATFORM == "Windows":
+        wo, _, _ = run("wmic os get caption /value", shell=True)
+        os_name = next((l.split("=", 1)[1].strip() for l in wo.splitlines() if "=" in l and l.split("=", 1)[1].strip()), "Windows")
+    kernel = ""
+    if PLATFORM == "Linux":
+        kernel, _, _ = run("uname -r 2>/dev/null")
     return {
         "cpu_model": cpu_model or "Ukendt CPU",
         "cpu_cores": cpu_cores or "?",
@@ -914,6 +931,8 @@ def get_hardware():
         "motherboard": mb or "?",
         "hostname": hostname.strip(),
         "platform": PLATFORM,
+        "os_name": os_name,
+        "kernel": kernel.strip(),
     }
 
 
@@ -975,7 +994,7 @@ def _docker_run_server(server):
             mapping = f"{port}:{rest}"
         cmd += ["-p", mapping]
     cmd += ["-v", f"{data_path}:{profile['data']}", profile["image"]]
-    out, err, code = run(cmd, timeout=120, shell=False)
+    out, err, code = run(cmd, timeout=300, shell=False)
     return {"ok": code == 0, "msg": out or err or f"{server['name']} startet"}
 
 
@@ -987,9 +1006,9 @@ def game_action(server_id, action):
         return {"ok": False, "msg": "Ukendt kommando"}
     if not docker_available():
         return {"ok": False, "msg": "Docker er ikke tilgængelig"}
-    if action == "start" and not container_exists(server["container"]):
+    if action in ("start", "restart") and not container_exists(server["container"]):
         return _docker_run_server(server)
-    out, err, code = run(["docker", action, server["container"]], timeout=45, shell=False)
+    out, err, code = run(["docker", action, server["container"]], timeout=60, shell=False)
     return {"ok": code == 0, "msg": out or err or f"{server['name']} {action}"}
 
 
@@ -1006,7 +1025,15 @@ def create_game_server(body):
         sid = f"{base_sid}-{index}"
         index += 1
 
-    port = int(body.get("port") or (profile["ports"][0].split(":", 1)[0].split("/", 1)[0] if profile["ports"] else 0) or 0)
+    raw_port = body.get("port") or (profile["ports"][0].split(":", 1)[0].split("/", 1)[0] if profile["ports"] else 0)
+    try:
+        port = int(raw_port) if raw_port else 0
+    except (ValueError, TypeError):
+        port = 0
+    # Auto-increment port if already in use by another server
+    used_ports = {s.get("port") for s in config["servers"]}
+    while port and port in used_ports:
+        port += 1
     container = f"byteforge-{sid}"
     data_path = SERVER_ROOT / sid
     data_path.mkdir(parents=True, exist_ok=True)
@@ -1045,7 +1072,7 @@ def create_game_server(body):
         cmd += ["-p", mapping]
     cmd += ["-v", f"{data_path}:{profile['data']}", profile["image"]]
 
-    out, err, code = run(cmd, timeout=120, shell=False)
+    out, err, code = run(cmd, timeout=300, shell=False)
     return {"ok": code == 0, "server": server, "msg": out or err or "Server oprettet"}
 
 
@@ -1358,7 +1385,7 @@ def apply_proxy():
         "-v", f"{config_dir}:/config",
         "caddy:2-alpine",
     ]
-    out, err, code = run(cmd, timeout=120, shell=False)
+    out, err, code = run(cmd, timeout=300, shell=False)
     return {"ok": code == 0, "msg": out or err or "Caddy proxy startet på port 80/443"}
 
 
@@ -1392,7 +1419,7 @@ def deploy_nginx_proxy_manager():
         "-v", f"{letsencrypt_path}:/etc/letsencrypt",
         "jc21/nginx-proxy-manager:latest",
     ]
-    out, err, code = run(cmd, timeout=120, shell=False)
+    out, err, code = run(cmd, timeout=300, shell=False)
     msg = out or err or "Nginx Proxy Manager installeret på http://localhost:81"
     return {"ok": code == 0, "msg": msg}
 
@@ -1439,7 +1466,7 @@ def deploy_app(app_id):
     for p in profile["ports"]:
         cmd += ["-p", p]
     cmd += ["-v", f"{data_path}:{profile['data']}", profile["image"]]
-    out, err, code = run(cmd, timeout=120, shell=False)
+    out, err, code = run(cmd, timeout=300, shell=False)
     host_port = profile["ports"][0].split(":")[0] if profile["ports"] else ""
     url = f" → http://localhost:{host_port}" if host_port else ""
     return {"ok": code == 0, "msg": (out or err or f"{profile['name']} deployet") + url}
