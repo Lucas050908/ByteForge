@@ -278,7 +278,7 @@ async function loadNAS() {
       <div class="bar"><div class="bar-f" style="width:${dk.pct}%"></div></div>
     </div>`).join('');
 }
-function nasRestart() { toast('NFS server genstartes...'); }
+// nasRestart defined below (async implementation)
 
 // ── RAID ──
 async function loadRAID() {
@@ -917,7 +917,8 @@ function aiQuick(msg) {
 function appendMsg(role, html) {
   const div = document.createElement('div');
   div.className = 'ai-msg ' + role;
-  div.innerHTML = `<div class="who">${role==='user'?'👤 LUCAS':'⚒ BYTEFORGE AI'}</div><div class="bubble">${html}</div>`;
+  const uname = (_authUser?.username || _authUser?.name || 'USER').toUpperCase();
+  div.innerHTML = `<div class="who">${role==='user'?`👤 ${uname}`:'⚒ BYTEFORGE AI'}</div><div class="bubble">${html}</div>`;
   document.getElementById('ai-msgs').appendChild(div);
   document.getElementById('ai-msgs').scrollTop = 9999;
   return div;
@@ -957,16 +958,28 @@ async function testAPI() {
 async function loadLog() {
   const src = document.getElementById('log-source').value;
   const out = document.getElementById('log-out');
-  const titles = {syslog:'/var/log/syslog', casaos:'casaos.service', docker:'docker logs', minecraft:'minecraft-server'};
+  const titles = {syslog:'/var/log/syslog', docker:'docker ps', minecraft:'minecraft-server', byteforge:'byteforge service'};
   document.getElementById('log-title').textContent = titles[src] || src;
   out.innerHTML = '<span class="thinking">Henter logs...</span>';
   try {
-    const mc = await api('/api/minecraft');
-    if (src === 'minecraft' && mc?.logs) {
-      out.innerHTML = mc.logs.split('\n').map(l=>`<div>${l}</div>`).join('');
-    } else {
-      out.innerHTML = '<span style="color:var(--t3)">Log tilgængeligt via byteforge-server.py API</span>';
+    let text = '';
+    if (src === 'minecraft') {
+      const servers = await api('/api/game-servers?logs=1');
+      const mc = (servers?.servers || []).find(s => s.type?.startsWith('minecraft'));
+      text = mc?.logs || 'Ingen Minecraft server fundet.';
+    } else if (src === 'docker') {
+      const containers = await api('/api/docker');
+      text = (containers || []).map(c => `${c.name.padEnd(30)} ${c.status}`).join('\n') || 'Ingen containers kørende.';
+    } else if (src === 'syslog') {
+      const r = await fetch(BASE+'/api/terminal/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'journalctl -n 50 --no-pager 2>/dev/null || tail -50 /var/log/syslog 2>/dev/null || echo "Ingen systemlog tilgængelig"'})});
+      const d = await r.json();
+      text = d.output || '';
+    } else if (src === 'byteforge') {
+      const r = await fetch(BASE+'/api/terminal/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'journalctl -u byteforge -n 50 --no-pager 2>/dev/null || echo "Byteforge service log ikke tilgængelig"'})});
+      const d = await r.json();
+      text = d.output || '';
     }
+    out.innerHTML = text.split('\n').filter(Boolean).map(l=>`<div>${escapeHTML(l)}</div>`).join('') || '<span style="color:var(--t3)">Ingen log output</span>';
   } catch { out.innerHTML = '<span class="t-err">Fejl ved hentning af logs</span>'; }
 }
 

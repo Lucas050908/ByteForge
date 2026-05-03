@@ -1025,9 +1025,11 @@ def create_game_server(body):
         sid = f"{base_sid}-{index}"
         index += 1
 
-    raw_port = body.get("port") or (profile["ports"][0].split(":", 1)[0].split("/", 1)[0] if profile["ports"] else 0)
+    raw_port = body.get("port") or (profile["ports"][0].split(":", 1)[0].split("/", 1)[0] if profile["ports"] else "0")
     try:
-        port = int(raw_port) if raw_port else 0
+        port = int(str(raw_port).strip()) if str(raw_port).strip() not in ("", "0") else 0
+        if port < 1 or port > 65535:
+            port = 0
     except (ValueError, TypeError):
         port = 0
     # Auto-increment port if already in use by another server
@@ -1980,7 +1982,14 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     ensure_dirs()
-    threading.Thread(target=_metrics_collector, daemon=True).start()
+    def _guarded_metrics():
+        while True:
+            try:
+                _metrics_collector()
+            except Exception:
+                pass
+            time.sleep(1)
+    threading.Thread(target=_guarded_metrics, daemon=True).start()
     print("\033[38;5;208m")
     print("  ByteForge Platform starter på port", PORT)
     print("  Data:", BASE_DIR)
