@@ -111,22 +111,80 @@
 <!-- ████ OVERVIEW ████ -->
 <div class="page active" id="page-overview">
   <div class="ph">
-    <div class="ph-left"><h1>BYTE<span>FORGE</span></h1><p>// ALL-IN-ONE HOMELAB PLATFORM · BUILT BY LUCAS</p></div>
+    <div class="ph-left"><h1>BYTE<span>FORGE</span></h1><p id="ov-subtitle">// ALL-IN-ONE HOMELAB PLATFORM</p></div>
+    <div class="ph-right"><button class="btn btn-g btn-sm" onclick="loadOverview()">⟳ REFRESH</button></div>
   </div>
-  <div class="grid g4" id="ov-stats">
-    <div class="card"><div class="ct">CPU <span id="ov-cpu-b"></span></div><div class="cv" id="ov-cpu">—<span class="u">%</span></div><canvas class="graph-canvas" id="graph-cpu" height="80"></canvas></div>
-    <div class="card"><div class="ct">RAM</div><div class="cv" id="ov-ram">—<span class="u">%</span></div><div class="cs" id="ov-ram-s"></div><canvas class="graph-canvas" id="graph-ram" height="80"></canvas></div>
-    <div class="card"><div class="ct">TEMPERATUR</div><div class="cv" id="ov-temp">—<span class="u">°C</span></div><div class="cs" id="ov-up"></div></div>
-    <div class="card"><div class="ct">GAME SERVERS</div><div id="ov-mc-b" style="margin:6px 0"></div><div class="cs" id="ov-mc-p"></div></div>
+
+  <!-- Row 1: Live system stats with graphs -->
+  <div class="grid g4" style="margin-bottom:12px">
+    <div class="card">
+      <div class="ct">CPU</div>
+      <div class="cv" id="ov-cpu">—<span class="u">%</span></div>
+      <canvas class="graph-canvas" id="graph-cpu" height="60"></canvas>
+    </div>
+    <div class="card">
+      <div class="ct">RAM</div>
+      <div class="cv" id="ov-ram">—<span class="u">%</span></div>
+      <div class="cs" id="ov-ram-s" style="margin-bottom:4px"></div>
+      <canvas class="graph-canvas" id="graph-ram" height="60"></canvas>
+    </div>
+    <div class="card">
+      <div class="ct">TEMPERATUR</div>
+      <div class="cv" id="ov-temp">—<span class="u">°C</span></div>
+      <div class="cs" id="ov-up" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <div class="ct">NETVÆRK</div>
+      <div style="display:flex;gap:12px;align-items:baseline;margin:4px 0">
+        <div><div style="font-family:var(--mono);font-size:9px;color:var(--t3)">↓ IN</div><div style="font-family:var(--display);font-size:24px" id="ov-net-rx">—</div></div>
+        <div><div style="font-family:var(--mono);font-size:9px;color:var(--t3)">↑ OUT</div><div style="font-family:var(--display);font-size:24px" id="ov-net-tx">—</div></div>
+      </div>
+      <canvas class="graph-canvas" id="graph-net-rx" height="60"></canvas>
+    </div>
   </div>
+
+  <!-- Row 2: Services status -->
   <div class="st">SERVICES <span>STATUS</span></div>
-  <div class="grid g3" id="ov-services">
-    <div class="card"><div class="ct">NAS / NFS</div><div id="ov-nas-b"></div></div>
-    <div class="card"><div class="ct">RAID ARRAY</div><div id="ov-raid-b"></div></div>
-    <div class="card"><div class="ct">DOCKER CONTAINERS</div><div class="cv" style="font-size:36px" id="ov-dc">—</div></div>
+  <div class="grid g4" style="margin-bottom:12px">
+    <div class="card">
+      <div class="ct">DOCKER</div>
+      <div class="cv" id="ov-dc" style="font-size:42px">—</div>
+      <div class="cs">Containers kørende</div>
+    </div>
+    <div class="card">
+      <div class="ct">GAME SERVERS</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin:4px 0">
+        <div class="cv" id="ov-gs-online" style="font-size:42px">—</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--t3)">/ <span id="ov-gs-total">—</span></div>
+      </div>
+      <div class="cs">Online / Total</div>
+    </div>
+    <div class="card">
+      <div class="ct">NAS / NFS</div>
+      <div id="ov-nas-b" style="margin:8px 0"></div>
+      <div class="cs" id="ov-nas-shares">—</div>
+    </div>
+    <div class="card">
+      <div class="ct">RAID ARRAY</div>
+      <div id="ov-raid-b" style="margin:8px 0"></div>
+      <div class="cs" id="ov-raid-info">—</div>
+    </div>
   </div>
+
+  <!-- Row 3: Hardware info -->
+  <div class="st">HARDWARE <span>INFO</span></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="grid g4">
+      <div><div class="ct">HOSTNAME</div><div style="font-family:var(--display);font-size:20px;letter-spacing:2px;margin-top:4px" id="ov-hostname">—</div></div>
+      <div><div class="ct">OS / DISTRO</div><div style="font-family:var(--mono);font-size:11px;color:var(--o2);margin-top:6px;line-height:1.5" id="ov-os">—</div></div>
+      <div><div class="ct">CPU</div><div style="font-family:var(--mono);font-size:10px;color:var(--t2);margin-top:6px;line-height:1.5" id="ov-cpu-model">—</div></div>
+      <div><div class="ct">GPU</div><div style="font-family:var(--mono);font-size:10px;color:var(--t2);margin-top:6px;line-height:1.5" id="ov-gpu">—</div></div>
+    </div>
+  </div>
+
+  <!-- Row 4: Disk overview -->
   <div class="st">DISK <span>OVERBLIK</span></div>
-  <div id="ov-disks"></div>
+  <div id="ov-disks" class="grid g2"></div>
 </div>
 
 <!-- ████ SYSTEM ████ -->

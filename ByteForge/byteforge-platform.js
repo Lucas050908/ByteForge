@@ -191,34 +191,95 @@ async function updateTicker() {
   window._lastData = d;
   checkNotifications(s);
   updateGraphs();
+  // Refresh overview if it's the active page
+  if (document.getElementById('page-overview')?.classList.contains('active')) {
+    loadOverview();
+  }
 }
 
 // ── OVERVIEW ──
 async function loadOverview() {
-  const d = window._lastData || await api('/api/all');
+  const [d, hw] = await Promise.all([
+    window._lastData ? Promise.resolve(window._lastData) : api('/api/all'),
+    api('/api/hardware')
+  ]);
   if (!d) return;
   const s = d.system;
-  document.getElementById('ov-cpu').innerHTML = s.cpu + '<span class="u">%</span>';
-  document.getElementById('ov-cpu-bar').style.width = s.cpu + '%';
-  document.getElementById('ov-ram').innerHTML = s.ram_pct + '<span class="u">%</span>';
-  document.getElementById('ov-ram-s').textContent = s.ram_used_mb + ' / ' + s.ram_total_mb + ' MB';
-  document.getElementById('ov-ram-bar').style.width = s.ram_pct + '%';
-  document.getElementById('ov-temp').innerHTML = s.temp + '<span class="u">°C</span>';
-  document.getElementById('ov-up').textContent = 'Uptime: ' + s.uptime;
-  document.getElementById('ov-mc-b').innerHTML = mkbadge(d.minecraft.status, 'Online', 'Offline');
-  document.getElementById('ov-mc-p').textContent = d.minecraft.players || 'Ingen spillere';
-  document.getElementById('ov-nas-b').innerHTML = mkbadge(d.nas.status);
-  document.getElementById('ov-raid-b').innerHTML = mkbadge(d.raid.status==='active'?'running':d.raid.status);
-  document.getElementById('ov-dc').textContent = d.docker.length;
-  document.getElementById('ov-disks').innerHTML = d.disks.map(dk => `
-    <div class="card" style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-family:var(--display);font-size:18px;letter-spacing:2px">${dk.mount}</span>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--t3)">${dk.used}GB / ${dk.total}GB &nbsp; <b style="color:var(--o)">${dk.pct}%</b></span>
-      </div>
-      <div class="bar"><div class="bar-f" style="width:${dk.pct}%"></div></div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:6px">${dk.free}GB fri</div>
-    </div>`).join('');
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+
+  // System stats
+  set('ov-cpu', s.cpu + '<span class="u">%</span>');
+  set('ov-ram', s.ram_pct + '<span class="u">%</span>');
+  set('ov-ram-s', `${s.ram_used_mb} MB / ${s.ram_total_mb} MB`);
+  set('ov-temp', s.temp + '<span class="u">°C</span>');
+  set('ov-up', '⏱ Uptime: ' + s.uptime);
+
+  // Network
+  const latest = _graphData?.net_rx?.slice(-1)[0];
+  if (latest !== undefined) {
+    set('ov-net-rx', fmtBytes(latest) + '<span class="u">/s</span>');
+    const txLatest = _graphData?.net_tx?.slice(-1)[0];
+    if (txLatest !== undefined) set('ov-net-tx', fmtBytes(txLatest) + '<span class="u">/s</span>');
+  } else {
+    set('ov-net-rx', '—'); set('ov-net-tx', '—');
+  }
+
+  // Docker
+  set('ov-dc', d.docker.length);
+
+  // Game servers
+  const gsOnline = (d.game_servers || []).filter(s => s.status === 'running').length;
+  const gsTotal = (d.game_servers || []).length;
+  set('ov-gs-online', gsOnline);
+  set('ov-gs-total', gsTotal);
+
+  // NAS
+  set('ov-nas-b', mkbadge(d.nas.status));
+  set('ov-nas-shares', d.nas.shares?.length ? d.nas.shares.length + ' share(s)' : 'Ingen shares konfigureret');
+
+  // RAID
+  const raidOk = d.raid.status === 'active';
+  set('ov-raid-b', mkbadge(raidOk ? 'running' : d.raid.status));
+  set('ov-raid-info', raidOk ? 'Array aktiv' : (d.raid.status === 'inactive' ? 'Ingen RAID' : d.raid.status));
+
+  // Hardware
+  if (hw) {
+    set('ov-hostname', hw.hostname || '—');
+    const osStr = hw.os_name || hw.platform;
+    const kernelStr = hw.kernel ? `<br><span style="font-size:9px;color:var(--t3)">${escapeHTML(hw.kernel)}</span>` : '';
+    set('ov-os', escapeHTML(osStr) + kernelStr);
+    set('ov-cpu-model', escapeHTML(hw.cpu_model) + `<br><span style="color:var(--t3)">${hw.cpu_cores} logiske tråde</span>`);
+    set('ov-gpu', escapeHTML(hw.gpu));
+  }
+
+  // Disks — color coded by usage
+  if (d.disks?.length) {
+    document.getElementById('ov-disks').innerHTML = d.disks.map(dk => {
+      const pct = parseInt(dk.pct) || 0;
+      const barColor = pct > 90 ? 'var(--err)' : pct > 75 ? 'var(--warn)' : 'var(--o)';
+      const pctColor = pct > 90 ? 'var(--err)' : pct > 75 ? 'var(--warn)' : 'var(--o2)';
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-family:var(--display);font-size:20px;letter-spacing:2px">${escapeHTML(dk.mount)}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:${pctColor};font-weight:700">${pct}%</span>
+        </div>
+        <div style="height:6px;background:var(--b);overflow:hidden;margin-bottom:8px">
+          <div style="height:6px;width:${pct}%;background:${barColor};transition:width 1s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--t3)">
+          <span>${dk.used}GB brugt</span><span>${dk.free}GB fri</span><span>${dk.total}GB total</span>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('ov-disks').innerHTML = '<div class="card"><div class="cs">Ingen diskdata tilgængelig</div></div>';
+  }
+}
+
+function fmtBytes(bytes) {
+  if (!bytes || bytes < 1024) return (bytes || 0) + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 // ── SYSTEM ──
