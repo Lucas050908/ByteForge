@@ -140,7 +140,7 @@ function nav(id, el) {
 }
 
 function loadPage(id) {
-  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, proxy:loadProxy, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth, appstore:loadAppStore, terminal:initTerminal};
+  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, proxy:loadProxy, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth, appstore:loadAppStore, terminal:initTerminal, backup:loadBackup};
   if (map[id]) map[id]();
 }
 
@@ -191,10 +191,9 @@ async function updateTicker() {
   window._lastData = d;
   checkNotifications(s);
   updateGraphs();
-  // Refresh overview if it's the active page
-  if (document.getElementById('page-overview')?.classList.contains('active')) {
-    loadOverview();
-  }
+  // Refresh active page stats
+  if (document.getElementById('page-overview')?.classList.contains('active')) loadOverview();
+  else if (document.getElementById('page-system')?.classList.contains('active')) loadSystem();
 }
 
 // ── OVERVIEW ──
@@ -1063,7 +1062,125 @@ async function nasRestart() {
   } catch(e) { toast('Fejl: '+e.message, false); }
 }
 
-function runBackup(job) { toast('Backup job kørende: ' + job + '...'); }
+// ── BACKUP & SYNC ──
+async function loadBackup() {
+  const data = await api('/api/backup/jobs');
+  if (!data) return;
+  const jobs = data.jobs || [];
+  const rp = data.restore_points || [];
+
+  document.getElementById('bk-total').textContent = jobs.length;
+  document.getElementById('bk-dest-path').textContent = data.backup_dir || '—';
+  document.getElementById('bk-rp-count').textContent = rp.length;
+
+  const lastRp = rp[0];
+  if (lastRp) {
+    document.getElementById('bk-last').textContent = lastRp.created
+      ? new Date(lastRp.created * 1000).toLocaleString('da-DK', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+      : '—';
+    document.getElementById('bk-last-size').textContent = lastRp.size_mb + ' MB';
+  } else {
+    document.getElementById('bk-last').textContent = 'Aldrig';
+    document.getElementById('bk-last-size').textContent = '';
+  }
+
+  const scheduleLabel = {manual:'Manuelt', daily:'Dagligt', weekly:'Ugentligt'};
+  const jobsList = document.getElementById('bk-jobs-list');
+  if (!jobs.length) {
+    jobsList.innerHTML = `<div class="card" style="border-style:dashed;text-align:center;padding:24px">
+      <div style="font-family:var(--display);font-size:18px;letter-spacing:2px;color:var(--t3)">INGEN BACKUP JOBS</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:8px">Tilføj et job ovenfor for at komme i gang.</div>
+    </div>`;
+  } else {
+    jobsList.innerHTML = `<div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl" style="width:100%">
+        <thead><tr><th>Navn</th><th>Kilde</th><th>Interval</th><th>Seneste</th><th>Størrelse</th><th></th></tr></thead>
+        <tbody>${jobs.map(j => `<tr>
+          <td><b>${escapeHTML(j.name)}</b></td>
+          <td style="font-size:10px;color:var(--t3)">${escapeHTML(j.src)}</td>
+          <td>${escapeHTML(scheduleLabel[j.schedule] || j.schedule)}</td>
+          <td>${j.last_run ? j.last_run.replace('_',' ') : '<span style="color:var(--t3)">Aldrig</span>'}</td>
+          <td>${j.last_size_mb ? j.last_size_mb + ' MB' : '—'}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-o btn-sm" onclick="runBackup('${j.id}','${escapeHTML(j.name)}')">▶ KØR</button>
+            <button class="btn btn-r btn-sm" style="margin-left:4px" onclick="deleteBackupJob('${j.id}')">🗑</button>
+          </td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+
+  const rpList = document.getElementById('bk-restore-list');
+  if (!rp.length) {
+    rpList.innerHTML = '<div class="card"><div class="cs">Ingen restore points endnu. Kør et backup job for at oprette et.</div></div>';
+  } else {
+    rpList.innerHTML = `<div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <thead><tr><th>Fil</th><th>Job</th><th>Oprettet</th><th>Størrelse</th><th></th></tr></thead>
+        <tbody>${rp.map(p => `<tr>
+          <td style="font-size:10px">${escapeHTML(p.name)}</td>
+          <td>${escapeHTML(p.job)}</td>
+          <td>${new Date(p.created*1000).toLocaleString('da-DK',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+          <td>${p.size_mb} MB</td>
+          <td><button class="btn btn-g btn-sm" onclick="restoreBackup('${escapeHTML(p.path)}')">⟳ GENDAN</button></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+}
+
+async function addBackupJob() {
+  const name = document.getElementById('bk-new-name').value.trim();
+  const src = document.getElementById('bk-new-src').value.trim();
+  const schedule = document.getElementById('bk-new-schedule').value;
+  if (!name || !src) { toast('Udfyld navn og kildesti', false); return; }
+  const r = await fetch(BASE+'/api/backup/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,src,schedule})});
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('bk-new-name').value = '';
+    document.getElementById('bk-new-src').value = '';
+    toast('Job tilføjet');
+    loadBackup();
+  } else toast(d.msg||'Fejl', false);
+}
+
+async function runBackup(jobId, jobName) {
+  const td = document.getElementById('bk-td');
+  const out = document.getElementById('bk-output');
+  const title = document.getElementById('bk-log-title');
+  if (td) td.classList.add('on');
+  if (title) title.textContent = jobName || jobId;
+  if (out) out.innerHTML = '<span class="thinking">Kører backup med rsync/tar... vent venligst.</span>';
+  try {
+    const r = await fetch(BASE+'/api/backup/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:jobId})});
+    const d = await r.json();
+    if (td) td.classList.remove('on');
+    if (out) out.innerHTML = `<div style="color:${d.ok?'var(--ok)':'var(--err)'}">${escapeHTML(d.msg||'Udført')}</div>`;
+    toast(d.msg || (d.ok ? 'Backup fuldført' : 'Backup fejlede'), d.ok);
+    loadBackup();
+  } catch(e) {
+    if (td) td.classList.remove('on');
+    if (out) out.innerHTML = `<div style="color:var(--err)">${escapeHTML(e.message)}</div>`;
+    toast('Fejl: '+e.message, false);
+  }
+}
+
+async function deleteBackupJob(id) {
+  if (!confirm('Slet dette backup job?')) return;
+  const r = await fetch(BASE+'/api/backup/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  const d = await r.json();
+  toast(d.ok ? 'Job slettet' : 'Fejl', d.ok);
+  if (d.ok) loadBackup();
+}
+
+async function restoreBackup(path) {
+  const dest = prompt('Gendan til mappe:', '/tmp/byteforge-restore');
+  if (!dest) return;
+  toast('Gendanner backup...');
+  const r = await fetch(BASE+'/api/backup/restore',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,dest})});
+  const d = await r.json();
+  toast(d.msg || (d.ok ? 'Gendannet' : 'Fejl'), d.ok);
+}
 
 // ── REAL-TIME GRAPHS ──
 const _graphData = {cpu:[], ram:[], rx:[], tx:[]};
@@ -1330,7 +1447,7 @@ async function startApp() {
   if (_tickerTimer) clearInterval(_tickerTimer);
   await updateTicker();
   _tickerTimer = setInterval(updateTicker, 15000);
-  loadOverview();
+  loadSystem();
   api('/api/users').then(d => {
     if (!d?.settings) return;
     applyTheme(d.settings.theme || 'forge-dark');

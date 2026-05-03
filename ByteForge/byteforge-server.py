@@ -1474,6 +1474,66 @@ def deploy_app(app_id):
     return {"ok": code == 0, "msg": (out or err or f"{profile['name']} deployet") + url}
 
 
+BACKUP_DIR = BASE_DIR / "backups"
+BACKUP_JOBS_PATH = BASE_DIR / "backup_jobs.json"
+
+def load_backup_jobs():
+    try:
+        with BACKUP_JOBS_PATH.open() as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def save_backup_jobs(jobs):
+    BACKUP_JOBS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = BACKUP_JOBS_PATH.with_suffix(".tmp")
+    with tmp.open("w") as f:
+        json.dump(jobs, f, indent=2)
+    tmp.replace(BACKUP_JOBS_PATH)
+
+def list_restore_points(job_name=""):
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    points = []
+    search = BACKUP_DIR / slugify(job_name) if job_name else BACKUP_DIR
+    for p in sorted(search.rglob("*.tar.gz") if job_name else BACKUP_DIR.glob("**/*.tar.gz"), reverse=True):
+        try:
+            stat = p.stat()
+            points.append({
+                "name": p.name,
+                "path": str(p),
+                "job": p.parent.name,
+                "size_mb": round(stat.st_size / (1024 * 1024), 1),
+                "created": int(stat.st_mtime),
+            })
+        except Exception:
+            pass
+    return points[:30]
+
+def run_backup_job(job):
+    src = job.get("src", "").strip()
+    if not src or not Path(src).exists():
+        return {"ok": False, "msg": f"Kilde ikke fundet: {src}"}
+    job_dir = BACKUP_DIR / slugify(job["name"])
+    job_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dest = job_dir / f"{slugify(job['name'])}_{ts}.tar.gz"
+    out, err, code = run(
+        f"tar -czf {shlex.quote(str(dest))} -C {shlex.quote(str(Path(src).parent))} {shlex.quote(Path(src).name)} 2>&1",
+        timeout=300, shell=True
+    )
+    if code == 0:
+        size_mb = round(dest.stat().st_size / (1024 * 1024), 1)
+        # Update last run time in jobs
+        jobs = load_backup_jobs()
+        for j in jobs:
+            if j.get("id") == job.get("id"):
+                j["last_run"] = ts
+                j["last_size_mb"] = size_mb
+        save_backup_jobs(jobs)
+        return {"ok": True, "msg": f"Backup fuldført: {dest.name} ({size_mb} MB)", "file": str(dest)}
+    return {"ok": False, "msg": out or err or "Backup fejlede"}
+
+
 def safe_path(scope, rel=""):
     roots = {
         "public": PUBLIC_ROOT,
@@ -1837,6 +1897,10 @@ class Handler(BaseHTTPRequestHandler):
                     "game_servers": get_game_servers(),
                     "network": get_network(),
                 })
+            elif path == "/api/backup/jobs":
+                jobs = load_backup_jobs()
+                rp = list_restore_points()
+                self.send_json({"jobs": jobs, "restore_points": rp, "backup_dir": str(BACKUP_DIR)})
             elif path == "/api/metrics/history":
                 with _METRICS_LOCK:
                     self.send_json(list(_METRICS_HISTORY))
@@ -1972,6 +2036,40 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(appstore_install(body.get("app", "")))
             elif parsed.path == "/api/appstore/uninstall":
                 self.send_json(appstore_uninstall(body.get("app", "")))
+            elif parsed.path == "/api/backup/add":
+                jobs = load_backup_jobs()
+                new_job = {
+                    "id": f"job-{int(time.time())}",
+                    "name": body.get("name", "Backup"),
+                    "src": body.get("src", ""),
+                    "schedule": body.get("schedule", "manual"),
+                    "last_run": None,
+                    "last_size_mb": None,
+                }
+                jobs.append(new_job)
+                save_backup_jobs(jobs)
+                self.send_json({"ok": True, "job": new_job})
+            elif parsed.path == "/api/backup/delete":
+                jobs = [j for j in load_backup_jobs() if j.get("id") != body.get("id")]
+                save_backup_jobs(jobs)
+                self.send_json({"ok": True})
+            elif parsed.path == "/api/backup/run":
+                job_id = body.get("id")
+                job = next((j for j in load_backup_jobs() if j.get("id") == job_id), None)
+                if not job:
+                    self.send_json({"ok": False, "msg": "Job ikke fundet"})
+                else:
+                    self.send_json(run_backup_job(job))
+            elif parsed.path == "/api/backup/restore":
+                path_str = body.get("path", "")
+                dest = body.get("dest", str(BASE_DIR / "restore"))
+                p = Path(path_str)
+                if not p.exists():
+                    self.send_json({"ok": False, "msg": "Fil ikke fundet"})
+                else:
+                    Path(dest).mkdir(parents=True, exist_ok=True)
+                    out, err, code = run(f"tar -xzf {shlex.quote(path_str)} -C {shlex.quote(dest)} 2>&1", timeout=120, shell=True)
+                    self.send_json({"ok": code == 0, "msg": out or err or f"Gendannet til {dest}"})
             elif parsed.path == "/api/terminal/exec":
                 self.send_json(exec_command(body.get("cmd", "")))
             else:

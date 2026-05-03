@@ -68,8 +68,7 @@
 <nav id="sidebar">
   <div class="sb-section">
     <div class="sb-label" data-i18n="nav.overview">Overblik</div>
-    <div class="sb-item active" onclick="nav('overview',this)"><span class="si">◈</span><span data-i18n="nav.dashboard">Dashboard</span></div>
-    <div class="sb-item" onclick="nav('system',this)"><span class="si">⚙</span><span data-i18n="nav.system">System</span></div>
+    <div class="sb-item active" onclick="nav('system',this)"><span class="si">⚙</span><span data-i18n="nav.system">System</span></div>
     <div class="sb-item" onclick="nav('network',this)"><span class="si">📡</span><span data-i18n="nav.network">Netværk</span></div>
   </div>
   <div class="sb-section">
@@ -109,7 +108,7 @@
 <main id="main">
 
 <!-- ████ OVERVIEW ████ -->
-<div class="page active" id="page-overview">
+<div class="page" id="page-overview">
   <div class="ph">
     <div class="ph-left"><h1>BYTE<span>FORGE</span></h1><p id="ov-subtitle">// ALL-IN-ONE HOMELAB PLATFORM</p></div>
     <div class="ph-right"><button class="btn btn-g btn-sm" onclick="loadOverview()">⟳ REFRESH</button></div>
@@ -188,7 +187,7 @@
 </div>
 
 <!-- ████ SYSTEM ████ -->
-<div class="page" id="page-system">
+<div class="page active" id="page-system">
   <div class="ph"><div class="ph-left"><h1>SYS<span>TEM</span></h1><p>// CPU · RAM · TEMP · UPTIME</p></div></div>
   <div class="grid g4" style="margin-bottom:12px">
     <div class="card ring-wrap" style="padding:20px">
@@ -323,37 +322,61 @@
 
 <!-- ████ BACKUP ████ -->
 <div class="page" id="page-backup">
-  <div class="ph"><div class="ph-left"><h1>BACKUP <span>& SYNC</span></h1><p>// AUTOMATISKE BACKUPS · VERSIONERING · RESTORE</p></div></div>
-  <div class="grid g3">
-    <div class="card highlight">
-      <div class="ct">NÆSTE BACKUP</div>
-      <div class="cv" style="font-size:32px" id="next-backup">02:00</div>
-      <div class="cs">Daglig planlagt backup</div>
-    </div>
-    <div class="card">
-      <div class="ct">SENESTE BACKUP</div>
-      <div class="cv" style="font-size:24px;color:var(--ok)" id="last-backup">—</div>
-      <div class="cs" id="last-backup-size"></div>
-    </div>
-    <div class="card">
-      <div class="ct">BACKUP VERSIONER</div>
-      <div class="cv" style="font-size:36px" id="backup-versions">—</div>
-      <div class="cs">Tilgængelige restore points</div>
+  <div class="ph">
+    <div class="ph-left"><h1>BACKUP <span>& SYNC</span></h1><p>// RSYNC · AUTOMATISK SCHEDULER · RESTORE POINTS</p></div>
+    <div class="ph-right"><button class="btn btn-g btn-sm" onclick="loadBackup()">⟳ REFRESH</button></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid g4" style="margin-bottom:14px">
+    <div class="card"><div class="ct">BACKUP JOBS</div><div class="cv" id="bk-total">—</div><div class="cs">Konfigurerede</div></div>
+    <div class="card"><div class="ct">SENESTE</div><div class="cv" style="font-size:22px;color:var(--ok)" id="bk-last">—</div><div class="cs" id="bk-last-size"></div></div>
+    <div class="card"><div class="ct">RESTORE POINTS</div><div class="cv" id="bk-rp-count">—</div><div class="cs">Tilgængelige</div></div>
+    <div class="card"><div class="ct">BACKUP PLACERING</div><div style="font-family:var(--mono);font-size:10px;color:var(--o2);margin-top:6px;word-break:break-all" id="bk-dest-path">—</div></div>
+  </div>
+
+  <!-- Add new job -->
+  <div class="st">NY BACKUP <span>JOB</span></div>
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end">
+      <div>
+        <div class="form-label">Navn</div>
+        <input class="input" id="bk-new-name" placeholder="e.g. Game Servers"/>
+      </div>
+      <div>
+        <div class="form-label">Kilde mappe</div>
+        <input class="input" id="bk-new-src" placeholder="/opt/byteforge/files/servers"/>
+      </div>
+      <div>
+        <div class="form-label">Kør</div>
+        <select class="select" id="bk-new-schedule">
+          <option value="manual">Manuelt</option>
+          <option value="daily">Dagligt</option>
+          <option value="weekly">Ugentligt</option>
+        </select>
+      </div>
+      <button class="btn btn-o" onclick="addBackupJob()">+ TILFØJ</button>
     </div>
   </div>
+
+  <!-- Jobs list -->
   <div class="st">BACKUP <span>JOBS</span></div>
-  <div class="card">
-    <table class="tbl">
-      <thead><tr><th>Job</th><th>Kilde</th><th>Destination</th><th>Interval</th><th>Status</th><th></th></tr></thead>
-      <tbody>
-        <tr><td>NAS → Local</td><td>/mnt/nas-share</td><td>/mnt/raid/backup</td><td>Daglig 02:00</td><td><span class="badge b-ok"><span class="bd"></span>OK</span></td><td><button class="btn btn-o btn-sm" onclick="runBackup('nas')">▶ KØR NU</button></td></tr>
-        <tr><td>Home → NAS</td><td>/home/admin</td><td>/mnt/nas-share/home</td><td>Daglig 03:00</td><td><span class="badge b-ok"><span class="bd"></span>OK</span></td><td><button class="btn btn-o btn-sm" onclick="runBackup('home')">▶ KØR NU</button></td></tr>
-        <tr><td>Minecraft → NAS</td><td>/opt/minecraft</td><td>/mnt/nas-share/mc</td><td>Hver 6. time</td><td><span class="badge b-warn"><span class="bd"></span>VENTER</span></td><td><button class="btn btn-o btn-sm" onclick="runBackup('mc')">▶ KØR NU</button></td></tr>
-      </tbody>
-    </table>
+  <div id="bk-jobs-list">
+    <div class="card"><div class="cs">Indlæser backup jobs...</div></div>
   </div>
+
+  <!-- Backup output -->
+  <div class="st" style="margin-top:14px">BACKUP <span>OUTPUT</span></div>
+  <div class="term">
+    <div class="term-bar"><div class="td" id="bk-td"></div><div class="td"></div><span class="term-lbl" id="bk-log-title">Klik KØR NU på et job</span></div>
+    <div class="term-body" id="bk-output" style="max-height:200px">Ingen aktiv backup kørende.</div>
+  </div>
+
+  <!-- Restore points -->
   <div class="st">RESTORE <span>POINTS</span></div>
-  <div class="card" id="restore-list"><div style="font-family:var(--mono);font-size:11px;color:var(--t3)">Ingen restore points fundet endnu</div></div>
+  <div id="bk-restore-list">
+    <div class="card"><div class="cs">Indlæser restore points...</div></div>
+  </div>
 </div>
 
 <!-- ████ DISK HEALTH ████ -->
