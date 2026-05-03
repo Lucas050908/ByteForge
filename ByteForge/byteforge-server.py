@@ -148,10 +148,10 @@ SERVER_TYPES = {
     # ── Survival / Open World ──
     "ark-survival-evolved": {
         "name": "ARK Survival Evolved",
-        "image": "hermsi/ark-server",
-        "env": {"SESSION_NAME": "ByteForge ARK", "SERVER_MAP": "TheIsland", "ADMIN_PASSWORD": "byteforge", "MAX_PLAYERS": "20", "SERVER_PASSWORD": ""},
+        "image": "azixmcaze/ark-se-server",
+        "env": {"SESSIONNAME": "ByteForge ARK", "SERVERMAP": "TheIsland", "ADMINPASSWORD": "byteforge", "MAXPLAYERS": "20", "SERVERPASSWORD": ""},
         "ports": ["7777:7777/udp", "7778:7778/udp", "27015:27015/udp"],
-        "data": "/ark",
+        "data": "/server",
         "cover": _STEAM.format(346110),
         "category": "Survival / Open World",
     },
