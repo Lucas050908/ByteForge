@@ -374,66 +374,43 @@
 <!-- ████ GAME SERVERS ████ -->
 <div class="page" id="page-minecraft">
   <div class="ph">
-    <div class="ph-left"><h1>GAME <span>SERVERS</span></h1><p>// MINECRAFT · FIVEM · TERRARIA · CUSTOM RUNTIMES</p></div>
+    <div class="ph-left"><h1>GAME <span>SERVERS</span></h1><p>// 24 SPIL · DOCKER RUNTIME · ONE-CLICK DEPLOY</p></div>
     <div class="ph-right"><button class="btn btn-o btn-sm" onclick="loadGameServers()">⟳ OPDATER</button></div>
   </div>
-  <div class="grid g4" style="margin-bottom:12px">
-    <div class="card"><div class="ct">SERVER PROFILER</div><div class="cv" id="gs-total">—</div><div class="cs">Konfigurerede instanser</div></div>
-    <div class="card"><div class="ct">ONLINE</div><div class="cv" id="gs-online">—</div><div class="cs">Kørende nu</div></div>
-    <div class="card"><div class="ct">AUTO-RESTART</div><div class="cv" id="gs-restart">—</div><div class="cs">Crash recovery aktiv</div></div>
-    <div class="card"><div class="ct">RUNTIME</div><div class="cv" style="font-size:30px">DOCKER</div><div class="cs">CasaOS uafhængig</div></div>
+
+  <!-- Stats -->
+  <div class="grid g4" style="margin-bottom:18px">
+    <div class="card"><div class="ct">SERVERE</div><div class="cv" id="gs-total">0</div><div class="cs">Konfigurerede instanser</div></div>
+    <div class="card"><div class="ct">ONLINE</div><div class="cv" style="color:var(--ok)" id="gs-online">0</div><div class="cs">Kørende nu</div></div>
+    <div class="card"><div class="ct">AUTO-RESTART</div><div class="cv" id="gs-restart">0</div><div class="cs">Crash recovery</div></div>
+    <div class="card"><div class="ct">RUNTIME</div><div class="cv" style="font-size:28px">DOCKER</div><div class="cs">Isoleret container per server</div></div>
   </div>
-  <div class="st">ONE-CLICK <span>SETUP</span></div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="setup-grid">
+
+  <!-- Game Picker -->
+  <div class="st">VÆLG <span>SPIL</span></div>
+  <div class="gp-cats" id="gp-cats">
+    <button class="gpcat-btn active" onclick="filterGamePicker('All')" data-gcat="All">ALLE</button>
+    <button class="gpcat-btn" onclick="filterGamePicker('Minecraft')" data-gcat="Minecraft">⛏ MINECRAFT</button>
+    <button class="gpcat-btn" onclick="filterGamePicker('Survival / Open World')" data-gcat="Survival / Open World">🌿 SURVIVAL</button>
+    <button class="gpcat-btn" onclick="filterGamePicker('Shooter / Action')" data-gcat="Shooter / Action">🔫 SHOOTER</button>
+    <button class="gpcat-btn" onclick="filterGamePicker('Simulation / Builder')" data-gcat="Simulation / Builder">🏗 SIMULATION</button>
+    <button class="gpcat-btn" onclick="filterGamePicker('Andre')" data-gcat="Andre">🎮 ANDRE</button>
+  </div>
+  <div class="game-picker-grid" id="game-picker-grid">
+    <div class="card"><div class="cs">Indlæser spil...</div></div>
+  </div>
+
+  <!-- Create Form (appears after picking a game) -->
+  <div class="create-form-panel" id="gs-create-panel">
+    <div style="font-family:var(--display);font-size:18px;letter-spacing:3px;margin-bottom:14px;color:var(--o)">OPRET SERVER — <span id="gs-selected-name">—</span></div>
+    <div class="create-form-grid">
       <div>
         <div class="form-label">Server navn</div>
-        <input class="input" id="new-server-name" placeholder="Survival, FiveM RP, Terraria..."/>
+        <input class="input" id="new-server-name" placeholder="Mit Valheim Server..."/>
       </div>
       <div>
-        <div class="form-label">Type</div>
-        <select class="select" id="new-server-type" style="width:100%" onchange="updateCoverPreview(this.value)">
-          <optgroup label="── Minecraft ──">
-            <option value="minecraft-paper">Minecraft Paper</option>
-            <option value="minecraft-vanilla">Minecraft Vanilla</option>
-            <option value="minecraft-spigot">Minecraft Spigot</option>
-            <option value="minecraft-forge">Minecraft Forge</option>
-            <option value="minecraft-fabric">Minecraft Fabric</option>
-          </optgroup>
-          <optgroup label="── Survival / Open World ──">
-            <option value="ark-survival-evolved">ARK Survival Evolved</option>
-            <option value="palworld">Palworld</option>
-            <option value="rust">Rust</option>
-            <option value="7-days-to-die">7 Days to Die</option>
-            <option value="dayz">DayZ</option>
-            <option value="valheim">Valheim</option>
-            <option value="project-zomboid">Project Zomboid</option>
-            <option value="v-rising">V Rising</option>
-            <option value="sons-of-the-forest">Sons of the Forest</option>
-          </optgroup>
-          <optgroup label="── Shooter / Action ──">
-            <option value="counter-strike-2">Counter-Strike 2</option>
-            <option value="team-fortress-2">Team Fortress 2</option>
-            <option value="left4dead2">Left 4 Dead 2</option>
-            <option value="gmod">Garry's Mod</option>
-          </optgroup>
-          <optgroup label="── Simulation / Builder ──">
-            <option value="satisfactory">Satisfactory</option>
-            <option value="factorio">Factorio</option>
-            <option value="astroneer">Astroneer</option>
-            <option value="space-engineers">Space Engineers</option>
-            <option value="farming-simulator-22">Farming Simulator 22</option>
-            <option value="farming-simulator-25">Farming Simulator 25</option>
-          </optgroup>
-          <optgroup label="── Andre ──">
-            <option value="fivem">FiveM</option>
-            <option value="terraria">Terraria</option>
-            <option value="unturned">Unturned</option>
-            <option value="euro-truck-simulator-2">Euro Truck Simulator 2</option>
-            <option value="custom">Custom</option>
-          </optgroup>
-        </select>
-        <img id="cover-preview" src="" alt="Game cover" onerror="this.style.display='none'"/>
+        <div class="form-label">Port (valgfrit)</div>
+        <input class="input" id="new-server-port" placeholder="Auto"/>
       </div>
       <div>
         <div class="form-label">CPU</div>
@@ -441,19 +418,28 @@
       </div>
       <div>
         <div class="form-label">RAM</div>
-        <input class="input" id="new-server-ram" value="2g"/>
+        <input class="input" id="new-server-ram" value="4g"/>
       </div>
-      <button class="btn btn-o" onclick="createGameServer()">⚡ OPRET</button>
+      <button class="btn btn-o" onclick="createGameServer()">⚡ DEPLOY</button>
+    </div>
+    <input type="hidden" id="new-server-type" value=""/>
+  </div>
+
+  <!-- Server List -->
+  <div class="st">DINE <span>SERVERE</span></div>
+  <div class="grid g2" id="game-server-list">
+    <div class="card" style="padding:32px;text-align:center;border-style:dashed">
+      <div style="font-size:48px;margin-bottom:12px">🎮</div>
+      <div style="font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--t3)">INGEN SERVERE ENDNU</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:8px">Vælg et spil ovenfor og klik DEPLOY</div>
     </div>
   </div>
-  <div class="st">SERVER <span>CONTROL</span></div>
-  <div class="grid g2" id="game-server-list">
-    <div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter serverprofiler...</div></div>
-  </div>
-  <div class="st">AKTIV <span>LOG</span></div>
+
+  <!-- Log -->
+  <div class="st" style="margin-top:16px">SERVER <span>LOG</span></div>
   <div class="term">
-    <div class="term-bar"><div class="td on"></div><div class="td"></div><span class="term-lbl" id="gs-log-title">game server</span><button class="btn btn-g btn-sm" style="margin-left:auto" onclick="loadGameServers(true)">⟳ LOGS</button></div>
-    <div class="term-body" id="mc-logs">Vælg en server for at se logs</div>
+    <div class="term-bar"><div class="td on"></div><div class="td"></div><span class="term-lbl" id="gs-log-title">Vælg en server</span><button class="btn btn-g btn-sm" style="margin-left:auto" onclick="loadGameServers(true)">⟳ LOGS</button></div>
+    <div class="term-body" id="mc-logs">Klik LOG på en server for at se output.</div>
   </div>
 </div>
 

@@ -439,7 +439,7 @@ function escapeHTML(v) {
 async function loadGameServers(withLogs=false) {
   const data = await api('/api/game-servers' + (withLogs ? '?logs=1' : ''));
   if (!data) return;
-  if (data.types) window._serverTypes = data.types;
+  if (data.types) { window._serverTypes = data.types; renderGamePicker(); }
   const servers = data.servers || [];
   document.getElementById('gs-total').textContent = servers.length;
   document.getElementById('gs-online').textContent = servers.filter(s => s.status === 'running').length;
@@ -447,42 +447,46 @@ async function loadGameServers(withLogs=false) {
   document.getElementById('sb-game-count').textContent = servers.length;
   const list = document.getElementById('game-server-list');
   if (!servers.length) {
-    list.innerHTML = '<div class="card"><div class="ct">INGEN SERVER</div><div class="cs">Opret din første game server med one-click setup.</div></div>';
+    list.innerHTML = `<div class="card" style="padding:32px;text-align:center;border-style:dashed;grid-column:1/-1">
+      <div style="font-size:48px;margin-bottom:12px">🎮</div>
+      <div style="font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--t3)">INGEN SERVERE ENDNU</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:8px">Vælg et spil ovenfor og klik DEPLOY</div>
+    </div>`;
     return;
   }
   list.innerHTML = servers.map(s => {
     const typeInfo = (window._serverTypes || {})[s.type] || {};
     const cover = typeInfo.cover || '';
+    const running = s.status === 'running';
+    const statusColor = running ? 'var(--ok)' : 'var(--t3)';
     const coverHTML = cover
-      ? `<img class="server-cover" src="${escapeHTML(cover)}" alt="${escapeHTML(s.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        + `<div class="server-cover-placeholder" style="display:none">🎮</div>`
-      : `<div class="server-cover-placeholder">🎮</div>`;
-    return `
-    <div class="server-card">
+      ? `<img class="sc-cover" src="${escapeHTML(cover)}" alt="${escapeHTML(s.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="sc-cover-placeholder" style="display:none;background:linear-gradient(135deg,var(--s),var(--b))">🎮</div>`
+      : `<div class="sc-cover-placeholder" style="background:linear-gradient(135deg,var(--s),var(--b))">🎮</div>`;
+    return `<div class="server-card">
       ${coverHTML}
-      <div class="server-body">
-        <div class="server-head">
-          <div><div class="server-name">${escapeHTML(s.name)}</div><div class="server-kind">${escapeHTML(s.kind)} · ${escapeHTML(s.container)}</div></div>
-          ${mkbadge(s.status, 'Online', 'Offline')}
+      <div class="sc-body">
+        <div class="sc-head">
+          <div>
+            <div class="sc-name">${escapeHTML(s.name)}</div>
+            <div class="sc-type">${escapeHTML(s.kind)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:${statusColor}">${running ? '● ONLINE' : '○ OFFLINE'}</div>
+            ${s.port ? `<div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:2px">:${s.port}</div>` : ''}
+          </div>
         </div>
-        <div class="server-meta">
-          <div class="meta-box"><div class="meta-label">Port</div><div class="meta-value">${s.port || '-'}</div></div>
-          <div class="meta-box"><div class="meta-label">CPU Limit</div><div class="meta-value">${escapeHTML(s.cpu_limit)}</div></div>
-          <div class="meta-box"><div class="meta-label">RAM Limit</div><div class="meta-value">${escapeHTML(s.memory_limit)}</div></div>
-          <div class="meta-box"><div class="meta-label">Storage</div><div class="meta-value">${escapeHTML(s.visibility)}</div></div>
+        <div class="sc-stats">
+          <div class="sc-stat"><div class="sc-stat-label">CPU Limit</div><div class="sc-stat-val">${escapeHTML(s.cpu_limit)} cores</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">RAM Limit</div><div class="sc-stat-val">${escapeHTML(s.memory_limit)}</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">CPU Nu</div><div class="sc-stat-val">${running ? escapeHTML(s.stats?.cpu) : '—'}</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">RAM Nu</div><div class="sc-stat-val">${running ? escapeHTML(s.stats?.memory) : '—'}</div></div>
         </div>
-        <div class="server-meta">
-          <div class="meta-box"><div class="meta-label">CPU Now</div><div class="meta-value">${escapeHTML(s.stats?.cpu)}</div></div>
-          <div class="meta-box"><div class="meta-label">Memory Now</div><div class="meta-value">${escapeHTML(s.stats?.memory)}</div></div>
-          <div class="meta-box"><div class="meta-label">Network</div><div class="meta-value">${escapeHTML(s.stats?.network)}</div></div>
-          <div class="meta-box"><div class="meta-label">Auto Restart</div><div class="meta-value">${s.auto_restart ? 'ON' : 'OFF'}</div></div>
-        </div>
-        <div class="sbox">${escapeHTML(s.path)}</div>
-        <div class="btn-row">
-          <button class="btn btn-o btn-sm" onclick="gameAction('${s.id}','start')">▶ START</button>
-          <button class="btn btn-g btn-sm" onclick="gameAction('${s.id}','restart')">⟳ RESTART</button>
-          <button class="btn btn-r btn-sm" onclick="gameAction('${s.id}','stop')">■ STOP</button>
-          <button class="btn btn-g btn-sm" onclick="showServerLog('${s.id}')">LOG</button>
+        <div class="sc-actions">
+          <button class="btn btn-o btn-sm" onclick="gameAction('${s.id}','start')" ${running?'disabled':''}>▶ START</button>
+          <button class="btn btn-g btn-sm" onclick="gameAction('${s.id}','restart')">⟳</button>
+          <button class="btn btn-r btn-sm" onclick="gameAction('${s.id}','stop')" ${!running?'disabled':''}>■ STOP</button>
+          <button class="btn btn-g btn-sm" onclick="showServerLog('${s.id}')">📋 LOG</button>
+          <button class="sc-delete" onclick="deleteServer('${s.id}','${escapeHTML(s.name)}')">🗑 SLET</button>
         </div>
       </div>
     </div>`;
@@ -491,14 +495,56 @@ async function loadGameServers(withLogs=false) {
   if (withLogs && servers[0]) showServerLog(servers[0].id);
 }
 
-function updateCoverPreview(typeKey) {
+// ── GAME PICKER ──
+let _gpCurrentCat = 'All', _gpSelected = null;
+
+function renderGamePicker() {
   const types = window._serverTypes || {};
-  const cover = (types[typeKey] || {}).cover || '';
-  const img = document.getElementById('cover-preview');
-  if (!img) return;
-  if (cover) { img.src = cover; img.style.display = 'block'; }
-  else { img.style.display = 'none'; }
+  const grid = document.getElementById('game-picker-grid');
+  if (!grid) return;
+  const entries = Object.entries(types).filter(([, v]) => _gpCurrentCat === 'All' || v.category === _gpCurrentCat);
+  grid.innerHTML = entries.map(([key, t]) => {
+    const sel = _gpSelected === key;
+    const cover = t.cover || '';
+    return `<div class="game-pick-card ${sel ? 'selected' : ''}" onclick="selectGame('${key}')">
+      ${cover
+        ? `<img src="${escapeHTML(cover)}" alt="${escapeHTML(t.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="no-img" style="display:none">🎮</div>`
+        : `<div class="no-img">🎮</div>`}
+      <div class="game-pick-name">${escapeHTML(t.name)}</div>
+      <div class="game-pick-cat">${escapeHTML(t.category)}</div>
+    </div>`;
+  }).join('');
 }
+
+function filterGamePicker(cat) {
+  _gpCurrentCat = cat;
+  document.querySelectorAll('.gpcat-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-gcat') === cat));
+  renderGamePicker();
+}
+
+function selectGame(key) {
+  _gpSelected = key;
+  renderGamePicker();
+  const t = (window._serverTypes || {})[key];
+  if (!t) return;
+  const panel = document.getElementById('gs-create-panel');
+  document.getElementById('gs-selected-name').textContent = t.name;
+  document.getElementById('new-server-type').value = key;
+  document.getElementById('new-server-name').value = '';
+  document.getElementById('new-server-name').placeholder = `Mit ${t.name} Server...`;
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function deleteServer(id, name) {
+  if (!confirm(`Slet "${name}"? Dette stopper og fjerner containeren.`)) return;
+  const r = await fetch(BASE+'/api/game-servers/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  const d = await r.json();
+  toast(d.msg || (d.ok ? 'Slettet' : 'Fejl'), d.ok);
+  if (d.ok) loadGameServers();
+}
+
+function updateCoverPreview() {} // no longer used
 
 function showServerLog(id) {
   const s = (window._gameServers || []).find(x => x.id === id);
@@ -524,15 +570,21 @@ async function createGameServer() {
   const body = {
     name: document.getElementById('new-server-name').value || 'ByteForge Server',
     type: document.getElementById('new-server-type').value,
+    port: document.getElementById('new-server-port')?.value || '',
     cpu_limit: document.getElementById('new-server-cpu').value || '2',
-    memory_limit: document.getElementById('new-server-ram').value || '2g',
+    memory_limit: document.getElementById('new-server-ram').value || '4g',
     auto_restart: true
   };
-  toast('Opretter serverprofil...');
+  if (!body.type) { toast('Vælg et spil først', false); return; }
+  toast(`Deployer ${(window._serverTypes||{})[body.type]?.name || body.type}...`);
   try {
     const r = await fetch(BASE+'/api/game-servers/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d = await r.json();
     toast(d.msg || 'Server oprettet', d.ok);
+    if (d.ok) {
+      document.getElementById('gs-create-panel')?.classList.remove('visible');
+      _gpSelected = null;
+    }
     loadGameServers(true);
   } catch(e) { toast('Server kunne ikke oprettes', false); }
 }
@@ -1172,7 +1224,7 @@ async function startApp() {
     applyLanguage(d.settings.language || 'da');
     if (d.settings.background) applyBackground(d.settings.background);
   });
-  api('/api/game-servers').then(d => { if (d?.types) { window._serverTypes = d.types; updateCoverPreview(document.getElementById('new-server-type')?.value); } });
+  api('/api/game-servers').then(d => { if (d?.types) { window._serverTypes = d.types; renderGamePicker(); } });
   updateAuthPanel();
 }
 

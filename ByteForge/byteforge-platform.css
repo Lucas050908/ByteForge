@@ -297,3 +297,38 @@ body::after{content:'';position:fixed;inset:0;
 
 /* Docker install progress */
 @keyframes progress{0%{width:0%}100%{width:100%}}
+
+/* ── GAME PICKER ── */
+.gp-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.gpcat-btn{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:4px 10px;border:1px solid var(--b);background:transparent;color:var(--t3);cursor:pointer;transition:all .15s;text-transform:uppercase;white-space:nowrap}
+.gpcat-btn:hover,.gpcat-btn.active{background:var(--o3);border-color:var(--o);color:var(--o)}
+.game-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:18px;max-height:420px;overflow-y:auto;padding-right:4px}
+.game-pick-card{background:var(--s);border:2px solid var(--b);cursor:pointer;transition:all .15s;overflow:hidden;border-radius:0}
+.game-pick-card:hover{border-color:var(--o2);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.game-pick-card.selected{border-color:var(--o);box-shadow:0 0 0 1px var(--o)}
+.game-pick-card img{width:100%;height:76px;object-fit:cover;display:block}
+.game-pick-card .no-img{width:100%;height:76px;background:linear-gradient(135deg,var(--b),var(--b2));display:flex;align-items:center;justify-content:center;font-size:26px}
+.game-pick-name{font-family:var(--display);font-size:12px;letter-spacing:1px;padding:5px 7px 2px;color:var(--t);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-pick-cat{font-family:var(--mono);font-size:7px;color:var(--t3);padding:0 7px 5px;letter-spacing:1px;text-transform:uppercase}
+.game-pick-card.selected .game-pick-name{color:var(--o)}
+.create-form-panel{background:var(--p);border:1px solid var(--o);padding:18px;margin-bottom:16px;display:none}
+.create-form-panel.visible{display:block;animation:fadeIn .2s ease}
+.create-form-grid{display:grid;grid-template-columns:1fr 1fr 80px 80px auto;gap:10px;align-items:end}
+
+/* ── SERVER CARD IMPROVED ── */
+.server-card{background:var(--p);border:1px solid var(--b);overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s}
+.server-card:hover{border-color:var(--b2)}
+.sc-cover{width:100%;height:100px;object-fit:cover;display:block}
+.sc-cover-placeholder{width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:36px}
+.sc-body{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}
+.sc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.sc-name{font-family:var(--display);font-size:22px;letter-spacing:2px;line-height:1;color:var(--t)}
+.sc-type{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:2px;margin-top:2px;text-transform:uppercase}
+.sc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sc-stat{background:var(--s);border:1px solid var(--b);padding:7px 10px}
+.sc-stat-label{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--t3);text-transform:uppercase}
+.sc-stat-val{font-family:var(--mono);font-size:11px;color:var(--o2);margin-top:3px;word-break:break-word}
+.sc-actions{display:flex;gap:6px;flex-wrap:wrap}
+.sc-actions .btn{flex:1;justify-content:center;min-width:60px}
+.sc-delete{background:transparent;border:1px solid var(--b);color:var(--t3);font-family:var(--mono);font-size:10px;padding:5px 10px;cursor:pointer;transition:all .15s}
+.sc-delete:hover{border-color:var(--err);color:var(--err)}

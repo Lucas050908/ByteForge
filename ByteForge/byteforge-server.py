@@ -538,21 +538,7 @@ def ensure_dirs():
 
 
 def default_servers():
-    return [
-        {
-            "id": "minecraft-main",
-            "name": "Minecraft Main",
-            "type": "minecraft-paper",
-            "container": "byteforge-minecraft-main",
-            "port": 25565,
-            "cpu_limit": "2",
-            "memory_limit": "4g",
-            "auto_restart": True,
-            "owner": "admin",
-            "visibility": "shared",
-            "path": str(SERVER_ROOT / "minecraft-main"),
-        }
-    ]
+    return []
 
 
 def default_users():
@@ -1061,6 +1047,18 @@ def create_game_server(body):
 
     out, err, code = run(cmd, timeout=120, shell=False)
     return {"ok": code == 0, "server": server, "msg": out or err or "Server oprettet"}
+
+
+def delete_game_server(server_id):
+    config = load_config()
+    server = next((s for s in config["servers"] if s["id"] == server_id), None)
+    if not server:
+        return {"ok": False, "msg": "Server ikke fundet"}
+    if docker_available() and container_exists(server["container"]):
+        run(["docker", "rm", "-f", server["container"]], timeout=15, shell=False)
+    config["servers"] = [s for s in config["servers"] if s["id"] != server_id]
+    save_config(config)
+    return {"ok": True, "msg": f"{server['name']} slettet"}
 
 
 def setup_status():
@@ -1912,6 +1910,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(game_action(body.get("id", ""), body.get("action", "")))
             elif parsed.path == "/api/game-servers/create":
                 self.send_json(create_game_server(body))
+            elif parsed.path == "/api/game-servers/delete":
+                self.send_json(delete_game_server(body.get("id", "")))
             elif parsed.path == "/api/files/action":
                 self.send_json(file_action(body))
             elif parsed.path == "/api/settings":
