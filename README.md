@@ -4,7 +4,7 @@ ByteForge er en selvstændig homelab- og game-server platform med en mørk, tekn
 
 Platformen er ikke afhængig af CasaOS. Den kører direkte med den medfølgende Python-backend og bruger Docker som runtime til game servers og apps.
 
-> **Built by Lucas Valentin** — NAS · RAID · MINECRAFT · DIT DATA · DIN KONTROL
+> **Built by Lucas Valentin og Kaspar Lythje** — NAS · RAID · MINECRAFT · DIT DATA · DIN KONTROL
 
 ---
 
