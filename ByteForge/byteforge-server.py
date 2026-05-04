@@ -408,6 +408,9 @@ APP_CATALOG = {
 _METRICS_HISTORY = []
 _METRICS_LOCK = threading.Lock()
 _NET_LAST = None
+_UPTIME_HISTORY = {"nfs": [], "inet": []}
+_UPTIME_LOCK = threading.Lock()
+_UPTIME_LATEST = {}
 
 
 def get_network_counters():
@@ -905,10 +908,148 @@ def get_network():
         "hostname": hostname,
         "ip": ip_addr.strip() or "?",
         "gateway": gateway.strip() or "?",
+        "dns": get_dns_servers(),
         "rx_total": counters["rx"],
         "tx_total": counters["tx"],
     }
 
+
+def get_smart():
+    if PLATFORM != "Linux":
+        return {"available": False, "disks": []}
+    smart_bin = shutil.which("smartctl")
+    out, _, _ = run("lsblk -d -n -o NAME,SIZE,MODEL,ROTA 2>/dev/null", shell=True, timeout=5)
+    disks = []
+    for line in out.splitlines():
+        parts = line.split(None, 3)
+        if not parts:
+            continue
+        name = parts[0].strip()
+        if name.startswith(("loop", "ram", "zram", "sr")):
+            continue
+        size = parts[1].strip() if len(parts) > 1 else "?"
+        rotational = parts[2].strip() if len(parts) > 2 else "1"
+        model = (parts[3].strip() if len(parts) > 3 else name.upper()) or name.upper()
+        disk = {"name": name, "dev": f"/dev/{name}", "model": model, "size": size,
+                "type": "HDD" if rotational == "1" else "SSD/NVMe",
+                "health": "unknown", "temp": None, "power_on_hours": None,
+                "reallocated": None, "smartctl": smart_bin is not None}
+        if smart_bin:
+            sout, _, _ = run([smart_bin, "-a", f"/dev/{name}"], shell=False, timeout=10)
+            if "PASSED" in sout:
+                disk["health"] = "passed"
+            elif "FAILED" in sout:
+                disk["health"] = "failed"
+            m = re.search(r'Temperature[^:\n]*:\s*(\d+)\s*(?:Celsius)?', sout, re.IGNORECASE)
+            if m:
+                disk["temp"] = int(m.group(1))
+            m = re.search(r'Power_On_Hours\s+(?:\S+\s+){5}(\d+)', sout)
+            if not m:
+                m = re.search(r'Power On Hours:\s+([\d,]+)', sout)
+            if m:
+                disk["power_on_hours"] = int(m.group(1).replace(",", ""))
+            m = re.search(r'Reallocated_Sector_Ct\s+(?:\S+\s+){5}(\d+)', sout)
+            if m:
+                disk["reallocated"] = int(m.group(1))
+            m = re.search(r'Available Spare:\s+(\d+)%', sout)
+            if m:
+                disk["available_spare"] = int(m.group(1))
+            m = re.search(r'Percentage Used:\s+(\d+)%', sout)
+            if m:
+                disk["pct_used"] = int(m.group(1))
+        disks.append(disk)
+    return {"available": smart_bin is not None, "disks": disks}
+
+
+def get_uptime_checks():
+    checks = {}
+    # Internet — ping Cloudflare DNS
+    out, _, code = run("ping -c 1 -W 2 1.1.1.1 2>/dev/null", shell=True, timeout=5)
+    m = re.search(r'time=(\d+\.?\d*)', out)
+    checks["inet"] = {"up": code == 0, "latency_ms": round(float(m.group(1))) if m else None}
+    # NFS service
+    nfs_out, _, _ = run(
+        "systemctl is-active nfs-server 2>/dev/null || systemctl is-active nfs-kernel-server 2>/dev/null",
+        shell=True)
+    checks["nfs"] = {"up": nfs_out.strip() == "active", "latency_ms": None}
+    # Minecraft — TCP port 25565
+    mc_up = False
+    try:
+        with socket.create_connection(("127.0.0.1", 25565), timeout=1):
+            mc_up = True
+    except Exception:
+        pass
+    checks["mc"] = {"up": mc_up, "latency_ms": None}
+    return checks
+
+
+def _uptime_collector():
+    global _UPTIME_LATEST
+    while True:
+        try:
+            checks = get_uptime_checks()
+            _UPTIME_LATEST = checks
+            with _UPTIME_LOCK:
+                for key in ("nfs", "inet"):
+                    _UPTIME_HISTORY.setdefault(key, [])
+                    _UPTIME_HISTORY[key].append(checks.get(key, {}).get("up", False))
+                    if len(_UPTIME_HISTORY[key]) > 30:
+                        _UPTIME_HISTORY[key].pop(0)
+        except Exception:
+            pass
+        time.sleep(30)
+
+def get_uptime_with_history():
+    with _UPTIME_LOCK:
+        history = {k: list(v) for k, v in _UPTIME_HISTORY.items()}
+    result = dict(_UPTIME_LATEST)
+    for key in ("nfs", "inet"):
+        if key in result:
+            result[key]["history"] = history.get(key, [])
+    return result
+
+def get_network_devices():
+    out, _, _ = run("ip neigh show 2>/dev/null", shell=True, timeout=5)
+    devices = []
+    seen = set()
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) >= 5 and parts[3] == "lladdr" and parts[0] not in seen:
+            ip, mac = parts[0], parts[4]
+            seen.add(ip)
+            state = parts[-1] if parts[-1] in ("REACHABLE","STALE","DELAY","PERMANENT") else "UNKNOWN"
+            hostname, _, _ = run(f"getent hosts {ip} 2>/dev/null | awk '{{print $2}}'", shell=True, timeout=2)
+            devices.append({"ip": ip, "mac": mac, "hostname": hostname.strip() or "—", "state": state})
+    return sorted(devices, key=lambda d: [int(x) for x in d["ip"].split(".") if x.isdigit()])
+
+def get_dns_servers():
+    try:
+        lines = Path("/etc/resolv.conf").read_text().splitlines()
+        return [l.split()[1] for l in lines if l.startswith("nameserver") and len(l.split()) >= 2]
+    except Exception:
+        return []
+
+def webhook_save(url):
+    cfg = load_config()
+    cfg.setdefault("settings", {})["webhook_url"] = url
+    save_config(cfg)
+    return {"ok": True, "msg": "Webhook gemt"}
+
+def webhook_test(url):
+    if not url:
+        return {"ok": False, "msg": "Ingen webhook URL"}
+    import urllib.request as urlreq
+    payload = json.dumps({"content": "⚡ **ByteForge** test alert! Forbindelsen virker.", "username": "ByteForge"}).encode()
+    try:
+        req = urlreq.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+        with urlreq.urlopen(req, timeout=5) as resp:
+            return {"ok": resp.status < 300, "msg": f"Alert sendt! (HTTP {resp.status})"}
+    except Exception as e:
+        return {"ok": False, "msg": str(e)[:120]}
+
+def webhook_get():
+    cfg = load_config()
+    return {"url": cfg.get("settings", {}).get("webhook_url", "")}
 
 def get_hardware():
     cpu_model = cpu_cores = gpu = ""
@@ -1480,6 +1621,151 @@ def docker_container_action(container, action):
     return {"ok": code == 0, "msg": out or err or f"{container} {action}"}
 
 
+def _linux_pkg_manager():
+    for pm, bin_ in [("apt","apt-get"),("dnf","dnf"),("yum","yum"),
+                     ("pacman","pacman"),("zypper","zypper"),("apk","apk")]:
+        if shutil.which(bin_):
+            return pm
+    return None
+
+def nas_setup(path, subnet, readonly, smb_user="", smb_pass=""):
+    if PLATFORM != "Linux":
+        return {"ok": False, "steps": ["NFS setup kun understøttet på Linux"]}
+    steps = []
+    # 1. Install nfs-utils if exportfs is missing
+    if not shutil.which("exportfs"):
+        steps.append("▶ Installerer NFS server pakke...")
+        pm = _linux_pkg_manager()
+        pkg = {"apt":"nfs-kernel-server","dnf":"nfs-utils","yum":"nfs-utils",
+               "pacman":"nfs-utils","zypper":"nfs-utils","apk":"nfs-utils"}.get(pm)
+        if not pkg:
+            steps.append("✗ Ukendt pakkemanager — installer nfs-utils manuelt")
+            return {"ok": False, "steps": steps}
+        _, err, code = run([{"apt":"apt-get","dnf":"dnf","yum":"yum",
+                              "pacman":"pacman","zypper":"zypper","apk":"apk"}[pm],
+                            "install", "-y", pkg], shell=False, timeout=180)
+        if code != 0:
+            steps.append(f"✗ Installation fejlede: {err[:200]}")
+            return {"ok": False, "steps": steps}
+        steps.append(f"✓ NFS server installeret")
+    else:
+        steps.append("✓ NFS server allerede installeret")
+    # 2. Create directory
+    try:
+        Path(path).mkdir(parents=True, exist_ok=True)
+        os.chmod(path, 0o777)
+        steps.append(f"✓ Mappe klar: {path}")
+    except Exception as e:
+        steps.append(f"✗ Kunne ikke oprette mappe: {e}")
+        return {"ok": False, "steps": steps}
+    # 3. Write /etc/exports (skip if already present)
+    opts = "ro,sync,no_subtree_check" if readonly else "rw,sync,no_subtree_check,no_root_squash"
+    entry = f"{path} {subnet}({opts})"
+    exports_path = Path("/etc/exports")
+    existing = exports_path.read_text() if exports_path.exists() else ""
+    if path in existing and subnet in existing:
+        steps.append("✓ Export allerede i /etc/exports")
+    else:
+        try:
+            with open(str(exports_path), "a") as f:
+                f.write(f"\n{entry}\n")
+            steps.append(f"✓ Tilføjet til /etc/exports")
+        except Exception as e:
+            steps.append(f"✗ Kunne ikke skrive /etc/exports: {e}")
+            return {"ok": False, "steps": steps}
+    # 4. Enable + start NFS service
+    started = False
+    for svc in ("nfs-server", "nfs-kernel-server"):
+        _, _, code = run(f"systemctl enable --now {svc} 2>/dev/null", shell=True, timeout=20)
+        if code == 0:
+            steps.append(f"✓ NFS service startet ({svc})")
+            started = True
+            break
+    if not started:
+        steps.append("✗ Kunne ikke starte NFS service")
+        return {"ok": False, "steps": steps}
+    # 5. Reload exports
+    _, err, code = run("exportfs -ra 2>/dev/null", shell=True, timeout=10)
+    steps.append("✓ Exports genindlæst" if code == 0 else f"! exportfs: {err[:100]}")
+    # 6. Firewall
+    if shutil.which("firewall-cmd"):
+        for svc in ("nfs", "mountd", "rpc-bind"):
+            run(f"firewall-cmd --permanent --add-service={svc} 2>/dev/null", shell=True)
+        run("firewall-cmd --reload 2>/dev/null", shell=True)
+        steps.append("✓ Firewall åbnet for NFS (firewalld)")
+    elif shutil.which("ufw"):
+        run("ufw allow 2049/tcp 2>/dev/null", shell=True)
+        run("ufw allow 111/tcp 2>/dev/null", shell=True)
+        steps.append("✓ Firewall åbnet for NFS (ufw)")
+    # Samba setup
+    if smb_user and smb_pass:
+        smb_steps, _ = nas_setup_samba(path, smb_user, smb_pass)
+        steps.extend(smb_steps)
+    return {"ok": True, "steps": steps}
+
+def nas_setup_samba(path, smb_user, smb_pass):
+    steps = []
+    pm = _linux_pkg_manager()
+    # Install samba
+    if not shutil.which("smbd"):
+        steps.append("▶ Installerer Samba...")
+        pkg = {"apt":"samba","dnf":"samba","yum":"samba",
+               "pacman":"samba","zypper":"samba","apk":"samba"}.get(pm)
+        if not pkg:
+            steps.append("✗ Ukendt pakkemanager"); return steps, False
+        _, err, code = run([{"apt":"apt-get","dnf":"dnf","yum":"yum",
+                              "pacman":"pacman","zypper":"zypper","apk":"apk"}[pm],
+                            "install", "-y", pkg], shell=False, timeout=180)
+        if code != 0:
+            steps.append(f"✗ Samba installation fejlede: {err[:200]}"); return steps, False
+        steps.append("✓ Samba installeret")
+    else:
+        steps.append("✓ Samba allerede installeret")
+    # Add share to smb.conf
+    conf_path = Path("/etc/samba/smb.conf")
+    share_name = Path(path).name
+    existing = conf_path.read_text() if conf_path.exists() else ""
+    if f"[{share_name}]" not in existing:
+        share_block = f"\n[{share_name}]\n   path = {path}\n   browsable = yes\n   writable = yes\n   valid users = {smb_user}\n   create mask = 0664\n   directory mask = 0775\n"
+        with open(str(conf_path), "a") as f:
+            f.write(share_block)
+        steps.append(f"✓ Share '{share_name}' tilføjet til smb.conf")
+    else:
+        steps.append(f"✓ Share '{share_name}' allerede i smb.conf")
+    # Set samba password
+    proc = subprocess.Popen(["smbpasswd", "-a", "-s", smb_user],
+                            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True)
+    out, _ = proc.communicate(input=f"{smb_pass}\n{smb_pass}\n")
+    if proc.returncode == 0:
+        steps.append(f"✓ Samba adgangskode sat for {smb_user}")
+    else:
+        steps.append(f"! smbpasswd: {out.strip()[:100]}")
+    # Enable + start smb
+    _, _, code = run("systemctl enable --now smb 2>/dev/null || systemctl enable --now smbd 2>/dev/null",
+                     shell=True, timeout=15)
+    steps.append("✓ Samba service startet" if code == 0 else "✗ Kunne ikke starte Samba service")
+    # Firewall
+    if shutil.which("firewall-cmd"):
+        run("firewall-cmd --permanent --add-service=samba 2>/dev/null", shell=True)
+        run("firewall-cmd --reload 2>/dev/null", shell=True)
+        steps.append("✓ Firewall åbnet for Samba")
+    elif shutil.which("ufw"):
+        run("ufw allow samba 2>/dev/null", shell=True)
+        steps.append("✓ UFW åbnet for Samba")
+    return steps, code == 0
+
+def nas_remove_share(path):
+    if PLATFORM != "Linux":
+        return {"ok": False, "msg": "Ikke understøttet"}
+    exports_path = Path("/etc/exports")
+    if not exports_path.exists():
+        return {"ok": False, "msg": "/etc/exports ikke fundet"}
+    lines = [l for l in exports_path.read_text().splitlines() if not l.strip().startswith(path)]
+    exports_path.write_text("\n".join(lines) + "\n")
+    run("exportfs -ra 2>/dev/null", shell=True, timeout=10)
+    return {"ok": True, "msg": f"Share fjernet: {path}"}
+
 def nas_service_action(action):
     if PLATFORM == "Darwin":
         _, _, code = run(f"nfsd {action} 2>/dev/null", timeout=15, shell=True)
@@ -1946,6 +2232,14 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/metrics/history":
                 with _METRICS_LOCK:
                     self.send_json(list(_METRICS_HISTORY))
+            elif path == "/api/smart":
+                self.send_json(get_smart())
+            elif path == "/api/uptime":
+                self.send_json(get_uptime_with_history())
+            elif path == "/api/network/devices":
+                self.send_json(get_network_devices())
+            elif path == "/api/webhook":
+                self.send_json(webhook_get())
             elif path == "/api/appstore":
                 self.send_json(get_appstore())
             elif path == "/api/appstore/logs":
@@ -2074,6 +2368,19 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(deploy_nginx_proxy_manager())
             elif parsed.path == "/api/nas/action":
                 self.send_json(nas_service_action(body.get("action", "restart")))
+            elif parsed.path == "/api/webhook/save":
+                self.send_json(webhook_save(body.get("url", "")))
+            elif parsed.path == "/api/webhook/test":
+                self.send_json(webhook_test(body.get("url", "")))
+            elif parsed.path == "/api/nas/setup":
+                self.send_json(nas_setup(
+                    body.get("path", "/mnt/nas-share"),
+                    body.get("subnet", "0.0.0.0/0"),
+                    body.get("readonly", False),
+                    body.get("smb_user", ""),
+                    body.get("smb_pass", "")))
+            elif parsed.path == "/api/nas/remove":
+                self.send_json(nas_remove_share(body.get("path", "")))
             elif parsed.path == "/api/apps/deploy":
                 self.send_json(deploy_app(body.get("app", "")))
             elif parsed.path == "/api/appstore/install":
@@ -2132,6 +2439,7 @@ if __name__ == "__main__":
                 pass
             time.sleep(1)
     threading.Thread(target=_guarded_metrics, daemon=True).start()
+    threading.Thread(target=_uptime_collector, daemon=True).start()
     print("\033[38;5;208m")
     print("  ByteForge Platform starter på port", PORT)
     print("  Data:", BASE_DIR)

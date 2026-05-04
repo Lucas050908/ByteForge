@@ -300,43 +300,174 @@ async function loadSystem() {
 
 // ── NETWORK ──
 async function loadNetwork() {
-  ['mc','nfs','inet'].forEach(id => {
-    const el = document.getElementById('mon-' + id);
-    if (!el) return;
-    el.innerHTML = Array.from({length:30}, (_,i) =>
-      `<div class="mbar ${Math.random() > 0.05 ? 'up' : 'down'}"></div>`).join('');
+  const [uptime, net, devices, wh] = await Promise.all([
+    api('/api/uptime'), api('/api/network'), api('/api/network/devices'), api('/api/webhook')
+  ]);
+  // Uptime bars from real history
+  ['nfs','inet'].forEach(id => {
+    const barEl = document.getElementById('mon-' + id);
+    const pingEl = document.getElementById('ping-' + id);
+    if (!barEl) return;
+    const check = uptime?.[id];
+    const up = check?.up ?? true;
+    const history = check?.history || [];
+    // Pad with nulls if history shorter than 30
+    const bars = [...Array(Math.max(0, 30 - history.length)).fill(null), ...history];
+    barEl.innerHTML = bars.map(h =>
+      h === null ? `<div class="mbar" style="opacity:.2"></div>`
+                 : `<div class="mbar ${h ? 'up' : 'down'}"></div>`
+    ).join('');
+    if (pingEl && check) {
+      if (check.latency_ms != null) {
+        pingEl.textContent = check.latency_ms + ' ms';
+        pingEl.style.color = check.latency_ms > 100 ? 'var(--warn)' : 'var(--ok)';
+      } else {
+        pingEl.textContent = up ? 'ONLINE' : 'OFFLINE';
+        pingEl.style.color = up ? 'var(--ok)' : 'var(--danger)';
+      }
+    }
   });
-  const net = await api('/api/network');
-  if (!net) return;
-  document.getElementById('net-info').innerHTML = `
-    <tr><td>Interface</td><td style="color:var(--o2)">${escapeHTML(net.interface)}</td></tr>
-    <tr><td>IP Adresse</td><td style="color:var(--o2)">${escapeHTML(net.ip)}</td></tr>
-    <tr><td>Gateway</td><td style="color:var(--o2)">${escapeHTML(net.gateway)}</td></tr>
-    <tr><td>Hostname</td><td style="color:var(--o2)">${escapeHTML(net.hostname)}</td></tr>
-  `;
+  // Network info + DNS
+  if (net) {
+    const dns = (net.dns || []).join(', ') || '—';
+    document.getElementById('net-info').innerHTML = `
+      <tr><td>Interface</td><td style="color:var(--o2)">${escapeHTML(net.interface)}</td></tr>
+      <tr><td>IP Adresse</td><td style="color:var(--o2)">${escapeHTML(net.ip)}</td></tr>
+      <tr><td>Gateway</td><td style="color:var(--o2)">${escapeHTML(net.gateway)}</td></tr>
+      <tr><td>DNS</td><td style="color:var(--o2)">${escapeHTML(dns)}</td></tr>
+      <tr><td>Hostname</td><td style="color:var(--o2)">${escapeHTML(net.hostname)}</td></tr>
+    `;
+  }
+  // Connected devices
+  const devEl = document.getElementById('net-devices');
+  if (devEl) {
+    if (!devices || !devices.length) {
+      devEl.innerHTML = '<tr><td colspan="4" style="color:var(--t3);font-family:var(--mono);font-size:10px">Ingen enheder fundet</td></tr>';
+    } else {
+      const stateColor = s => s === 'REACHABLE' ? 'var(--ok)' : s === 'STALE' ? 'var(--warn)' : 'var(--t3)';
+      devEl.innerHTML = devices.map(d => `<tr>
+        <td style="color:var(--o2)">${escapeHTML(d.ip)}</td>
+        <td>${escapeHTML(d.hostname)}</td>
+        <td style="font-family:var(--mono);font-size:10px;color:var(--t3)">${escapeHTML(d.mac)}</td>
+        <td style="color:${stateColor(d.state)};font-family:var(--mono);font-size:9px">${escapeHTML(d.state)}</td>
+      </tr>`).join('');
+    }
+  }
+  // Load saved webhook URL
+  if (wh?.url) document.getElementById('webhook-url').value = wh.url;
 }
 
-function testWebhook() {
-  const url = document.getElementById('webhook-url').value;
-  if (!url) { toast('Ingen webhook URL indtastet', false); return; }
-  toast('Test alert sendt til webhook!');
+async function saveWebhook() {
+  const url = document.getElementById('webhook-url').value.trim();
+  const r = await fetch(BASE+'/api/webhook/save', {method:'POST',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})});
+  const d = await r.json();
+  toast(d.msg || (d.ok ? 'Gemt' : 'Fejl'), d.ok);
 }
-function saveWebhook() { toast('Webhook gemt'); }
+
+async function testWebhook() {
+  const url = document.getElementById('webhook-url').value.trim();
+  if (!url) { toast('Ingen webhook URL', false); return; }
+  toast('Sender test alert...');
+  const r = await fetch(BASE+'/api/webhook/test', {method:'POST',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})});
+  const d = await r.json();
+  toast(d.msg || (d.ok ? 'Alert sendt!' : 'Fejl'), d.ok);
+}
+
 
 // ── NAS ──
 async function loadNAS() {
-  const n = await api('/api/nas');
+  const [n, net] = await Promise.all([api('/api/nas'), api('/api/network')]);
+  const ip = net?.ip || window.location.hostname;
+  // Pre-fill subnet in modal
+  if (ip && ip !== '?') {
+    const parts = ip.split('.');
+    if (parts.length === 4) document.getElementById('nas-new-subnet').value = `${parts[0]}.${parts[1]}.${parts[2]}.0/24`;
+  }
+  const sharePath = n?.shares?.length ? n.shares[0].split(' ')[0] : '/mnt/nas-share';
+  const winEl = document.getElementById('nas-win-cmd');
+  const nfsEl = document.getElementById('nas-nfs-cmd');
+  const macEl = document.getElementById('nas-mac-cmd');
+  if (winEl) winEl.textContent = `\\\\${ip}\\nas-share`;
+  if (nfsEl) nfsEl.textContent = `sudo mount -t nfs ${ip}:${sharePath} /mnt/remote`;
+  if (macEl) macEl.textContent = `Cmd+K → nfs://${ip}${sharePath}`;
   if (!n) return;
   document.getElementById('nas-badge').innerHTML = mkbadge(n.status);
-  document.getElementById('nas-exports').innerHTML = n.shares.length
-    ? n.shares.map(s=>`<div class="t-o">${s}</div>`).join('')
-    : '<span style="color:var(--t3)">Ingen shares fundet</span>';
+  const exportsList = document.getElementById('nas-exports-list');
+  if (!n.shares.length) {
+    exportsList.innerHTML = `<div class="card" style="border-style:dashed;text-align:center;padding:24px">
+      <div style="font-family:var(--display);font-size:16px;letter-spacing:2px;color:var(--t3)">INGEN SHARES KONFIGURERET</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:8px">Klik <b style="color:var(--o)">+ TILFØJ SHARE</b> for at sætte NFS op automatisk.</div>
+    </div>`;
+  } else {
+    exportsList.innerHTML = `<div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl" style="width:100%">
+        <thead><tr><th>Sti</th><th>Klienter & Options</th><th></th></tr></thead>
+        <tbody>${n.shares.map(s => {
+          const path = s.split(' ')[0];
+          const rest = s.slice(path.length).trim();
+          return `<tr>
+            <td style="font-family:var(--mono);color:var(--o2)">${escapeHTML(path)}</td>
+            <td style="font-family:var(--mono);font-size:10px;color:var(--t3)">${escapeHTML(rest)}</td>
+            <td><button class="btn btn-r btn-sm" onclick="nasRemoveShare('${escapeHTML(path)}')">🗑 FJERN</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  }
   const d = window._lastData?.disks || (await api('/api/disks'));
   if (d) document.getElementById('nas-storage').innerHTML = d.map(dk=>`
     <div class="card" style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between"><span style="font-family:var(--display);letter-spacing:2px">${dk.mount}</span><b style="color:var(--o)">${dk.pct}%</b></div>
-      <div class="bar"><div class="bar-f" style="width:${dk.pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between"><span style="font-family:var(--display);letter-spacing:2px">${escapeHTML(dk.mount)}</span><b style="color:var(--o)">${escapeHTML(dk.pct)}%</b></div>
+      <div class="bar"><div class="bar-f" style="width:${escapeHTML(dk.pct)}%"></div></div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:6px">${escapeHTML(dk.used)}G brugt af ${escapeHTML(dk.total)}G</div>
     </div>`).join('');
+}
+
+function openNasSetup() {
+  const modal = document.getElementById('nas-setup-modal');
+  modal.style.display = 'flex';
+  document.getElementById('nas-setup-form').style.display = 'flex';
+  document.getElementById('nas-setup-log').style.display = 'none';
+  document.getElementById('nas-setup-footer').style.display = 'none';
+  document.getElementById('nas-setup-log').innerHTML = '';
+}
+
+function closeNasSetup() {
+  document.getElementById('nas-setup-modal').style.display = 'none';
+}
+
+async function runNasSetup() {
+  const path = document.getElementById('nas-new-path').value.trim();
+  const subnet = document.getElementById('nas-new-subnet').value.trim();
+  const readonly = document.getElementById('nas-readonly').checked;
+  const smb_user = document.getElementById('nas-smb-user').value.trim();
+  const smb_pass = document.getElementById('nas-smb-pass').value;
+  if (!path || !subnet) { toast('Udfyld sti og netværk', false); return; }
+  document.getElementById('nas-setup-form').style.display = 'none';
+  const log = document.getElementById('nas-setup-log');
+  log.style.display = 'block';
+  log.innerHTML = '<div style="color:var(--t3)">Konfigurerer NFS...</div>';
+  const r = await fetch(BASE+'/api/nas/setup', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({path, subnet, readonly, smb_user, smb_pass})});
+  const d = await r.json();
+  log.innerHTML = (d.steps || [d.msg || 'Fejl']).map(l =>
+    `<div class="${l.startsWith('✓')?'log-ok':l.startsWith('✗')?'log-err':''}">${escapeHTML(l)}</div>`
+  ).join('');
+  document.getElementById('nas-setup-footer').style.display = 'flex';
+  if (d.ok) { toast('NFS share oprettet!'); setTimeout(loadNAS, 500); }
+  else toast('NFS setup fejlede', false);
+}
+
+async function nasRemoveShare(path) {
+  if (!confirm(`Fjern share: ${path}?`)) return;
+  const r = await fetch(BASE+'/api/nas/remove', {method:'POST',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify({path})});
+  const d = await r.json();
+  toast(d.msg || (d.ok ? 'Fjernet' : 'Fejl'), d.ok);
+  if (d.ok) loadNAS();
 }
 // nasRestart defined below (async implementation)
 
@@ -345,9 +476,30 @@ async function loadRAID() {
   const r = await api('/api/raid');
   if (!r) return;
   document.getElementById('raid-badge').innerHTML = mkbadge(r.status==='active'?'running':r.status);
-  document.getElementById('raid-info').innerHTML = r.info
-    ? r.info.split('\n').map(l=>`<div>${l}</div>`).join('')
-    : '<span style="color:var(--t3)">Ingen RAID array fundet. Tilslut mindst 2 ekstra diske.</span>';
+  if (!r.info || r.status === 'inactive') {
+    document.getElementById('raid-info').innerHTML = '<span style="color:var(--t3)">Ingen RAID array fundet. Tilslut mindst 2 ekstra diske og konfigurér med mdadm.</span>';
+    return;
+  }
+  // Parse mdstat lines into structured display
+  const lines = r.info.split('\n');
+  let html = '';
+  lines.forEach(line => {
+    if (line.startsWith('md')) {
+      const m = line.match(/^(md\S+)\s*:\s*(\w+)\s+(\w+)\s+(.*)/);
+      if (m) {
+        const [,dev,state,level,rest] = m;
+        const color = state === 'active' ? 'var(--ok)' : 'var(--danger)';
+        html += `<div style="margin-bottom:6px"><span style="font-family:var(--display);color:var(--o);letter-spacing:2px">${escapeHTML(dev)}</span>  <span style="font-family:var(--mono);font-size:10px;color:${color}">${escapeHTML(state).toUpperCase()}</span>  <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">${escapeHTML(level)} · ${escapeHTML(rest)}</span></div>`;
+      } else {
+        html += `<div style="color:var(--t2);font-size:11px">${escapeHTML(line)}</div>`;
+      }
+    } else if (line.includes('recovery') || line.includes('resync')) {
+      html += `<div style="color:var(--warn);font-size:10px;margin-top:4px">⟳ ${escapeHTML(line)}</div>`;
+    } else if (line.trim()) {
+      html += `<div style="color:var(--t3);font-size:10px">${escapeHTML(line)}</div>`;
+    }
+  });
+  document.getElementById('raid-info').innerHTML = html || '<span style="color:var(--t3)">Ingen aktive arrays.</span>';
 }
 
 // ── DOCKER ──
@@ -918,27 +1070,41 @@ async function mcAction(action) { gameAction('minecraft-main', action); }
 // ── DISK HEALTH ──
 async function loadDiskHealth() {
   const out = document.getElementById('smart-cards');
-  out.innerHTML = `
-    <div class="grid g2">
-      <div class="card">
-        <div class="ct">KIOXIA KXG60ZNV256G <span class="badge b-ok" style="margin-left:8px"><span class="bd"></span>HEALTHY</span></div>
-        <div class="smart-row"><span>Model</span><span class="smart-val">KIOXIA KXG60ZNV256G</span></div>
-        <div class="smart-row"><span>Kapacitet</span><span class="smart-val">238 GB</span></div>
-        <div class="smart-row"><span>Type</span><span class="smart-val">NVMe SSD</span></div>
-        <div class="smart-row"><span>Temperatur</span><span class="smart-val" id="disk-temp1">— °C</span></div>
-        <div class="smart-row"><span>Power-on timer</span><span class="smart-val">—</span></div>
-        <div class="smart-row"><span>Status</span><span class="smart-val" style="color:var(--ok)">PASSED</span></div>
-      </div>
-      <div class="card">
-        <div class="ct">MICRON MTFDKBA512TFH <span class="badge b-ok" style="margin-left:8px"><span class="bd"></span>HEALTHY</span></div>
-        <div class="smart-row"><span>Model</span><span class="smart-val">Micron MTFDKBA512TFH</span></div>
-        <div class="smart-row"><span>Kapacitet</span><span class="smart-val">476 GB</span></div>
-        <div class="smart-row"><span>Type</span><span class="smart-val">NVMe SSD</span></div>
-        <div class="smart-row"><span>Temperatur</span><span class="smart-val" id="disk-temp2">— °C</span></div>
-        <div class="smart-row"><span>Power-on timer</span><span class="smart-val">—</span></div>
-        <div class="smart-row"><span>Status</span><span class="smart-val" style="color:var(--ok)">PASSED</span></div>
-      </div>
+  out.innerHTML = '<div style="font-family:var(--mono);font-size:11px;color:var(--t3)">Henter SMART data...</div>';
+  const data = await api('/api/smart');
+  if (!data || !data.disks.length) {
+    out.innerHTML = '<div class="card"><div class="ct">INGEN DISKE</div><div class="cs">Kunne ikke finde block devices.</div></div>';
+    return;
+  }
+  let warning = '';
+  if (!data.available) {
+    warning = `<div class="card" style="border-color:var(--warn);margin-bottom:12px">
+      <div class="ct">SMARTMONTOOLS MANGLER</div>
+      <div class="cs">Installer for fulde SMART data: <span class="sbox" style="display:inline-block;margin-top:4px">sudo apt install smartmontools</span></div>
     </div>`;
+  }
+  out.innerHTML = warning + `<div class="grid g2">${data.disks.map(d => {
+    const healthBadge = d.health === 'passed'
+      ? `<span class="badge b-ok" style="margin-left:8px"><span class="bd"></span>HEALTHY</span>`
+      : d.health === 'failed'
+      ? `<span class="badge b-warn" style="margin-left:8px"><span class="bd"></span>FAILED</span>`
+      : `<span class="badge" style="margin-left:8px;border-color:var(--t3)"><span class="bd" style="background:var(--t3)"></span>UNKNOWN</span>`;
+    const rows = [
+      ['Model',   d.model],
+      ['Device',  d.dev],
+      ['Størrelse', d.size],
+      ['Type',    d.type],
+      d.temp != null ? ['Temperatur', `<span style="color:${d.temp>60?'var(--danger)':d.temp>45?'var(--warn)':'var(--ok)'}">${d.temp} °C</span>`] : null,
+      d.power_on_hours != null ? ['Power-on', `${d.power_on_hours}h (${Math.round(d.power_on_hours/24)} dage)`] : null,
+      d.reallocated != null ? ['Reallocated sektorer', `<span style="color:${d.reallocated>0?'var(--warn)':'var(--ok)'}">${d.reallocated}</span>`] : null,
+      d.available_spare != null ? ['Available spare', `${d.available_spare}%`] : null,
+      d.pct_used != null ? ['NVMe brugt', `${d.pct_used}%`] : null,
+    ].filter(Boolean);
+    return `<div class="card">
+      <div class="ct">${escapeHTML(d.model)}${healthBadge}</div>
+      ${rows.map(([k,v])=>`<div class="smart-row"><span>${escapeHTML(k)}</span><span class="smart-val">${v.includes('<')?v:escapeHTML(v)}</span></div>`).join('')}
+    </div>`;
+  }).join('')}</div>`;
 }
 
 // ── AI ──

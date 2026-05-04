@@ -154,11 +154,6 @@
   <div class="st">UPTIME <span>MONITOR</span></div>
   <div class="card" id="monitor-list">
     <div class="monitor-row">
-      <div class="monitor-name">MINECRAFT</div>
-      <div class="monitor-bars" id="mon-mc"></div>
-      <div class="monitor-ping" id="ping-mc">PORT 25565</div>
-    </div>
-    <div class="monitor-row">
       <div class="monitor-name">NFS SERVER</div>
       <div class="monitor-bars" id="mon-nfs"></div>
       <div class="monitor-ping" id="ping-nfs">— ms</div>
@@ -185,35 +180,86 @@
       </div>
     </div>
   </div>
+  <div class="st" style="margin-top:20px">ENHEDER PÅ <span>NETVÆRKET</span></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="tbl" style="width:100%">
+      <thead><tr><th>IP</th><th>Hostname</th><th>MAC</th><th>Status</th></tr></thead>
+      <tbody id="net-devices"><tr><td colspan="4" style="color:var(--t3);font-family:var(--mono);font-size:10px">Indlæser...</td></tr></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ████ NAS ████ -->
 <div class="page" id="page-nas">
-  <div class="ph"><div class="ph-left"><h1>NAS <span>SERVER</span></h1><p>// NETWORK FILE SYSTEM · DELTE MAPPER</p></div></div>
+  <div class="ph">
+    <div class="ph-left"><h1>NAS <span>SERVER</span></h1><p>// NETWORK FILE SYSTEM · DELTE MAPPER</p></div>
+    <div class="ph-right"><button class="btn btn-o btn-sm" onclick="openNasSetup()">+ TILFØJ SHARE</button></div>
+  </div>
   <div class="grid g2">
     <div class="card">
       <div class="ct">NFS STATUS</div>
       <div id="nas-badge" style="margin:8px 0"></div>
-      <div class="form-label" style="margin-top:12px">NFS Share Sti</div>
-      <div class="sbox">/mnt/nas-share</div>
-      <div class="btn-row">
-        <button class="btn btn-o btn-sm" onclick="nasRestart()">⟳ GENSTART NFS</button>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-g btn-sm" onclick="nasRestart()">⟳ GENSTART NFS</button>
       </div>
     </div>
     <div class="card">
       <div class="ct">FORBIND FRA ENHEDER</div>
       <div class="form-label" style="margin-top:8px">Windows (SAMBA)</div>
-      <div class="sbox">\\10.194.177.172\nas-share</div>
+      <div class="sbox" id="nas-win-cmd">\\…\nas-share</div>
       <div class="form-label" style="margin-top:10px">Linux (NFS)</div>
-      <div class="sbox">mount -t nfs 10.194.177.172:/mnt/nas-share /mnt/remote</div>
+      <div class="sbox" id="nas-nfs-cmd">mount -t nfs …:/mnt/nas-share /mnt/remote</div>
       <div class="form-label" style="margin-top:10px">Mac (Finder)</div>
-      <div class="sbox">Cmd+K → nfs://10.194.177.172/mnt/nas-share</div>
+      <div class="sbox" id="nas-mac-cmd">Cmd+K → nfs://…/mnt/nas-share</div>
     </div>
   </div>
-  <div class="st">EXPORTS <span>KONFIGURATION</span></div>
-  <div class="card"><div class="term"><div class="term-bar"><div class="td on"></div><div class="td"></div><span class="term-lbl">/etc/exports</span></div><div class="term-body" id="nas-exports">Indlæser...</div></div></div>
+  <div class="st">AKTIVE <span>SHARES</span></div>
+  <div id="nas-exports-list"><div class="card"><div class="cs">Indlæser...</div></div></div>
   <div class="st">STORAGE <span>BRUG</span></div>
   <div id="nas-storage"></div>
+</div>
+
+<!-- NAS SETUP MODAL -->
+<div id="nas-setup-modal" style="display:none;position:fixed;inset:0;z-index:999;align-items:center;justify-content:center">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px)" onclick="closeNasSetup()"></div>
+  <div class="install-box">
+    <div class="install-header">
+      <span id="nas-modal-title">TILFØJ NFS SHARE</span>
+      <button class="install-close" onclick="closeNasSetup()">✕</button>
+    </div>
+    <div id="nas-setup-form" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <div class="form-label">Share mappe (oprettes automatisk)</div>
+        <input class="input" id="nas-new-path" value="/mnt/nas-share" placeholder="/mnt/nas-share"/>
+      </div>
+      <div>
+        <div class="form-label">Tillad netværk (subnet eller enkelt IP)</div>
+        <input class="input" id="nas-new-subnet" placeholder="192.168.1.0/24"/>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="nas-readonly" style="accent-color:var(--o);width:16px;height:16px"/>
+        <label for="nas-readonly" style="font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--t2)">READ-ONLY (ingen skriveadgang)</label>
+      </div>
+      <div style="border-top:1px solid var(--b);padding-top:12px;margin-top:4px">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--o);margin-bottom:10px">WINDOWS ADGANG (SAMBA) — VALGFRIT</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div class="form-label">Linux brugernavn</div>
+            <input class="input" id="nas-smb-user" placeholder="dit-brugernavn"/>
+          </div>
+          <div>
+            <div class="form-label">Samba adgangskode</div>
+            <input class="input" id="nas-smb-pass" type="password" placeholder="Vælg en adgangskode"/>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-o" onclick="runNasSetup()" style="margin-top:4px">⚡ INSTALLER & KONFIGURÉR NFS + SAMBA</button>
+    </div>
+    <div class="install-log" id="nas-setup-log" style="display:none"></div>
+    <div class="install-footer" id="nas-setup-footer" style="display:none">
+      <button class="btn btn-g" onclick="closeNasSetup()">LUK</button>
+    </div>
+  </div>
 </div>
 
 <!-- ████ RAID ████ -->

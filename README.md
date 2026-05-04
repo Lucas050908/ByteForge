@@ -4,7 +4,7 @@ ByteForge er en selvstændig homelab- og game-server platform med en mørk, tekn
 
 Platformen kører direkte med den medfølgende Python-backend og bruger Docker som runtime til game servers og apps.
 
-> **Built by Lucas Valentin og Kaspar Lythje** — NAS · RAID · MINECRAFT · DIT DATA · DIN KONTROL
+> **Self-hosted homelab control panel** — NAS · RAID · MINECRAFT · DIT DATA · DIN KONTROL
 
 ---
 
@@ -206,4 +206,4 @@ Linux:    mount -t nfs 10.194.177.172:/mnt/nas-share /mnt/remote
 
 ## Licens
 
-Built by Lucas Valentin — `github.com/ByteForgeAdmin/ByteForge`
+`github.com/ByteForgeAdmin/ByteForge`
