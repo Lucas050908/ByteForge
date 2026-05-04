@@ -140,7 +140,7 @@ function nav(id, el) {
 }
 
 function loadPage(id) {
-  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, proxy:loadProxy, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth, appstore:loadAppStore, terminal:initTerminal, backup:loadBackup};
+  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, proxy:loadProxy, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth, appstore:loadApps, terminal:initTerminal, backup:loadBackup};
   if (map[id]) map[id]();
 }
 
@@ -300,7 +300,7 @@ async function loadSystem() {
 
 // ── NETWORK ──
 async function loadNetwork() {
-  ['casaos','mc','nfs','inet'].forEach(id => {
+  ['mc','nfs','inet'].forEach(id => {
     const el = document.getElementById('mon-' + id);
     if (!el) return;
     el.innerHTML = Array.from({length:30}, (_,i) =>
@@ -359,7 +359,7 @@ const LANG = {
     'nav.services':'Services','nav.docker':'Docker','nav.gameservers':'Game Servers','nav.proxy':'Proxy & SSL','nav.websites':'Websites','nav.privacy':'Privacy Suite',
     'nav.platform':'Platform','nav.files':'Filer','nav.access':'Adgang','nav.settings':'Settings',
     'nav.tools':'Tools','nav.ai':'AI Assistant','nav.devtools':'Dev Tools','nav.marketplace':'Marketplace',
-    'ver.tagline':'CASAOS UAFHÆNGIG',
+    'ver.tagline':'SELVSTÆNDIG',
     'set.theme':'Theme','set.language':'Sprog','set.background':'Baggrund',
     'docker.notinstalled':'DOCKER IKKE INSTALLERET',
     'docker.notinstalled.desc':'Docker kræves for at køre containers og game servers.',
@@ -367,7 +367,7 @@ const LANG = {
     'docker.installing':'Installerer Docker, vent venligst...',
     'docker.running':'KØRENDE',
     'gs.servername':'Server navn','gs.type':'Type',
-    'nav.appstore':'App Store','nav.terminal':'Terminal',
+    'nav.appstore':'Apps','nav.terminal':'Terminal',
   },
   en: {
     'nav.overview':'Overview','nav.dashboard':'Dashboard','nav.system':'System','nav.network':'Network',
@@ -375,7 +375,7 @@ const LANG = {
     'nav.services':'Services','nav.docker':'Docker','nav.gameservers':'Game Servers','nav.proxy':'Proxy & SSL','nav.websites':'Websites','nav.privacy':'Privacy Suite',
     'nav.platform':'Platform','nav.files':'Files','nav.access':'Access','nav.settings':'Settings',
     'nav.tools':'Tools','nav.ai':'AI Assistant','nav.devtools':'Dev Tools','nav.marketplace':'Marketplace',
-    'ver.tagline':'CASAOS INDEPENDENT',
+    'ver.tagline':'STANDALONE',
     'set.theme':'Theme','set.language':'Language','set.background':'Background',
     'docker.notinstalled':'DOCKER NOT INSTALLED',
     'docker.notinstalled.desc':'Docker is required to run containers and game servers.',
@@ -383,7 +383,7 @@ const LANG = {
     'docker.installing':'Installing Docker, please wait...',
     'docker.running':'RUNNING',
     'gs.servername':'Server name','gs.type':'Type',
-    'nav.appstore':'App Store','nav.terminal':'Terminal',
+    'nav.appstore':'Apps','nav.terminal':'Terminal',
   }
 };
 
@@ -1269,16 +1269,65 @@ function checkNotifications(sysData) {
   }
 }
 
-// ── APP STORE ──
-let _allApps = [], _currentCat = 'All';
+// ── APPS ──
+let _allApps = [], _currentCat = 'All', _currentAppsTab = 'installed';
 
-async function loadAppStore() {
-  const grid = document.getElementById('app-store-grid');
-  grid.innerHTML = '<div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter app catalog...</div></div>';
+async function loadApps() {
+  switchAppsTab('installed');
+  const installedGrid = document.getElementById('apps-installed-grid');
+  const storeGrid = document.getElementById('app-store-grid');
+  if (installedGrid) installedGrid.innerHTML = '<div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter apps...</div></div>';
+  if (storeGrid) storeGrid.innerHTML = '<div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter app catalog...</div></div>';
   const apps = await api('/api/appstore');
-  if (!apps) { grid.innerHTML = '<div class="card"><div class="ct">FEJL</div><div class="cs">Kunne ikke hente app catalog</div></div>'; return; }
+  if (!apps) {
+    if (installedGrid) installedGrid.innerHTML = '<div class="card"><div class="ct">FEJL</div><div class="cs">Kunne ikke hente apps</div></div>';
+    if (storeGrid) storeGrid.innerHTML = '<div class="card"><div class="ct">FEJL</div><div class="cs">Kunne ikke hente app catalog</div></div>';
+    return;
+  }
   _allApps = apps;
+  renderInstalledApps(apps.filter(a => a.installed));
   renderApps(apps);
+}
+
+function switchAppsTab(tab) {
+  _currentAppsTab = tab;
+  document.getElementById('apps-installed-section').style.display = tab === 'installed' ? '' : 'none';
+  document.getElementById('apps-store-section').style.display = tab === 'store' ? '' : 'none';
+  document.getElementById('tab-installed').classList.toggle('active', tab === 'installed');
+  document.getElementById('tab-store').classList.toggle('active', tab === 'store');
+}
+
+function appOpenUrl(a) {
+  return a.webport ? `http://${window.location.hostname}:${a.webport}` : '';
+}
+
+function renderInstalledApps(apps) {
+  const grid = document.getElementById('apps-installed-grid');
+  if (!grid) return;
+  if (!apps.length) {
+    grid.innerHTML = `<div class="card" style="grid-column:1/-1">
+      <div class="ct">INGEN APPS INSTALLERET</div>
+      <div class="cs">Gå til <button class="btn btn-o btn-sm" style="display:inline-flex;margin-left:6px" onclick="switchAppsTab('store')">🛒 STORE</button> for at installere din første app.</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = apps.map(a => {
+    const running = a.status === 'running';
+    const url = appOpenUrl(a);
+    const statusColor = running ? 'var(--ok)' : 'var(--warn)';
+    const statusLabel = running ? '● KØRENDE' : '○ STOPPET';
+    const openBtn = url ? `<a class="btn btn-o app-tile-open" href="${url}" target="_blank" rel="noopener">↗ ÅBEN APP</a>` : '';
+    return `<div class="app-tile" id="apptile-${escapeHTML(a.id)}">
+      <div class="app-tile-icon">${escapeHTML(a.icon)}</div>
+      <div class="app-tile-name">${escapeHTML(a.name)}</div>
+      <div class="app-tile-status" style="color:${statusColor}">${statusLabel}</div>
+      ${openBtn}
+      <div class="app-tile-actions">
+        <button class="btn btn-g btn-sm" onclick="appAction('${escapeHTML(a.id)}','${running?'stop':'start'}')">${running?'■ STOP':'▶ START'}</button>
+        <button class="btn btn-r btn-sm" onclick="appUninstall('${escapeHTML(a.id)}')">🗑 FJERN</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function filterApps(cat) {
@@ -1293,20 +1342,30 @@ function filterApps(cat) {
 
 function renderApps(apps) {
   const grid = document.getElementById('app-store-grid');
+  if (!grid) return;
   if (!apps.length) { grid.innerHTML = '<div class="card"><div class="ct">INGEN RESULTATER</div><div class="cs">Prøv et andet søgeord eller kategori.</div></div>'; return; }
   grid.innerHTML = apps.map(a => {
     const installed = a.installed;
+    const installing = a.status === 'installing';
     const running = a.status === 'running';
-    const statusHtml = installed
-      ? `<span class="app-status" style="color:${running?'var(--ok)':'var(--warn)'}">${running?'● KØRENDE':'○ STOPPET'}</span>`
-      : `<span class="app-status" style="color:var(--t3)">○ IKKE INSTALLERET</span>`;
-    const btnHtml = installed
-      ? `<div style="display:flex;gap:6px">
-           <button class="btn btn-g btn-sm" onclick="appAction('${a.id}','${running?'stop':'start'}')">${running?'■ STOP':'▶ START'}</button>
-           <button class="btn btn-r btn-sm" onclick="appUninstall('${a.id}')">🗑</button>
-         </div>`
-      : `<button class="btn btn-o btn-sm" onclick="appInstall('${a.id}')">⚡ INSTALL</button>`;
-    return `<div class="app-card ${installed?'installed':''}" id="appcard-${a.id}">
+    const url = appOpenUrl(a);
+    let statusHtml, btnHtml;
+    if (installing) {
+      statusHtml = `<span class="app-status" style="color:var(--o)">⟳ INSTALLERER...</span>`;
+      btnHtml = `<button class="btn btn-g btn-sm" disabled>⟳ WAIT</button>`;
+    } else if (installed) {
+      statusHtml = `<span class="app-status" style="color:${running?'var(--ok)':'var(--warn)'}">${running?'● KØRENDE':'○ STOPPET'}</span>`;
+      const openBtn = url ? `<a class="btn btn-o btn-sm" href="${url}" target="_blank" rel="noopener">↗ ÅBEN</a>` : '';
+      btnHtml = `<div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${openBtn}
+        <button class="btn btn-g btn-sm" onclick="appAction('${escapeHTML(a.id)}','${running?'stop':'start'}')">${running?'■ STOP':'▶ START'}</button>
+        <button class="btn btn-r btn-sm" onclick="appUninstall('${escapeHTML(a.id)}')">🗑</button>
+      </div>`;
+    } else {
+      statusHtml = `<span class="app-status" style="color:var(--t3)">○ IKKE INSTALLERET</span>`;
+      btnHtml = `<button class="btn btn-o btn-sm" onclick="appInstall('${escapeHTML(a.id)}')">⚡ INSTALL</button>`;
+    }
+    return `<div class="app-card ${installed?'installed':''} ${installing?'installing':''}" id="appcard-${escapeHTML(a.id)}">
       <div class="app-icon">${escapeHTML(a.icon)}</div>
       <div>
         <div class="app-name">${escapeHTML(a.name)}</div>
@@ -1318,13 +1377,63 @@ function renderApps(apps) {
   }).join('');
 }
 
+// ── Install modal ──
+let _installPollTimer = null;
+let _installSeenLines = 0;
+
 async function appInstall(id) {
   const app = _allApps.find(a => a.id === id);
-  toast(`Installerer ${app?.name || id}...`);
+  const name = app?.name || id;
+  // Show modal
+  document.getElementById('install-modal').style.display = 'flex';
+  document.getElementById('install-modal-title').textContent = `INSTALLING  ${name}`;
+  document.getElementById('install-log').innerHTML = '';
+  document.getElementById('install-footer').style.display = 'none';
+  document.getElementById('install-open-btn').style.display = 'none';
+  _installSeenLines = 0;
+  // Start install
   const r = await fetch(BASE+'/api/appstore/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app:id})});
   const d = await r.json();
-  toast(d.msg || (d.ok ? 'Installeret' : 'Fejl'), d.ok);
-  if (d.ok) setTimeout(loadAppStore, 1000);
+  if (!d.ok) {
+    appendInstallLog(d.msg || 'Fejl', true);
+    document.getElementById('install-footer').style.display = 'flex';
+    return;
+  }
+  // Poll logs
+  _installPollTimer = setInterval(() => pollInstallLogs(id, app), 600);
+}
+
+async function pollInstallLogs(id, app) {
+  const data = await api(`/api/appstore/logs?app=${encodeURIComponent(id)}`);
+  if (!data) return;
+  const newLines = data.lines.slice(_installSeenLines);
+  _installSeenLines = data.lines.length;
+  newLines.forEach(l => appendInstallLog(l));
+  if (data.done) {
+    clearInterval(_installPollTimer);
+    _installPollTimer = null;
+    document.getElementById('install-footer').style.display = 'flex';
+    if (data.ok && app?.port) {
+      const openBtn = document.getElementById('install-open-btn');
+      openBtn.href = appOpenUrl(app);
+      openBtn.style.display = 'flex';
+    }
+    setTimeout(loadApps, 800);
+  }
+}
+
+function appendInstallLog(line) {
+  const log = document.getElementById('install-log');
+  const span = document.createElement('div');
+  span.className = line.startsWith('✓') ? 'log-ok' : line.startsWith('✗') ? 'log-err' : '';
+  span.textContent = line;
+  log.appendChild(span);
+  log.scrollTop = log.scrollHeight;
+}
+
+function closeInstallModal() {
+  if (_installPollTimer) { clearInterval(_installPollTimer); _installPollTimer = null; }
+  document.getElementById('install-modal').style.display = 'none';
 }
 
 async function appUninstall(id) {
@@ -1333,14 +1442,14 @@ async function appUninstall(id) {
   const r = await fetch(BASE+'/api/appstore/uninstall',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app:id})});
   const d = await r.json();
   toast(d.msg || (d.ok ? 'Afinstalleret' : 'Fejl'), d.ok);
-  if (d.ok) setTimeout(loadAppStore, 800);
+  if (d.ok) setTimeout(loadApps, 800);
 }
 
 async function appAction(id, action) {
   const r = await fetch(BASE+'/api/docker/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({container:`byteforge-${id}`,action})});
   const d = await r.json();
   toast(d.msg||'Udført', d.ok);
-  setTimeout(loadAppStore, 800);
+  setTimeout(loadApps, 800);
 }
 
 // ── WEB TERMINAL ──

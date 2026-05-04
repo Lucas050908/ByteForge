@@ -94,13 +94,13 @@
   </div>
   <div class="sb-section">
     <div class="sb-label" data-i18n="nav.tools">Tools</div>
-    <div class="sb-item" onclick="nav('appstore',this)"><span class="si">🛒</span><span data-i18n="nav.appstore">App Store</span></div>
+    <div class="sb-item" onclick="nav('appstore',this)"><span class="si">▣</span><span data-i18n="nav.appstore">Apps</span></div>
     <div class="sb-item" onclick="nav('terminal',this)"><span class="si">⌨</span><span data-i18n="nav.terminal">Terminal</span></div>
     <div class="sb-item" onclick="nav('ai',this)"><span class="si">🤖</span><span data-i18n="nav.ai">AI Assistant</span></div>
     <div class="sb-item" onclick="nav('tools',this)"><span class="si">🔧</span><span data-i18n="nav.devtools">Dev Tools</span></div>
   </div>
   <div class="sb-bottom">
-    <div class="sb-ver">BYTEFORGE v1.2 // STANDALONE<br><span data-i18n="ver.tagline">CASAOS UAFHÆNGIG</span></div>
+    <div class="sb-ver">BYTEFORGE v1.2 // STANDALONE<br><span data-i18n="ver.tagline">SELVSTÆNDIG</span></div>
   </div>
 </nav>
 
@@ -153,11 +153,6 @@
   </div>
   <div class="st">UPTIME <span>MONITOR</span></div>
   <div class="card" id="monitor-list">
-    <div class="monitor-row">
-      <div class="monitor-name">CASAOS PANEL</div>
-      <div class="monitor-bars" id="mon-casaos"></div>
-      <div class="monitor-ping" id="ping-casaos">— ms</div>
-    </div>
     <div class="monitor-row">
       <div class="monitor-name">MINECRAFT</div>
       <div class="monitor-bars" id="mon-mc"></div>
@@ -763,25 +758,40 @@
 <!-- ████ APP STORE ████ -->
 <div class="page" id="page-appstore">
   <div class="ph">
-    <div class="ph-left"><h1>APP <span>STORE</span></h1><p>// 40+ APPS · ONE-CLICK INSTALL · DOCKER POWERED</p></div>
-    <div class="ph-right"><button class="btn btn-g btn-sm" onclick="loadAppStore()">⟳ REFRESH</button></div>
+    <div class="ph-left"><h1>MY <span>APPS</span></h1><p>// INSTALLED APPS & ONE-CLICK STORE</p></div>
+    <div class="ph-right"><button class="btn btn-g btn-sm" onclick="loadApps()">⟳ REFRESH</button></div>
   </div>
-  <input id="store-search" placeholder="🔍 Search apps..." oninput="filterApps()"/>
-  <div class="store-cats" id="store-cats">
-    <button class="cat-btn active" onclick="filterApps('All')" data-cat="All">ALL</button>
-    <button class="cat-btn" onclick="filterApps('Media')" data-cat="Media">🎬 MEDIA</button>
-    <button class="cat-btn" onclick="filterApps('Development')" data-cat="Development">💻 DEV</button>
-    <button class="cat-btn" onclick="filterApps('Network')" data-cat="Network">🌐 NETWORK</button>
-    <button class="cat-btn" onclick="filterApps('Cloud')" data-cat="Cloud">☁ CLOUD</button>
-    <button class="cat-btn" onclick="filterApps('Monitoring')" data-cat="Monitoring">📊 MONITORING</button>
-    <button class="cat-btn" onclick="filterApps('Security')" data-cat="Security">🔐 SECURITY</button>
-    <button class="cat-btn" onclick="filterApps('Database')" data-cat="Database">🗄 DATABASE</button>
-    <button class="cat-btn" onclick="filterApps('Home')" data-cat="Home">🏠 HOME</button>
-    <button class="cat-btn" onclick="filterApps('Productivity')" data-cat="Productivity">📋 PRODUCTIVITY</button>
-    <button class="cat-btn" onclick="filterApps('AI')" data-cat="AI">🤖 AI</button>
+  <div class="apps-tabs">
+    <button class="apps-tab-btn active" id="tab-installed" onclick="switchAppsTab('installed')">▣ MY APPS</button>
+    <button class="apps-tab-btn" id="tab-store" onclick="switchAppsTab('store')">🛒 STORE</button>
   </div>
-  <div class="grid g3" id="app-store-grid" style="align-items:start">
-    <div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter app catalog...</div></div>
+
+  <!-- MY APPS -->
+  <div id="apps-installed-section">
+    <div class="grid g3" id="apps-installed-grid" style="align-items:start">
+      <div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter installerede apps...</div></div>
+    </div>
+  </div>
+
+  <!-- STORE -->
+  <div id="apps-store-section" style="display:none">
+    <input id="store-search" placeholder="🔍 Search apps..." oninput="filterApps()"/>
+    <div class="store-cats" id="store-cats">
+      <button class="cat-btn active" onclick="filterApps('All')" data-cat="All">ALL</button>
+      <button class="cat-btn" onclick="filterApps('Media')" data-cat="Media">🎬 MEDIA</button>
+      <button class="cat-btn" onclick="filterApps('Development')" data-cat="Development">💻 DEV</button>
+      <button class="cat-btn" onclick="filterApps('Network')" data-cat="Network">🌐 NETWORK</button>
+      <button class="cat-btn" onclick="filterApps('Cloud')" data-cat="Cloud">☁ CLOUD</button>
+      <button class="cat-btn" onclick="filterApps('Monitoring')" data-cat="Monitoring">📊 MONITORING</button>
+      <button class="cat-btn" onclick="filterApps('Security')" data-cat="Security">🔐 SECURITY</button>
+      <button class="cat-btn" onclick="filterApps('Database')" data-cat="Database">🗄 DATABASE</button>
+      <button class="cat-btn" onclick="filterApps('Home')" data-cat="Home">🏠 HOME</button>
+      <button class="cat-btn" onclick="filterApps('Productivity')" data-cat="Productivity">📋 PRODUCTIVITY</button>
+      <button class="cat-btn" onclick="filterApps('AI')" data-cat="AI">🤖 AI</button>
+    </div>
+    <div class="grid g3" id="app-store-grid" style="align-items:start">
+      <div class="card"><div class="ct">INDLÆSER</div><div class="cs">Henter app catalog...</div></div>
+    </div>
   </div>
 </div>
 
@@ -850,6 +860,22 @@
       <div class="preset-title" style="color:var(--t3)">+ DEL DIT SETUP</div>
       <div class="preset-desc" style="color:var(--t3)">Del din konfiguration med homelab-fællesskabet og hjælp andre.</div>
       <div class="btn-row"><button class="btn btn-g btn-sm">📤 UPLOAD SETUP</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ INSTALL MODAL ████ -->
+<div id="install-modal" style="display:none;position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px)" onclick="closeInstallModal()"></div>
+  <div class="install-box">
+    <div class="install-header">
+      <span id="install-modal-title">INSTALLING</span>
+      <button class="install-close" onclick="closeInstallModal()">✕</button>
+    </div>
+    <div class="install-log" id="install-log"></div>
+    <div class="install-footer" id="install-footer" style="display:none">
+      <button class="btn btn-g" onclick="closeInstallModal()">CLOSE</button>
+      <a id="install-open-btn" class="btn btn-o" href="#" target="_blank" rel="noopener" style="display:none">↗ OPEN APP</a>
     </div>
   </div>
 </div>

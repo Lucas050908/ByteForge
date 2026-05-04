@@ -1,6 +1,5 @@
 /* ============================================================
-   BYTEFORGE THEME  –  CasaOS custom.css override
-   Drop this in /var/lib/casaos/www/css/custom.css
+   BYTEFORGE THEME
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Rajdhani:wght@400;500;600;700&display=swap');
@@ -22,7 +21,7 @@
   --success:            #FF6B1A !important;
   --warning:            #FF9A3C !important;
 
-  /* Vue/CasaOS specific vars */
+  /* Vue-specific vars */
   --color-primary:      #FF6B1A !important;
   --color-bg:           #0D0D0D !important;
   --color-sidebar:      #141414 !important;
@@ -402,11 +401,6 @@ a:hover { color: #FF9A3C !important; }
   border-radius: 0 !important;
 }
 
-/* ── Orange accent for any IceWhale branding ── */
-[class*="casaos"],
-[class*="icewhale"] {
-  color: #FF6B1A !important;
-}
 
 /* ── Bottom status bar style ── */
 .status-bar,

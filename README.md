@@ -2,7 +2,7 @@
 
 ByteForge er en selvstændig homelab- og game-server platform med en mørk, teknisk æstetik: skarpe paneler, neon-orange highlights, mono labels og lav visuel støj.
 
-Platformen er ikke afhængig af CasaOS. Den kører direkte med den medfølgende Python-backend og bruger Docker som runtime til game servers og apps.
+Platformen kører direkte med den medfølgende Python-backend og bruger Docker som runtime til game servers og apps.
 
 > **Built by Lucas Valentin og Kaspar Lythje** — NAS · RAID · MINECRAFT · DIT DATA · DIN KONTROL
 
@@ -201,10 +201,6 @@ Linux:    mount -t nfs 10.194.177.172:/mnt/nas-share /mnt/remote
 | Firewall | UFW |
 
 ---
-
-## Legacy Theme
-
-`ByteForge/byteforge-custom.css` og `ByteForge/byteforge-deploy.sh` er inkluderet til den gamle CasaOS theme-del. Selve platformen i `byteforge-platform.html` og `byteforge-server.py` er CasaOS-uafhængig.
 
 ---
 
