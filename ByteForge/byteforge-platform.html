@@ -101,8 +101,6 @@
     <div class="sb-item" onclick="nav('terminal',this)"><span class="si">⌨</span><span data-i18n="nav.terminal">Terminal</span></div>
     <div class="sb-item" onclick="nav('ai',this)"><span class="si">🤖</span><span data-i18n="nav.ai">AI Assistant</span></div>
     <div class="sb-item" onclick="nav('tools',this)"><span class="si">🔧</span><span data-i18n="nav.devtools">Dev Tools</span></div>
-    <div class="sb-item" onclick="nav('studio',this)"><span class="si">🎨</span><span>UI Studio</span></div>
-    <div class="sb-item" onclick="nav('dash',this)"><span class="si">⊞</span><span>Dashboard</span></div>
   </div>
   <div class="sb-bottom">
     <div class="sb-ver">BYTEFORGE v1.2 // STANDALONE<br><span data-i18n="ver.tagline">SELVSTÆNDIG</span></div>
@@ -637,7 +635,15 @@
 
 <!-- ████ SETTINGS ████ -->
 <div class="page" id="page-settings">
-  <div class="ph"><div class="ph-left"><h1>PLATFORM <span>CONFIG</span></h1><p>// THEME · SPROG · CUSTOM BACKGROUND · PERFORMANCE</p></div></div>
+  <div class="ph">
+    <div class="ph-left"><h1>PLATFORM <span>CONFIG</span></h1><p>// THEME · SPROG · CUSTOM BACKGROUND · PERFORMANCE</p></div>
+    <div class="ph-right">
+      <div class="apps-tabs" style="margin-bottom:0">
+        <button class="apps-tab-btn active" id="set-tab-general">GENERAL</button>
+        <button class="apps-tab-btn" id="set-tab-studio" onclick="nav('studio',document.querySelector('[data-nav=settings]'))">FORGEUI STUDIO</button>
+      </div>
+    </div>
+  </div>
   <div class="grid g2">
     <div class="card">
       <div class="ct">UI / UX</div>
@@ -987,6 +993,7 @@
     <div class="studio-topbar">
       <div class="studio-brand">FORGE<span>UI</span> STUDIO</div>
       <div class="studio-topbar-actions">
+        <button class="studio-action-btn" onclick="nav('settings',document.querySelector('[data-nav=settings]'))">← SETTINGS</button>
         <button class="studio-action-btn" onclick="studioReset()">↺ RESET</button>
         <button class="studio-action-btn" onclick="studioExport()">⬆ EXPORT</button>
         <button class="studio-action-btn primary" onclick="studioSave()">💾 SAVE</button>
@@ -1238,43 +1245,6 @@
   </div>
 </div>
 
-<!-- ████ DASHBOARD EDITOR ████ -->
-<div class="page" id="page-dash">
-  <div class="dash-editor-wrap">
-    <div class="dash-editor-header">
-      <div style="display:flex;align-items:baseline;gap:16px">
-        <h1 style="font-family:var(--display);font-size:28px;letter-spacing:4px">DASH<span style="color:var(--o)">BOARD</span></h1>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">// CLICK TO ADD · DRAG TO REORDER</span>
-      </div>
-      <div class="dash-editor-actions">
-        <button class="btn btn-g btn-sm" onclick="dashPreset('minimal')">⊡ MINIMAL</button>
-        <button class="btn btn-g btn-sm" onclick="dashPreset('full')">⊞ FULL</button>
-        <button class="btn btn-g btn-sm" onclick="dashPreset('gaming')">🎮 GAMING</button>
-        <button class="btn btn-g btn-sm" onclick="dashClear()">✕ CLEAR</button>
-        <button class="btn btn-o btn-sm" onclick="dashSave()">💾 SAVE</button>
-      </div>
-    </div>
-    <div class="dash-editor-body">
-      <!-- Widget Palette -->
-      <div class="dash-palette">
-        <div class="dash-palette-title">CLICK TO ADD</div>
-        <div id="dash-widget-list"></div>
-      </div>
-      <!-- Live Grid Canvas -->
-      <div class="dash-canvas-wrap">
-        <div class="dash-canvas" id="dash-canvas"
-             ondragover="event.preventDefault()"
-             ondrop="dashDropOnCanvas(event)">
-        </div>
-        <div class="dash-empty-hint" id="dash-empty-hint">
-          <div style="font-size:48px;margin-bottom:12px">⊞</div>
-          <div style="font-family:var(--display);font-size:20px;letter-spacing:3px;color:var(--t3)">CLICK A WIDGET TO ADD IT</div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--b2);margin-top:8px">Or choose a preset above</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 </main>
 </div>
