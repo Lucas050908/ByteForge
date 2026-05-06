@@ -2094,108 +2094,167 @@ function studioExport() {
 // DASHBOARD EDITOR
 // ══════════════════════════════════════════════════════════
 const DASH_WIDGETS = [
-  {id:'cpu',     name:'CPU',          icon:'🖥',  span:2},
-  {id:'ram',     name:'RAM',          icon:'💾',  span:2},
-  {id:'temp',    name:'Temperature',  icon:'🌡',  span:1},
-  {id:'uptime',  name:'Uptime',       icon:'⏱',  span:1},
-  {id:'network', name:'Network',      icon:'📡',  span:2},
-  {id:'docker',  name:'Docker',       icon:'▣',  span:3},
-  {id:'storage', name:'Storage',      icon:'🗄',  span:2},
-  {id:'game',    name:'Game Servers', icon:'🎮',  span:3},
-  {id:'nas',     name:'NAS',          icon:'💽',  span:2},
-  {id:'notes',   name:'Notes',        icon:'📝',  span:2},
-  {id:'clock',   name:'Clock',        icon:'🕐',  span:1},
-  {id:'logs',    name:'System Logs',  icon:'📋',  span:3},
-  {id:'weather', name:'Weather',      icon:'🌤',  span:2},
-  {id:'ai',      name:'AI Chat',      icon:'🤖',  span:3},
-  {id:'terminal',name:'Terminal',     icon:'⌨',  span:4},
+  {id:'cpu',     name:'CPU',          icon:'🖥',  span:1, color:'var(--o)'},
+  {id:'ram',     name:'RAM',          icon:'💾',  span:1, color:'var(--o2)'},
+  {id:'temp',    name:'Temperature',  icon:'🌡',  span:1, color:'var(--warn)'},
+  {id:'uptime',  name:'Uptime',       icon:'⏱',  span:1, color:'var(--ok)'},
+  {id:'network', name:'Network',      icon:'📡',  span:2, color:'var(--o)'},
+  {id:'docker',  name:'Docker',       icon:'▣',  span:2, color:'var(--o2)'},
+  {id:'storage', name:'Storage',      icon:'🗄',  span:2, color:'var(--warn)'},
+  {id:'game',    name:'Game Servers', icon:'🎮',  span:2, color:'var(--ok)'},
+  {id:'nas',     name:'NAS',          icon:'💽',  span:1, color:'var(--o)'},
+  {id:'notes',   name:'Notes',        icon:'📝',  span:2, color:'var(--t2)'},
+  {id:'clock',   name:'Clock',        icon:'🕐',  span:1, color:'var(--o)'},
+  {id:'logs',    name:'System Logs',  icon:'📋',  span:4, color:'var(--t3)'},
+  {id:'weather', name:'Weather',      icon:'🌤',  span:1, color:'var(--o2)'},
+  {id:'ai',      name:'AI Chat',      icon:'🤖',  span:2, color:'var(--o)'},
+  {id:'terminal',name:'Terminal',     icon:'⌨',  span:4, color:'var(--ok)'},
 ];
-const GRID_COLS = 6;
-let _dashLayout = []; // [{widgetId, col, row}]
+let _dashLayout = []; // [{widgetId, span}] in order
+let _dashDragIdx = null;
 
 function loadDashEditor() {
-  buildWidgetPalette();
-  buildDashGrid();
   const saved = localStorage.getItem('byteforge-dashboard');
-  if (saved) { try { _dashLayout = JSON.parse(saved); renderDashGrid(); } catch(e) {} }
-  updateDashPreview();
+  if (saved) { try { _dashLayout = JSON.parse(saved); } catch(e) { _dashLayout = []; } }
+  buildWidgetPalette();
+  renderDashCanvas();
+  setTimeout(dashRefreshLiveData, 300);
 }
 
 function buildWidgetPalette() {
   const el = document.getElementById('dash-widget-list');
   if (!el) return;
-  el.innerHTML = DASH_WIDGETS.map(w => `
-    <div class="dash-widget-chip" draggable="true" data-widget="${w.id}"
-         ondragstart="dashDragStart(event,'${w.id}')">
+  el.innerHTML = DASH_WIDGETS.map(w => {
+    const inGrid = _dashLayout.some(d => d.widgetId === w.id);
+    return `<div class="dash-widget-chip ${inGrid?'in-grid':''}" id="chip-${w.id}"
+      onclick="dashAddWidget('${w.id}')" title="${inGrid?'Remove':'Add'} ${w.name}">
       <span class="dash-widget-chip-icon">${w.icon}</span>
       <span>${w.name}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function buildDashGrid() {
-  const canvas = document.getElementById('dash-canvas');
-  if (!canvas) return;
-  canvas.innerHTML = '';
-  for (let i = 0; i < 24; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'dash-cell';
-    cell.dataset.cell = i;
-    cell.ondragover = e => { e.preventDefault(); cell.classList.add('drag-over'); };
-    cell.ondragleave = () => cell.classList.remove('drag-over');
-    cell.ondrop = e => { e.preventDefault(); cell.classList.remove('drag-over'); dashDrop(e, i); };
-    canvas.appendChild(cell);
+function dashAddWidget(id) {
+  const idx = _dashLayout.findIndex(w => w.widgetId === id);
+  if (idx >= 0) {
+    _dashLayout.splice(idx, 1);
+  } else {
+    const def = DASH_WIDGETS.find(w => w.id === id);
+    _dashLayout.push({widgetId: id, span: def?.span || 1});
   }
-  renderDashGrid();
+  buildWidgetPalette();
+  renderDashCanvas();
 }
 
-let _dashDragging = null;
-function dashDragStart(e, widgetId) { _dashDragging = widgetId; e.dataTransfer.effectAllowed = 'copy'; }
-
-function dashDrop(e, cellIdx) {
-  if (!_dashDragging) return;
-  const existing = _dashLayout.findIndex(w => w.cell === cellIdx);
-  if (existing >= 0) _dashLayout.splice(existing, 1);
-  _dashLayout.push({widgetId: _dashDragging, cell: cellIdx});
-  _dashDragging = null;
-  renderDashGrid();
-  updateDashPreview();
-}
-
-function renderDashGrid() {
+function renderDashCanvas() {
   const canvas = document.getElementById('dash-canvas');
+  const hint = document.getElementById('dash-empty-hint');
   if (!canvas) return;
-  canvas.querySelectorAll('.dash-cell').forEach(cell => {
-    const cellIdx = parseInt(cell.dataset.cell);
-    const placed = _dashLayout.find(w => w.cell === cellIdx);
-    if (placed) {
-      const def = DASH_WIDGETS.find(w => w.id === placed.widgetId);
-      cell.innerHTML = `<div class="dash-placed-widget" draggable="true"
-        ondragstart="dashDragStart(event,'${placed.widgetId}')">
-        <div class="dash-placed-widget-title">${def?.icon || '?'} ${def?.name || placed.widgetId}</div>
-        <div class="dash-placed-widget-icon">${def?.icon || '?'}</div>
-        <button class="dash-widget-remove" onclick="dashRemove(${cellIdx})">✕</button>
-      </div>`;
-    } else {
-      cell.innerHTML = '';
-    }
-  });
+  if (hint) hint.style.display = _dashLayout.length ? 'none' : 'flex';
+  canvas.innerHTML = _dashLayout.map((item, idx) => {
+    const def = DASH_WIDGETS.find(w => w.id === item.widgetId);
+    if (!def) return '';
+    const span = item.span || def.span || 1;
+    const content = dashWidgetContent(def, item);
+    return `<div class="dash-widget-card" data-idx="${idx}" data-span="${span}"
+      draggable="true"
+      ondragstart="dashCardDragStart(event,${idx})"
+      ondragover="dashCardDragOver(event,${idx})"
+      ondragleave="this.classList.remove('drag-target')"
+      ondrop="dashCardDrop(event,${idx})">
+      <button class="dwc-remove" onclick="dashRemoveWidget(${idx})" title="Remove">✕</button>
+      <div class="dwc-header">
+        <span class="dwc-icon">${def.icon}</span>
+        <span class="dwc-name">${def.name}</span>
+      </div>
+      ${content}
+      <div class="dwc-resize" onclick="dashCycleSpan(${idx})" title="Resize: ${span}/${span<4?span+1:1}">⟺ ${span}</div>
+    </div>`;
+  }).join('');
 }
 
-function dashRemove(cellIdx) {
-  _dashLayout = _dashLayout.filter(w => w.cell !== cellIdx);
-  renderDashGrid();
-  updateDashPreview();
+function dashWidgetContent(def, item) {
+  const previews = {
+    cpu:      `<div class="dwc-value" style="color:${def.color}" id="dw-cpu">—%</div><div class="dwc-bar"><div class="dwc-bar-fill" id="dwb-cpu" style="width:0%;background:${def.color}"></div></div>`,
+    ram:      `<div class="dwc-value" style="color:${def.color}" id="dw-ram">—%</div><div class="dwc-bar"><div class="dwc-bar-fill" id="dwb-ram" style="width:0%;background:${def.color}"></div></div>`,
+    temp:     `<div class="dwc-value" style="color:${def.color}" id="dw-temp">—°C</div>`,
+    uptime:   `<div class="dwc-value" style="font-size:18px;color:${def.color}" id="dw-uptime">—</div>`,
+    network:  `<div style="display:flex;gap:16px"><div><div class="dwc-sub">↓ IN</div><div class="dwc-value" style="font-size:18px;color:${def.color}" id="dw-netrx">—</div></div><div><div class="dwc-sub">↑ OUT</div><div class="dwc-value" style="font-size:18px;color:${def.color}" id="dw-nettx">—</div></div></div>`,
+    docker:   `<div class="dwc-value" style="color:${def.color}" id="dw-docker">—</div><div class="dwc-sub">containers running</div>`,
+    storage:  `<div class="dwc-value" style="font-size:20px;color:${def.color}" id="dw-storage">—</div><div class="dwc-sub">root disk used</div>`,
+    game:     `<div class="dwc-value" style="color:${def.color}" id="dw-game">—</div><div class="dwc-sub">servers configured</div>`,
+    nas:      `<div class="dwc-value" style="font-size:16px;color:${def.color}" id="dw-nas">—</div>`,
+    clock:    `<div class="dwc-value" style="font-size:22px;color:${def.color}" id="dw-clock">—</div>`,
+    notes:    `<textarea id="dw-notes" style="width:100%;flex:1;background:var(--bg);border:1px solid var(--b);color:var(--t);font-family:var(--mono);font-size:10px;padding:6px;resize:none;min-height:60px" placeholder="Your notes...">${localStorage.getItem('dash-notes')||''}</textarea>`,
+    logs:     `<div id="dw-logs" style="font-family:var(--mono);font-size:9px;color:var(--t3);line-height:1.6;max-height:80px;overflow:hidden">Loading...</div>`,
+    weather:  `<div class="dwc-value" style="color:${def.color}">🌤 —°C</div><div class="dwc-sub">Ingen weather API konfigureret</div>`,
+    ai:       `<div class="dwc-value" style="font-size:14px;color:${def.color}">🤖 AI ASSISTANT</div><div class="dwc-sub" style="cursor:pointer;color:var(--o)" onclick="nav('ai',document.querySelector('[onclick*=nav__ai]'))">→ Åben AI chat</div>`,
+    terminal: `<div style="background:var(--bg);border:1px solid var(--b);padding:8px;font-family:var(--mono);font-size:9px;color:var(--ok);line-height:1.6;min-height:60px">byteforge $ <span style="animation:blink 1s infinite">█</span></div>`,
+  };
+  return previews[def.id] || `<div class="dwc-sub">${def.name}</div>`;
 }
 
-function updateDashPreview() {
-  const el = document.getElementById('dash-live-grid');
-  const count = document.getElementById('dash-preview-count');
-  if (!el) return;
-  if (count) count.textContent = `${_dashLayout.length} widget${_dashLayout.length !== 1 ? 's' : ''}`;
-  el.innerHTML = _dashLayout.map(w => {
-    const def = DASH_WIDGETS.find(d => d.id === w.widgetId);
-    return `<div class="dash-live-widget"><span>${def?.icon||'?'}</span>${def?.name||w.widgetId}</div>`;
-  }).join('') || '<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:8px">No widgets — drag some in above</div>';
+function dashCardDragStart(e, idx) {
+  _dashDragIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => { const el = document.querySelector(`[data-idx="${idx}"]`); if(el) el.classList.add('dragging'); }, 0);
+}
+function dashCardDragOver(e, idx) {
+  e.preventDefault();
+  if (_dashDragIdx === null || _dashDragIdx === idx) return;
+  document.querySelectorAll('.dash-widget-card').forEach(c => c.classList.remove('drag-target'));
+  document.querySelector(`[data-idx="${idx}"]`)?.classList.add('drag-target');
+}
+function dashCardDrop(e, targetIdx) {
+  e.preventDefault();
+  document.querySelectorAll('.dash-widget-card').forEach(c => c.classList.remove('drag-target','dragging'));
+  if (_dashDragIdx === null || _dashDragIdx === targetIdx) { _dashDragIdx = null; return; }
+  const item = _dashLayout.splice(_dashDragIdx, 1)[0];
+  _dashLayout.splice(targetIdx, 0, item);
+  _dashDragIdx = null;
+  renderDashCanvas();
+  dashRefreshLiveData();
+}
+function dashDropOnCanvas(e) {
+  e.preventDefault();
+  document.querySelectorAll('.dash-widget-card').forEach(c => c.classList.remove('drag-target','dragging'));
+  _dashDragIdx = null;
+}
+
+function dashRemoveWidget(idx) {
+  _dashLayout.splice(idx, 1);
+  buildWidgetPalette();
+  renderDashCanvas();
+}
+
+function dashCycleSpan(idx) {
+  const item = _dashLayout[idx];
+  if (!item) return;
+  item.span = (item.span || 1) >= 4 ? 1 : (item.span || 1) + 1;
+  renderDashCanvas();
+  dashRefreshLiveData();
+}
+
+async function dashRefreshLiveData() {
+  const sys = await api('/api/system');
+  if (sys) {
+    const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+    const setW = (id, w) => { const el = document.getElementById(id); if(el) el.style.width = w+'%'; };
+    setEl('dw-cpu', sys.cpu+'%'); setW('dwb-cpu', sys.cpu);
+    setEl('dw-ram', sys.ram_pct+'%'); setW('dwb-ram', sys.ram_pct);
+    setEl('dw-temp', sys.temp+'°C');
+    setEl('dw-uptime', sys.uptime);
+  }
+  const docker = await api('/api/docker');
+  if (docker) { const el = document.getElementById('dw-docker'); if(el) el.textContent = docker.filter(c=>c.status.includes('Up')).length+' / '+docker.length; }
+  const disks = await api('/api/disks');
+  if (disks?.length) { const el = document.getElementById('dw-storage'); if(el) el.textContent = disks[0].pct+'% ('+disks[0].used+'G / '+disks[0].total+'G)'; }
+  const cfg = await api('/api/game-servers');
+  if (cfg) { const el = document.getElementById('dw-game'); if(el) el.textContent = cfg.servers?.length || 0; }
+  const clockEl = document.getElementById('dw-clock');
+  if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const notesEl = document.getElementById('dw-notes');
+  if (notesEl) notesEl.onblur = () => localStorage.setItem('dash-notes', notesEl.value);
 }
 
 function dashSave() {
@@ -2203,18 +2262,19 @@ function dashSave() {
   toast(`Dashboard gemt — ${_dashLayout.length} widgets`);
 }
 
-function dashClear() { _dashLayout = []; renderDashGrid(); updateDashPreview(); }
+function dashClear() { _dashLayout = []; buildWidgetPalette(); renderDashCanvas(); }
 
 function dashPreset(name) {
   const presets = {
-    minimal: [{widgetId:'cpu',cell:0},{widgetId:'ram',cell:2},{widgetId:'uptime',cell:4},{widgetId:'network',cell:6}],
-    full: [{widgetId:'cpu',cell:0},{widgetId:'ram',cell:2},{widgetId:'temp',cell:4},{widgetId:'uptime',cell:5},{widgetId:'network',cell:6},{widgetId:'docker',cell:8},{widgetId:'storage',cell:12},{widgetId:'game',cell:14},{widgetId:'nas',cell:18}],
-    gaming: [{widgetId:'cpu',cell:0},{widgetId:'ram',cell:2},{widgetId:'game',cell:4},{widgetId:'docker',cell:10},{widgetId:'terminal',cell:14},{widgetId:'network',cell:20}],
+    minimal: ['cpu','ram','temp','uptime'].map(id => ({widgetId:id, span: DASH_WIDGETS.find(w=>w.id===id)?.span||1})),
+    full: ['cpu','ram','temp','uptime','network','docker','storage','game','nas','logs'].map(id => ({widgetId:id, span: DASH_WIDGETS.find(w=>w.id===id)?.span||1})),
+    gaming: ['cpu','ram','game','docker','network','terminal'].map(id => ({widgetId:id, span: DASH_WIDGETS.find(w=>w.id===id)?.span||1})),
   };
   _dashLayout = presets[name] || [];
-  renderDashGrid();
-  updateDashPreview();
-  toast(`Preset "${name}" indlæst`);
+  buildWidgetPalette();
+  renderDashCanvas();
+  setTimeout(dashRefreshLiveData, 200);
+  toast(`"${name}" preset indlæst`);
 }
 
 boot();

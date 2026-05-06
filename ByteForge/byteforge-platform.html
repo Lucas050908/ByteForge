@@ -1242,7 +1242,10 @@
 <div class="page" id="page-dash">
   <div class="dash-editor-wrap">
     <div class="dash-editor-header">
-      <div class="ph-left"><h1>DASH<span>BOARD</span></h1><p>// DRAG · DROP · CUSTOMIZE YOUR VIEW</p></div>
+      <div style="display:flex;align-items:baseline;gap:16px">
+        <h1 style="font-family:var(--display);font-size:28px;letter-spacing:4px">DASH<span style="color:var(--o)">BOARD</span></h1>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">// CLICK TO ADD · DRAG TO REORDER</span>
+      </div>
       <div class="dash-editor-actions">
         <button class="btn btn-g btn-sm" onclick="dashPreset('minimal')">⊡ MINIMAL</button>
         <button class="btn btn-g btn-sm" onclick="dashPreset('full')">⊞ FULL</button>
@@ -1254,19 +1257,21 @@
     <div class="dash-editor-body">
       <!-- Widget Palette -->
       <div class="dash-palette">
-        <div class="dash-palette-title">WIDGETS</div>
+        <div class="dash-palette-title">CLICK TO ADD</div>
         <div id="dash-widget-list"></div>
       </div>
-      <!-- Grid Canvas -->
+      <!-- Live Grid Canvas -->
       <div class="dash-canvas-wrap">
-        <div class="dash-canvas" id="dash-canvas"></div>
-        <div class="dash-canvas-hint">Drag widgets from the left onto the grid</div>
+        <div class="dash-canvas" id="dash-canvas"
+             ondragover="event.preventDefault()"
+             ondrop="dashDropOnCanvas(event)">
+        </div>
+        <div class="dash-empty-hint" id="dash-empty-hint">
+          <div style="font-size:48px;margin-bottom:12px">⊞</div>
+          <div style="font-family:var(--display);font-size:20px;letter-spacing:3px;color:var(--t3)">CLICK A WIDGET TO ADD IT</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--b2);margin-top:8px">Or choose a preset above</div>
+        </div>
       </div>
-    </div>
-    <!-- Live Preview -->
-    <div class="dash-preview-bar">
-      <div class="dash-preview-title">PREVIEW — <span id="dash-preview-count">0 widgets</span></div>
-      <div class="dash-live-grid" id="dash-live-grid"></div>
     </div>
   </div>
 </div>

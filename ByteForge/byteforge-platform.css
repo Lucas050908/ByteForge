@@ -86,6 +86,8 @@ body::after{content:'';position:fixed;inset:0;
 #main{overflow-y:auto;position:relative;z-index:1;background:transparent}
 .page{display:none;padding:28px;min-height:100%}
 .page.active{display:block;animation:fadeIn .2s ease}
+#page-studio.active{display:flex!important;flex-direction:column;padding:0;height:calc(100vh - 52px);overflow:hidden}
+#page-dash.active{display:flex!important;flex-direction:column;padding:0;height:calc(100vh - 52px);overflow:hidden}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── PAGE HEADER ── */
@@ -454,32 +456,38 @@ body::after{content:'';position:fixed;inset:0;
 /* ══════════════════════════════════════════════════════════
    DASHBOARD EDITOR
 ══════════════════════════════════════════════════════════ */
-#page-dash{padding:0!important;display:flex;flex-direction:column;overflow:hidden}
 .dash-editor-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden}
 .dash-editor-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--s);border-bottom:1px solid var(--b);flex-shrink:0;gap:12px;flex-wrap:wrap}
 .dash-editor-actions{display:flex;gap:6px;flex-wrap:wrap}
 .dash-editor-body{display:flex;flex:1;overflow:hidden;min-height:0}
-.dash-palette{width:160px;flex-shrink:0;background:var(--s);border-right:1px solid var(--b);overflow-y:auto;padding:12px 8px}
-.dash-palette-title{font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--t3);padding:4px 8px;margin-bottom:8px;text-transform:uppercase}
-.dash-widget-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;background:var(--p);border:1px solid var(--b);cursor:grab;font-family:var(--mono);font-size:10px;color:var(--t2);transition:all .15s;user-select:none}
-.dash-widget-chip:hover{border-color:var(--o);color:var(--o)}
-.dash-widget-chip:active{cursor:grabbing}
-.dash-widget-chip-icon{font-size:16px}
+.dash-palette{width:170px;flex-shrink:0;background:var(--s);border-right:1px solid var(--b);overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:0}
+.dash-palette-title{font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--t3);padding:4px 8px 10px;text-transform:uppercase}
+.dash-widget-chip{display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;background:var(--p);border:1px solid var(--b);cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--t2);transition:all .15s;user-select:none;letter-spacing:1px}
+.dash-widget-chip:hover{border-color:var(--o);color:var(--o);background:var(--o3);transform:translateX(2px)}
+.dash-widget-chip.in-grid{border-color:var(--ok);color:var(--ok)}
+.dash-widget-chip-icon{font-size:14px;width:18px;text-align:center}
 .dash-canvas-wrap{flex:1;overflow:auto;padding:16px;background:var(--bg);position:relative}
-.dash-canvas{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;min-height:300px}
-.dash-cell{min-height:80px;border:1px dashed var(--b);transition:all .15s;position:relative}
-.dash-cell.drag-over{border-color:var(--o);background:var(--o3)}
-.dash-placed-widget{background:var(--p);border:1px solid var(--b);padding:10px;height:100%;display:flex;flex-direction:column;cursor:move;position:relative;transition:border-color .15s}
-.dash-placed-widget:hover{border-color:var(--o)}
-.dash-placed-widget-title{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--t3);margin-bottom:6px;text-transform:uppercase}
-.dash-placed-widget-icon{font-size:28px;text-align:center;flex:1;display:flex;align-items:center;justify-content:center}
-.dash-widget-remove{position:absolute;top:4px;right:4px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:12px;padding:2px 4px;transition:color .15s}
-.dash-widget-remove:hover{color:var(--err)}
-.dash-canvas-hint{font-family:var(--mono);font-size:9px;color:var(--b2);text-align:center;margin-top:8px;letter-spacing:1px}
-.dash-preview-bar{border-top:1px solid var(--b);padding:12px 16px;background:var(--s);flex-shrink:0}
-.dash-preview-title{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--t3);margin-bottom:10px;text-transform:uppercase}
-.dash-live-grid{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;min-height:60px}
-.dash-live-widget{background:var(--p);border:1px solid var(--b);padding:8px 12px;min-width:100px;white-space:nowrap;font-family:var(--mono);font-size:9px;color:var(--t2);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.dash-canvas{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-content:start}
+.dash-empty-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:.5}
+.dash-widget-card{background:var(--p);border:1px solid var(--b);padding:14px;display:flex;flex-direction:column;gap:8px;cursor:grab;transition:all .2s;position:relative;min-height:100px}
+.dash-widget-card:hover{border-color:var(--o);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.dash-widget-card.dragging{opacity:.5;border-color:var(--o)}
+.dash-widget-card.drag-target{border-color:var(--o);background:var(--o3)}
+.dash-widget-card[data-span="2"]{grid-column:span 2}
+.dash-widget-card[data-span="3"]{grid-column:span 3}
+.dash-widget-card[data-span="4"]{grid-column:span 4}
+.dwc-header{display:flex;align-items:center;gap:8px}
+.dwc-icon{font-size:22px}
+.dwc-name{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase}
+.dwc-value{font-family:var(--display);font-size:28px;letter-spacing:2px;color:var(--t)}
+.dwc-sub{font-family:var(--mono);font-size:9px;color:var(--t3)}
+.dwc-bar{height:2px;background:var(--b);margin-top:4px}
+.dwc-bar-fill{height:100%;background:var(--o);transition:width .5s}
+.dwc-remove{position:absolute;top:6px;right:6px;background:none;border:none;color:var(--b2);cursor:pointer;font-size:14px;padding:2px 5px;line-height:1;transition:color .15s;opacity:0}
+.dash-widget-card:hover .dwc-remove{opacity:1}
+.dwc-remove:hover{color:var(--err)}
+.dwc-resize{position:absolute;bottom:4px;right:6px;font-family:var(--mono);font-size:8px;color:var(--b2);cursor:e-resize;padding:2px 4px;opacity:0;transition:opacity .15s}
+.dash-widget-card:hover .dwc-resize{opacity:1}
 
 /* Effect overrides applied by Studio */
 .studio-glow .card{box-shadow:0 0 calc(var(--glow) * 3px) var(--o)}
