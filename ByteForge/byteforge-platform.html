@@ -101,6 +101,8 @@
     <div class="sb-item" onclick="nav('terminal',this)"><span class="si">⌨</span><span data-i18n="nav.terminal">Terminal</span></div>
     <div class="sb-item" onclick="nav('ai',this)"><span class="si">🤖</span><span data-i18n="nav.ai">AI Assistant</span></div>
     <div class="sb-item" onclick="nav('tools',this)"><span class="si">🔧</span><span data-i18n="nav.devtools">Dev Tools</span></div>
+    <div class="sb-item" onclick="nav('studio',this)"><span class="si">🎨</span><span>UI Studio</span></div>
+    <div class="sb-item" onclick="nav('dash',this)"><span class="si">⊞</span><span>Dashboard</span></div>
   </div>
   <div class="sb-bottom">
     <div class="sb-ver">BYTEFORGE v1.2 // STANDALONE<br><span data-i18n="ver.tagline">SELVSTÆNDIG</span></div>
@@ -974,6 +976,297 @@
     <div class="install-footer" id="install-footer" style="display:none">
       <button class="btn btn-g" onclick="closeInstallModal()">CLOSE</button>
       <a id="install-open-btn" class="btn btn-o" href="#" target="_blank" rel="noopener" style="display:none">↗ OPEN APP</a>
+    </div>
+  </div>
+</div>
+
+<!-- ████ FORGEUI STUDIO ████ -->
+<div class="page" id="page-studio">
+  <div class="studio-wrap">
+    <!-- Studio Header -->
+    <div class="studio-topbar">
+      <div class="studio-brand">FORGE<span>UI</span> STUDIO</div>
+      <div class="studio-topbar-actions">
+        <button class="studio-action-btn" onclick="studioReset()">↺ RESET</button>
+        <button class="studio-action-btn" onclick="studioExport()">⬆ EXPORT</button>
+        <button class="studio-action-btn primary" onclick="studioSave()">💾 SAVE</button>
+      </div>
+    </div>
+
+    <div class="studio-body">
+      <!-- Left: Category Nav -->
+      <nav class="studio-nav">
+        <div class="studio-nav-item active" data-tab="presets" onclick="studioTab('presets')">
+          <span class="studio-nav-icon">◈</span><span>PRESETS</span>
+        </div>
+        <div class="studio-nav-item" data-tab="colors" onclick="studioTab('colors')">
+          <span class="studio-nav-icon">🎨</span><span>COLORS</span>
+        </div>
+        <div class="studio-nav-item" data-tab="effects" onclick="studioTab('effects')">
+          <span class="studio-nav-icon">✦</span><span>EFFECTS</span>
+        </div>
+        <div class="studio-nav-item" data-tab="typography" onclick="studioTab('typography')">
+          <span class="studio-nav-icon">𝗔</span><span>TYPOGRAPHY</span>
+        </div>
+        <div class="studio-nav-item" data-tab="layout" onclick="studioTab('layout')">
+          <span class="studio-nav-icon">⊞</span><span>LAYOUT</span>
+        </div>
+      </nav>
+
+      <!-- Center: Controls -->
+      <div class="studio-controls">
+
+        <!-- PRESETS tab -->
+        <div class="studio-tab active" id="studio-tab-presets">
+          <div class="studio-section-title">THEME PRESETS</div>
+          <div class="studio-presets-grid">
+            <div class="studio-preset" data-theme="forge-dark" onclick="studioApplyPreset('forge-dark')">
+              <div class="studio-preset-swatch" style="background:#0D0D0D;border:2px solid #FF6B1A">
+                <div style="background:#FF6B1A;height:6px;margin:8px 8px 4px"></div>
+                <div style="background:#1A1A1A;height:30px;margin:0 8px;border:1px solid #242424"></div>
+              </div>
+              <div class="studio-preset-name">🔥 FORGE DARK</div>
+            </div>
+            <div class="studio-preset" data-theme="cyberpunk" onclick="studioApplyPreset('cyberpunk')">
+              <div class="studio-preset-swatch" style="background:#0a0014;border:2px solid #e040fb">
+                <div style="background:#e040fb;height:6px;margin:8px 8px 4px"></div>
+                <div style="background:#1a003a;height:30px;margin:0 8px;border:1px solid #4b0082"></div>
+              </div>
+              <div class="studio-preset-name">💜 CYBERPUNK</div>
+            </div>
+            <div class="studio-preset" data-theme="matrix" onclick="studioApplyPreset('matrix')">
+              <div class="studio-preset-swatch" style="background:#000;border:2px solid #00ff41">
+                <div style="background:#00ff41;height:6px;margin:8px 8px 4px"></div>
+                <div style="background:#001100;height:30px;margin:0 8px;border:1px solid #003300"></div>
+              </div>
+              <div class="studio-preset-name">🟩 MATRIX</div>
+            </div>
+            <div class="studio-preset" data-theme="ocean" onclick="studioApplyPreset('ocean')">
+              <div class="studio-preset-swatch" style="background:#040d1a;border:2px solid #00bcd4">
+                <div style="background:#00bcd4;height:6px;margin:8px 8px 4px"></div>
+                <div style="background:#0b2040;height:30px;margin:0 8px;border:1px solid #163a6b"></div>
+              </div>
+              <div class="studio-preset-name">🌊 OCEAN</div>
+            </div>
+            <div class="studio-preset" data-theme="military" onclick="studioApplyPreset('military')">
+              <div class="studio-preset-swatch" style="background:#0f110a;border:2px solid #8ba446">
+                <div style="background:#8ba446;height:6px;margin:8px 8px 4px"></div>
+                <div style="background:#1e2414;height:30px;margin:0 8px;border:1px solid #3a4228"></div>
+              </div>
+              <div class="studio-preset-name">🟫 MILITARY</div>
+            </div>
+            <div class="studio-preset" data-theme="forge-light" onclick="studioApplyPreset('forge-light')">
+              <div class="studio-preset-swatch" style="background:#f0ece6;border:2px solid #d45a00">
+                <div style="background:#d45a00;height:6px;margin:8px 8px 4px"></div>
+                <div style="background:#e8e2d9;height:30px;margin:0 8px;border:1px solid #c0b8ad"></div>
+              </div>
+              <div class="studio-preset-name">☀ FORGE LIGHT</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLORS tab -->
+        <div class="studio-tab" id="studio-tab-colors">
+          <div class="studio-section-title">ACCENT COLOR</div>
+          <div class="studio-color-row">
+            <div class="studio-color-swatches">
+              <div class="studio-swatch" style="background:#FF6B1A" onclick="studioSetAccent('#FF6B1A','#FF9A3C')" title="Forge Orange"></div>
+              <div class="studio-swatch" style="background:#e040fb" onclick="studioSetAccent('#e040fb','#ea80fc')" title="Cyberpunk Purple"></div>
+              <div class="studio-swatch" style="background:#00ff41" onclick="studioSetAccent('#00ff41','#00cc30')" title="Matrix Green"></div>
+              <div class="studio-swatch" style="background:#00bcd4" onclick="studioSetAccent('#00bcd4','#4dd0e1')" title="Ocean Cyan"></div>
+              <div class="studio-swatch" style="background:#ff1744" onclick="studioSetAccent('#ff1744','#ff616f')" title="Red Alert"></div>
+              <div class="studio-swatch" style="background:#FFD600" onclick="studioSetAccent('#FFD600','#FFEA00')" title="Gold"></div>
+              <div class="studio-swatch" style="background:#00e5ff" onclick="studioSetAccent('#00e5ff','#84ffff')" title="Ice Blue"></div>
+              <div class="studio-swatch" style="background:#76ff03" onclick="studioSetAccent('#76ff03','#b2ff59')" title="Neon Lime"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+              <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">CUSTOM</span>
+              <input type="color" id="studio-accent-picker" value="#FF6B1A" oninput="studioSetAccentFromPicker(this.value)" style="width:40px;height:32px;border:none;background:none;cursor:pointer"/>
+              <input type="color" id="studio-accent2-picker" value="#FF9A3C" oninput="studioSetVar('--o2',this.value)" style="width:40px;height:32px;border:none;background:none;cursor:pointer"/>
+              <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">PRIMARY · SECONDARY</span>
+            </div>
+          </div>
+          <div class="studio-section-title" style="margin-top:20px">BACKGROUND</div>
+          <div class="studio-color-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="color" id="studio-bg-picker" value="#0D0D0D" oninput="studioSetVar('--bg',this.value)" style="width:40px;height:32px;border:none;background:none;cursor:pointer"/>
+              <input type="color" id="studio-panel-picker" value="#1A1A1A" oninput="studioSetVar('--p',this.value)" style="width:40px;height:32px;border:none;background:none;cursor:pointer"/>
+              <span style="font-family:var(--mono);font-size:9px;color:var(--t3)">BACKGROUND · PANEL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- EFFECTS tab -->
+        <div class="studio-tab" id="studio-tab-effects">
+          <div class="studio-effect-row">
+            <div class="studio-effect-label">
+              <span>GLOW INTENSITY</span>
+              <span class="studio-val-badge" id="sv-glow">0</span>
+            </div>
+            <input type="range" class="studio-slider" id="sl-glow" min="0" max="10" value="0" step="1" oninput="studioSetEffect('glow',this.value)"/>
+          </div>
+          <div class="studio-effect-row">
+            <div class="studio-effect-label">
+              <span>BLUR PANELS</span>
+              <span class="studio-val-badge" id="sv-blur">0px</span>
+            </div>
+            <input type="range" class="studio-slider" id="sl-blur" min="0" max="20" value="0" step="1" oninput="studioSetEffect('blur',this.value)"/>
+          </div>
+          <div class="studio-effect-row">
+            <div class="studio-effect-label">
+              <span>BORDER RADIUS</span>
+              <span class="studio-val-badge" id="sv-radius">0px</span>
+            </div>
+            <input type="range" class="studio-slider" id="sl-radius" min="0" max="16" value="0" step="1" oninput="studioSetEffect('radius',this.value)"/>
+          </div>
+          <div class="studio-effect-row">
+            <div class="studio-effect-label">
+              <span>PANEL TRANSPARENCY</span>
+              <span class="studio-val-badge" id="sv-opacity">100%</span>
+            </div>
+            <input type="range" class="studio-slider" id="sl-opacity" min="40" max="100" value="100" step="1" oninput="studioSetEffect('opacity',this.value)"/>
+          </div>
+          <div class="studio-effect-row">
+            <div class="studio-effect-label">
+              <span>BORDER BRIGHTNESS</span>
+              <span class="studio-val-badge" id="sv-border">normal</span>
+            </div>
+            <input type="range" class="studio-slider" id="sl-border" min="0" max="3" value="1" step="0.1" oninput="studioSetEffect('border',this.value)"/>
+          </div>
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+            <label class="studio-toggle-row">
+              <span>ANIMATIONS</span>
+              <input type="checkbox" id="st-animations" checked onchange="studioToggle('animations',this.checked)"/>
+              <div class="studio-toggle"></div>
+            </label>
+            <label class="studio-toggle-row">
+              <span>GRID OVERLAY</span>
+              <input type="checkbox" id="st-grid" checked onchange="studioToggle('grid',this.checked)"/>
+              <div class="studio-toggle"></div>
+            </label>
+            <label class="studio-toggle-row">
+              <span>SCANLINES</span>
+              <input type="checkbox" id="st-scanlines" onchange="studioToggle('scanlines',this.checked)"/>
+              <div class="studio-toggle"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- TYPOGRAPHY tab -->
+        <div class="studio-tab" id="studio-tab-typography">
+          <div class="studio-section-title">DISPLAY FONT</div>
+          <div class="studio-font-grid" id="studio-fonts-display"></div>
+          <div class="studio-section-title" style="margin-top:20px">MONO FONT</div>
+          <div class="studio-font-grid" id="studio-fonts-mono"></div>
+          <div class="studio-effect-row" style="margin-top:20px">
+            <div class="studio-effect-label">
+              <span>LETTER SPACING</span>
+              <span class="studio-val-badge" id="sv-spacing">2px</span>
+            </div>
+            <input type="range" class="studio-slider" id="sl-spacing" min="0" max="8" value="2" step="0.5" oninput="studioSetEffect('spacing',this.value)"/>
+          </div>
+        </div>
+
+        <!-- LAYOUT tab -->
+        <div class="studio-tab" id="studio-tab-layout">
+          <div class="studio-effect-row">
+            <div class="studio-effect-label">
+              <span>UI SCALE</span>
+              <span class="studio-val-badge" id="sv-scale">100%</span>
+            </div>
+            <input type="range" class="studio-slider" id="sl-scale" min="80" max="120" value="100" step="5" oninput="studioSetEffect('scale',this.value)"/>
+          </div>
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+            <label class="studio-toggle-row">
+              <span>COMPACT MODE</span>
+              <input type="checkbox" id="st-compact" onchange="studioToggle('compact',this.checked)"/>
+              <div class="studio-toggle"></div>
+            </label>
+            <label class="studio-toggle-row">
+              <span>WIDE SIDEBAR</span>
+              <input type="checkbox" id="st-wide" onchange="studioToggle('wide',this.checked)"/>
+              <div class="studio-toggle"></div>
+            </label>
+            <label class="studio-toggle-row">
+              <span>TOPBAR TICKER</span>
+              <input type="checkbox" id="st-ticker" checked onchange="studioToggle('ticker',this.checked)"/>
+              <div class="studio-toggle"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Live Preview -->
+      <div class="studio-preview-panel">
+        <div class="studio-preview-label">LIVE PREVIEW</div>
+        <div class="studio-preview-frame">
+          <div class="spv-topbar">
+            <div class="spv-logo">BF</div>
+            <div class="spv-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="spv-body">
+            <div class="spv-sidebar">
+              <div class="spv-sb-item active"></div>
+              <div class="spv-sb-item"></div>
+              <div class="spv-sb-item"></div>
+              <div class="spv-sb-item"></div>
+            </div>
+            <div class="spv-main">
+              <div class="spv-card">
+                <div class="spv-ct">SYSTEM</div>
+                <div class="spv-ring"></div>
+                <div class="spv-bar"><div class="spv-bar-fill"></div></div>
+              </div>
+              <div class="spv-card">
+                <div class="spv-ct">DOCKER</div>
+                <div class="spv-val">3</div>
+                <div class="spv-bar"><div class="spv-bar-fill" style="width:60%"></div></div>
+              </div>
+              <div class="spv-card spv-card-wide">
+                <div class="spv-ct">NETWORK</div>
+                <div class="spv-val" style="font-size:14px">↑ 12 MB/s</div>
+              </div>
+              <div class="spv-btn">DEPLOY</div>
+            </div>
+          </div>
+        </div>
+        <div class="studio-preview-info" id="studio-preview-info">
+          Theme: <span id="spv-theme-name">Forge Dark</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ DASHBOARD EDITOR ████ -->
+<div class="page" id="page-dash">
+  <div class="dash-editor-wrap">
+    <div class="dash-editor-header">
+      <div class="ph-left"><h1>DASH<span>BOARD</span></h1><p>// DRAG · DROP · CUSTOMIZE YOUR VIEW</p></div>
+      <div class="dash-editor-actions">
+        <button class="btn btn-g btn-sm" onclick="dashPreset('minimal')">⊡ MINIMAL</button>
+        <button class="btn btn-g btn-sm" onclick="dashPreset('full')">⊞ FULL</button>
+        <button class="btn btn-g btn-sm" onclick="dashPreset('gaming')">🎮 GAMING</button>
+        <button class="btn btn-g btn-sm" onclick="dashClear()">✕ CLEAR</button>
+        <button class="btn btn-o btn-sm" onclick="dashSave()">💾 SAVE</button>
+      </div>
+    </div>
+    <div class="dash-editor-body">
+      <!-- Widget Palette -->
+      <div class="dash-palette">
+        <div class="dash-palette-title">WIDGETS</div>
+        <div id="dash-widget-list"></div>
+      </div>
+      <!-- Grid Canvas -->
+      <div class="dash-canvas-wrap">
+        <div class="dash-canvas" id="dash-canvas"></div>
+        <div class="dash-canvas-hint">Drag widgets from the left onto the grid</div>
+      </div>
+    </div>
+    <!-- Live Preview -->
+    <div class="dash-preview-bar">
+      <div class="dash-preview-title">PREVIEW — <span id="dash-preview-count">0 widgets</span></div>
+      <div class="dash-live-grid" id="dash-live-grid"></div>
     </div>
   </div>
 </div>

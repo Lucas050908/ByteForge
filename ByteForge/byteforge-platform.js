@@ -140,7 +140,7 @@ function nav(id, el) {
 }
 
 function loadPage(id) {
-  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, proxy:loadProxy, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth, appstore:loadApps, terminal:initTerminal, backup:loadBackup};
+  const map = {overview:loadOverview, system:loadSystem, network:loadNetwork, nas:loadNAS, raid:loadRAID, docker:loadDocker, minecraft:loadGameServers, proxy:loadProxy, files:loadFiles, access:loadAccess, settings:loadSettings, diskheath:loadDiskHealth, appstore:loadApps, terminal:initTerminal, backup:loadBackup, studio:loadStudio, dash:loadDashEditor};
   if (map[id]) map[id]();
 }
 
@@ -1918,5 +1918,303 @@ document.addEventListener('keydown', e => {
     login();
   }
 });
+
+// ══════════════════════════════════════════════════════════
+// FORGEUI STUDIO
+// ══════════════════════════════════════════════════════════
+const DISPLAY_FONTS = [
+  {name:'Bebas Neue', css:"'Bebas Neue',sans-serif", label:'BEBAS NEUE'},
+  {name:'Orbitron', css:"'Orbitron',sans-serif", label:'ORBITRON'},
+  {name:'Rajdhani', css:"'Rajdhani',sans-serif", label:'RAJDHANI'},
+  {name:'Russo One', css:"'Russo One',sans-serif", label:'RUSSO ONE'},
+];
+const MONO_FONTS = [
+  {name:'DM Mono', css:"'DM Mono',monospace", label:'DM MONO'},
+  {name:'JetBrains Mono', css:"'JetBrains Mono',monospace", label:'JETBRAINS'},
+  {name:'Space Mono', css:"'Space Mono',monospace", label:'SPACE MONO'},
+  {name:'Share Tech Mono', css:"'Share Tech Mono',monospace", label:'SHARE TECH'},
+];
+let _studioState = {};
+
+function loadStudio() {
+  buildFontPicker('studio-fonts-display', DISPLAY_FONTS, 'displayFont', '--display');
+  buildFontPicker('studio-fonts-mono', MONO_FONTS, 'monoFont', '--mono');
+  loadStudioState();
+}
+
+function buildFontPicker(containerId, fonts, stateKey, cssVar) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const currentFont = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
+  // Load Google Fonts
+  fonts.forEach(f => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(f.name.replace(/ /g,'+'))}&display=swap`;
+    document.head.appendChild(link);
+  });
+  el.innerHTML = fonts.map(f => `
+    <div class="studio-font-card ${currentFont.includes(f.name)?'active':''}" onclick="studioSetFont('${cssVar}','${f.css}','${containerId}',this)">
+      <div style="font-family:${f.css};font-size:20px;letter-spacing:2px;color:var(--t)">${f.label}</div>
+      <div class="studio-font-card-name">${f.name}</div>
+    </div>`).join('');
+}
+
+function studioSetFont(cssVar, fontCss, containerId, el) {
+  document.documentElement.style.setProperty(cssVar, fontCss);
+  document.querySelectorAll(`#${containerId} .studio-font-card`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function studioTab(tab) {
+  document.querySelectorAll('.studio-nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
+  document.querySelectorAll('.studio-tab').forEach(t => t.classList.toggle('active', t.id === `studio-tab-${tab}`));
+}
+
+function studioApplyPreset(theme) {
+  applyTheme(theme);
+  document.querySelectorAll('.studio-preset').forEach(p => p.classList.toggle('active', p.dataset.theme === theme));
+  document.getElementById('spv-theme-name').textContent = theme.replace(/-/g,' ').toUpperCase();
+}
+
+function studioSetAccent(primary, secondary) {
+  document.documentElement.style.setProperty('--o', primary);
+  document.documentElement.style.setProperty('--o2', secondary);
+  document.documentElement.style.setProperty('--o3', primary + '1f');
+  const p = document.getElementById('studio-accent-picker');
+  const p2 = document.getElementById('studio-accent2-picker');
+  if (p) p.value = primary;
+  if (p2) p2.value = secondary;
+}
+
+function studioSetAccentFromPicker(val) {
+  studioSetAccent(val, val + 'aa');
+}
+
+function studioSetVar(cssVar, val) {
+  document.documentElement.style.setProperty(cssVar, val);
+}
+
+function studioSetEffect(type, val) {
+  val = parseFloat(val);
+  const root = document.documentElement;
+  switch(type) {
+    case 'glow':
+      root.style.setProperty('--glow', val);
+      document.getElementById('sv-glow').textContent = val;
+      document.body.classList.toggle('studio-glow', val > 0);
+      break;
+    case 'blur':
+      root.style.setProperty('--blur', val+'px');
+      document.getElementById('sv-blur').textContent = val+'px';
+      document.body.classList.toggle('studio-blur', val > 0);
+      break;
+    case 'radius':
+      root.style.setProperty('--radius', val+'px');
+      document.getElementById('sv-radius').textContent = val+'px';
+      document.body.classList.toggle('studio-radius', val > 0);
+      break;
+    case 'opacity':
+      root.style.setProperty('--card-alpha', val/100);
+      document.getElementById('sv-opacity').textContent = val+'%';
+      break;
+    case 'border':
+      document.getElementById('sv-border').textContent = val > 1.5 ? 'bright' : val < 0.5 ? 'dim' : 'normal';
+      document.querySelectorAll('.card').forEach(c => c.style.borderColor = val > 0 ? '' : 'transparent');
+      break;
+    case 'spacing':
+      root.style.setProperty('--ls', val+'px');
+      document.getElementById('sv-spacing').textContent = val+'px';
+      break;
+    case 'scale':
+      root.style.fontSize = (val/100 * 16) + 'px';
+      document.getElementById('sv-scale').textContent = val+'%';
+      break;
+  }
+}
+
+function studioToggle(type, on) {
+  switch(type) {
+    case 'animations': document.body.classList.toggle('studio-no-anim', !on); break;
+    case 'grid': document.body.classList.toggle('no-grid', !on); break;
+    case 'scanlines': document.body.classList.toggle('studio-scanlines', on); break;
+    case 'compact': document.body.classList.toggle('studio-compact', on); break;
+    case 'wide': document.getElementById('sidebar').style.width = on ? '260px' : ''; break;
+    case 'ticker': document.getElementById('sys-ticker').style.display = on ? '' : 'none'; break;
+  }
+}
+
+function loadStudioState() {
+  const saved = localStorage.getItem('byteforge-studio');
+  if (!saved) return;
+  try {
+    const s = JSON.parse(saved);
+    if (s.theme) { applyTheme(s.theme); const sel = document.getElementById('set-theme'); if(sel) sel.value = s.theme; }
+    if (s.accent) studioSetAccent(s.accent, s.accent2 || s.accent);
+    if (s.glow) { document.getElementById('sl-glow').value = s.glow; studioSetEffect('glow', s.glow); }
+    if (s.blur) { document.getElementById('sl-blur').value = s.blur; studioSetEffect('blur', s.blur); }
+    if (s.radius) { document.getElementById('sl-radius').value = s.radius; studioSetEffect('radius', s.radius); }
+    if (s.opacity) { document.getElementById('sl-opacity').value = s.opacity; studioSetEffect('opacity', s.opacity); }
+    if (s.scale) { document.getElementById('sl-scale').value = s.scale; studioSetEffect('scale', s.scale); }
+  } catch(e) {}
+}
+
+function studioSave() {
+  const state = {
+    theme: window._currentTheme || 'forge-dark',
+    accent: getComputedStyle(document.documentElement).getPropertyValue('--o').trim(),
+    accent2: getComputedStyle(document.documentElement).getPropertyValue('--o2').trim(),
+    glow: document.getElementById('sl-glow')?.value,
+    blur: document.getElementById('sl-blur')?.value,
+    radius: document.getElementById('sl-radius')?.value,
+    opacity: document.getElementById('sl-opacity')?.value,
+    scale: document.getElementById('sl-scale')?.value,
+  };
+  localStorage.setItem('byteforge-studio', JSON.stringify(state));
+  toast('Studio design gemt!');
+}
+
+function studioReset() {
+  localStorage.removeItem('byteforge-studio');
+  applyTheme('forge-dark');
+  ['glow','blur','radius','spacing'].forEach(t => { const sl = document.getElementById('sl-'+t); if(sl){sl.value=0;studioSetEffect(t,0);} });
+  ['opacity'].forEach(t => { const sl = document.getElementById('sl-'+t); if(sl){sl.value=100;studioSetEffect(t,100);} });
+  ['scale'].forEach(t => { const sl = document.getElementById('sl-'+t); if(sl){sl.value=100;studioSetEffect(t,100);} });
+  document.documentElement.removeAttribute('style');
+  document.body.className = document.body.className.replace(/studio-\S+/g,'').trim();
+  toast('Design nulstillet');
+}
+
+function studioExport() {
+  const css = `:root{--o:${getComputedStyle(document.documentElement).getPropertyValue('--o').trim()};--o2:${getComputedStyle(document.documentElement).getPropertyValue('--o2').trim()};--radius:${getComputedStyle(document.documentElement).getPropertyValue('--radius').trim()};--blur:${getComputedStyle(document.documentElement).getPropertyValue('--blur').trim()};--glow:${getComputedStyle(document.documentElement).getPropertyValue('--glow').trim()};}`;
+  navigator.clipboard?.writeText(css).then(() => toast('CSS kopieret til udklipsholder!'));
+}
+
+// ══════════════════════════════════════════════════════════
+// DASHBOARD EDITOR
+// ══════════════════════════════════════════════════════════
+const DASH_WIDGETS = [
+  {id:'cpu',     name:'CPU',          icon:'🖥',  span:2},
+  {id:'ram',     name:'RAM',          icon:'💾',  span:2},
+  {id:'temp',    name:'Temperature',  icon:'🌡',  span:1},
+  {id:'uptime',  name:'Uptime',       icon:'⏱',  span:1},
+  {id:'network', name:'Network',      icon:'📡',  span:2},
+  {id:'docker',  name:'Docker',       icon:'▣',  span:3},
+  {id:'storage', name:'Storage',      icon:'🗄',  span:2},
+  {id:'game',    name:'Game Servers', icon:'🎮',  span:3},
+  {id:'nas',     name:'NAS',          icon:'💽',  span:2},
+  {id:'notes',   name:'Notes',        icon:'📝',  span:2},
+  {id:'clock',   name:'Clock',        icon:'🕐',  span:1},
+  {id:'logs',    name:'System Logs',  icon:'📋',  span:3},
+  {id:'weather', name:'Weather',      icon:'🌤',  span:2},
+  {id:'ai',      name:'AI Chat',      icon:'🤖',  span:3},
+  {id:'terminal',name:'Terminal',     icon:'⌨',  span:4},
+];
+const GRID_COLS = 6;
+let _dashLayout = []; // [{widgetId, col, row}]
+
+function loadDashEditor() {
+  buildWidgetPalette();
+  buildDashGrid();
+  const saved = localStorage.getItem('byteforge-dashboard');
+  if (saved) { try { _dashLayout = JSON.parse(saved); renderDashGrid(); } catch(e) {} }
+  updateDashPreview();
+}
+
+function buildWidgetPalette() {
+  const el = document.getElementById('dash-widget-list');
+  if (!el) return;
+  el.innerHTML = DASH_WIDGETS.map(w => `
+    <div class="dash-widget-chip" draggable="true" data-widget="${w.id}"
+         ondragstart="dashDragStart(event,'${w.id}')">
+      <span class="dash-widget-chip-icon">${w.icon}</span>
+      <span>${w.name}</span>
+    </div>`).join('');
+}
+
+function buildDashGrid() {
+  const canvas = document.getElementById('dash-canvas');
+  if (!canvas) return;
+  canvas.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'dash-cell';
+    cell.dataset.cell = i;
+    cell.ondragover = e => { e.preventDefault(); cell.classList.add('drag-over'); };
+    cell.ondragleave = () => cell.classList.remove('drag-over');
+    cell.ondrop = e => { e.preventDefault(); cell.classList.remove('drag-over'); dashDrop(e, i); };
+    canvas.appendChild(cell);
+  }
+  renderDashGrid();
+}
+
+let _dashDragging = null;
+function dashDragStart(e, widgetId) { _dashDragging = widgetId; e.dataTransfer.effectAllowed = 'copy'; }
+
+function dashDrop(e, cellIdx) {
+  if (!_dashDragging) return;
+  const existing = _dashLayout.findIndex(w => w.cell === cellIdx);
+  if (existing >= 0) _dashLayout.splice(existing, 1);
+  _dashLayout.push({widgetId: _dashDragging, cell: cellIdx});
+  _dashDragging = null;
+  renderDashGrid();
+  updateDashPreview();
+}
+
+function renderDashGrid() {
+  const canvas = document.getElementById('dash-canvas');
+  if (!canvas) return;
+  canvas.querySelectorAll('.dash-cell').forEach(cell => {
+    const cellIdx = parseInt(cell.dataset.cell);
+    const placed = _dashLayout.find(w => w.cell === cellIdx);
+    if (placed) {
+      const def = DASH_WIDGETS.find(w => w.id === placed.widgetId);
+      cell.innerHTML = `<div class="dash-placed-widget" draggable="true"
+        ondragstart="dashDragStart(event,'${placed.widgetId}')">
+        <div class="dash-placed-widget-title">${def?.icon || '?'} ${def?.name || placed.widgetId}</div>
+        <div class="dash-placed-widget-icon">${def?.icon || '?'}</div>
+        <button class="dash-widget-remove" onclick="dashRemove(${cellIdx})">✕</button>
+      </div>`;
+    } else {
+      cell.innerHTML = '';
+    }
+  });
+}
+
+function dashRemove(cellIdx) {
+  _dashLayout = _dashLayout.filter(w => w.cell !== cellIdx);
+  renderDashGrid();
+  updateDashPreview();
+}
+
+function updateDashPreview() {
+  const el = document.getElementById('dash-live-grid');
+  const count = document.getElementById('dash-preview-count');
+  if (!el) return;
+  if (count) count.textContent = `${_dashLayout.length} widget${_dashLayout.length !== 1 ? 's' : ''}`;
+  el.innerHTML = _dashLayout.map(w => {
+    const def = DASH_WIDGETS.find(d => d.id === w.widgetId);
+    return `<div class="dash-live-widget"><span>${def?.icon||'?'}</span>${def?.name||w.widgetId}</div>`;
+  }).join('') || '<div style="font-family:var(--mono);font-size:10px;color:var(--t3);padding:8px">No widgets — drag some in above</div>';
+}
+
+function dashSave() {
+  localStorage.setItem('byteforge-dashboard', JSON.stringify(_dashLayout));
+  toast(`Dashboard gemt — ${_dashLayout.length} widgets`);
+}
+
+function dashClear() { _dashLayout = []; renderDashGrid(); updateDashPreview(); }
+
+function dashPreset(name) {
+  const presets = {
+    minimal: [{widgetId:'cpu',cell:0},{widgetId:'ram',cell:2},{widgetId:'uptime',cell:4},{widgetId:'network',cell:6}],
+    full: [{widgetId:'cpu',cell:0},{widgetId:'ram',cell:2},{widgetId:'temp',cell:4},{widgetId:'uptime',cell:5},{widgetId:'network',cell:6},{widgetId:'docker',cell:8},{widgetId:'storage',cell:12},{widgetId:'game',cell:14},{widgetId:'nas',cell:18}],
+    gaming: [{widgetId:'cpu',cell:0},{widgetId:'ram',cell:2},{widgetId:'game',cell:4},{widgetId:'docker',cell:10},{widgetId:'terminal',cell:14},{widgetId:'network',cell:20}],
+  };
+  _dashLayout = presets[name] || [];
+  renderDashGrid();
+  updateDashPreview();
+  toast(`Preset "${name}" indlæst`);
+}
 
 boot();
