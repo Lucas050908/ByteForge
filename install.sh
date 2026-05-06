@@ -162,8 +162,10 @@ check_existing() {
   if [ -f "$TARGET_DIR/byteforge-server.py" ]; then
     warn "ByteForge is already installed at $TARGET_DIR."
     if [ -t 0 ]; then
-      read -rp "  Upgrade / reinstall? [Y/n] " ans
+      read -rp "  Upgrade existing install? [Y/n] " ans </dev/tty
       [[ "${ans:-y}" =~ ^[Nn] ]] && { echo "Aborted."; exit 0; }
+    else
+      warn "Non-interactive mode — upgrading automatically."
     fi
     ok "Upgrading existing install."
     UPGRADING=1
@@ -186,6 +188,11 @@ install_files() {
   for f in byteforge-server.py byteforge-platform.html byteforge-platform.css byteforge-platform.js byteforge-logo.svg byteforge-icon.svg; do
     [ -f "$SRC_DIR/$f" ] && run_p cp "$SRC_DIR/$f" "$TARGET_DIR/$f"
   done
+  # Copy api/ package directory (required since server.py was split into modules)
+  if [ -d "$SRC_DIR/api" ]; then
+    run_p mkdir -p "$TARGET_DIR/api"
+    run_p cp -r "$SRC_DIR/api/." "$TARGET_DIR/api/"
+  fi
   ok "Files copied to $TARGET_DIR"
 }
 
