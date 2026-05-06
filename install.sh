@@ -159,26 +159,26 @@ prompt_password() {
 
 # ── Check for upgrade ──────────────────────────────────────────────────────
 check_existing() {
+  UPGRADING=0
   if [ -f "$TARGET_DIR/byteforge-server.py" ]; then
     warn "ByteForge is already installed at $TARGET_DIR."
     if [ -t 0 ]; then
-      read -rp "  Upgrade existing install? [Y/n] " ans </dev/tty
-      [[ "${ans:-y}" =~ ^[Nn] ]] && { echo "Aborted."; exit 0; }
+      read -rp "  Upgrade existing install? [Y/n] " ans
+      if [[ "${ans:-y}" =~ ^[Nn] ]]; then echo "Aborted."; exit 0; fi
     else
       warn "Non-interactive mode — upgrading automatically."
     fi
     ok "Upgrading existing install."
     UPGRADING=1
-  else
-    UPGRADING=0
   fi
 }
 
 # ── Port check ─────────────────────────────────────────────────────────────
 check_port() {
   if command -v ss >/dev/null 2>&1; then
-    ss -tlnH "sport = :$PORT" 2>/dev/null | grep -q "$PORT" && \
-      warn "Port $PORT is already in use. Set BYTEFORGE_PORT=<other> and re-run, or the service may not start."
+    if ss -tlnH 2>/dev/null | grep -q ":${PORT} "; then
+      warn "Port $PORT is already in use. Set BYTEFORGE_PORT=<other> and re-run."
+    fi
   fi
 }
 
