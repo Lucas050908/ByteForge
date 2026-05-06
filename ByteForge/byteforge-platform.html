@@ -28,6 +28,7 @@
 
 <!-- TOPBAR -->
 <div id="topbar">
+  <button id="hamburger" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:var(--t);font-size:20px;cursor:pointer;padding:0 8px">☰</button>
   <a class="logo" href="#">
     <span class="logo-icon">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="30" height="30">
@@ -37,6 +38,8 @@
         <rect x="72" y="108" width="56" height="30" fill="#FF6B1A"/>
         <rect x="55" y="138" width="90" height="22" fill="#FF6B1A"/>
         <circle cx="100" cy="60" r="2.5" fill="#FF9A3C" opacity="0.9"/>
+        <circle cx="115" cy="52" r="1.8" fill="#FF9A3C" opacity="0.7"/>
+        <circle cx="85" cy="54" r="1.5" fill="#FF9A3C" opacity="0.6"/>
       </svg>
     </span>
     <span class="logo-text">BYTE<b>FORGE</b></span>
@@ -418,7 +421,7 @@
 <!-- ████ GAME SERVERS ████ -->
 <div class="page" id="page-minecraft">
   <div class="ph">
-    <div class="ph-left"><h1>GAME <span>SERVERS</span></h1><p>// 24 SPIL · DOCKER RUNTIME · ONE-CLICK DEPLOY</p></div>
+    <div class="ph-left"><h1>GAME <span>SERVERS</span></h1><p>// 30+ SPIL · DOCKER RUNTIME · MODS & PLUGINS</p></div>
     <div class="ph-right"><button class="btn btn-o btn-sm" onclick="loadGameServers()">⟳ OPDATER</button></div>
   </div>
 
@@ -484,6 +487,33 @@
   <div class="term">
     <div class="term-bar"><div class="td on"></div><div class="td"></div><span class="term-lbl" id="gs-log-title">Vælg en server</span><button class="btn btn-g btn-sm" style="margin-left:auto" onclick="loadGameServers(true)">⟳ LOGS</button></div>
     <div class="term-body" id="mc-logs">Klik LOG på en server for at se output.</div>
+  </div>
+</div>
+
+<!-- MODS MODAL -->
+<div id="mods-modal" style="display:none;position:fixed;inset:0;z-index:999;align-items:center;justify-content:center">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px)" onclick="closeModsModal()"></div>
+  <div class="install-box" style="width:min(700px,96vw)">
+    <div class="install-header">
+      <span id="mods-modal-title">MODS & PLUGINS</span>
+      <button class="install-close" onclick="closeModsModal()">✕</button>
+    </div>
+    <div style="padding:14px 16px;border-bottom:1px solid var(--b);display:flex;gap:8px">
+      <input class="input" id="mods-search" placeholder="Søg Modrinth efter mods..." style="flex:1" onkeydown="if(event.key==='Enter')searchMods()"/>
+      <button class="btn btn-o btn-sm" onclick="searchMods()">🔍 SØG</button>
+    </div>
+    <div id="mods-results" style="max-height:320px;overflow-y:auto;padding:12px 16px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3)">Søg efter mods ovenfor, eller installér fra URL herunder.</div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--b);display:flex;gap:8px">
+      <input class="input" id="mods-url" placeholder="Direct URL til mod/plugin .jar fil..." style="flex:1"/>
+      <button class="btn btn-g btn-sm" onclick="installModFromUrl()">⬇ INSTALLER</button>
+    </div>
+    <div class="install-log" id="mods-log" style="display:none;max-height:120px"></div>
+    <div style="padding:10px 16px;border-top:1px solid var(--b)">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--t3)">INSTALLEREDE MODS / PLUGINS</div>
+      <div id="mods-installed" style="margin-top:8px;font-family:var(--mono);font-size:10px"></div>
+    </div>
   </div>
 </div>
 
@@ -611,9 +641,13 @@
       <div class="ct">UI / UX</div>
       <div class="form-label" data-i18n="set.theme">Theme</div>
       <select class="select" id="set-theme" style="width:100%" onchange="applyTheme(this.value)">
-        <option value="forge-dark">Forge Dark</option>
-        <option value="forge-light">Forge Light</option>
-        <option value="high-contrast">High Contrast</option>
+        <option value="forge-dark">🔥 Forge Dark</option>
+        <option value="forge-light">☀ Forge Light</option>
+        <option value="high-contrast">◈ High Contrast</option>
+        <option value="cyberpunk">💜 Cyberpunk</option>
+        <option value="ocean">🌊 Ocean</option>
+        <option value="matrix">🟩 Matrix</option>
+        <option value="military">🟫 Military</option>
       </select>
       <div class="form-label" style="margin-top:10px" data-i18n="set.language">Sprog</div>
       <select class="select" id="set-language" style="width:100%" onchange="applyLanguage(this.value)"><option value="da">Dansk</option><option value="en">English</option></select>
@@ -746,10 +780,28 @@
         </div>
       </div>
       <div class="card">
-        <div class="ct">AI MODELLER</div>
-        <div class="cs" style="margin-bottom:8px">Kørende via Claude API</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-          <span class="badge b-ok"><span class="bd"></span>CLAUDE SONNET</span>
+        <div class="ct">AI MOTOR</div>
+        <div class="form-label" style="margin-top:4px">Vælg motor</div>
+        <select class="select" id="ai-engine" style="width:100%;margin-top:4px" onchange="onAiEngineChange()">
+          <option value="claude">🤖 Claude (Anthropic)</option>
+          <option value="ollama">🦙 Ollama (Lokalt)</option>
+          <option value="openai">💡 ChatGPT (OpenAI)</option>
+        </select>
+        <div id="ai-key-row" style="margin-top:10px">
+          <div class="form-label">API Nøgle</div>
+          <input class="input" id="ai-api-key" type="password" placeholder="sk-ant-... / sk-..."/>
+        </div>
+        <div id="ai-model-row" style="margin-top:10px">
+          <div class="form-label">Model</div>
+          <select class="select" id="ai-model" style="width:100%">
+            <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+            <option value="claude-opus-4-7">claude-opus-4-7</option>
+            <option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option>
+          </select>
+        </div>
+        <div id="ai-ollama-row" style="margin-top:10px;display:none">
+          <div class="form-label">Ollama Model</div>
+          <input class="input" id="ai-ollama-model" value="llama3" placeholder="llama3, mistral, gemma..."/>
         </div>
       </div>
     </div>

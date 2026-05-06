@@ -553,22 +553,53 @@ function applyTheme(theme) {
   const styleId = 'bf-theme-style';
   let el = document.getElementById(styleId);
   if (!el) { el = document.createElement('style'); el.id = styleId; document.head.appendChild(el); }
-  if (theme === 'forge-dark') {
-    el.textContent = '';
-  } else if (theme === 'forge-light') {
-    el.textContent = `
+  const themes = {
+    'forge-dark': '',
+    'forge-light': `
       :root{--bg:#f0ece6;--s:#e8e2d9;--p:#ddd7cc;--b:#c0b8ad;--b2:#a89f93;
         --t:#1a1208;--t2:#4a3f30;--t3:#8a7a65;--o:#d45a00;--o2:#e07020;--o3:rgba(212,90,0,.1)}
       body::before{background-image:linear-gradient(var(--b) 1px,transparent 1px),linear-gradient(90deg,var(--b) 1px,transparent 1px);opacity:.4}
-      #topbar{background:rgba(240,236,230,.96)}
-      #sidebar{background:var(--s)}`;
-  } else if (theme === 'high-contrast') {
-    el.textContent = `
+      #topbar{background:rgba(240,236,230,.96)} #sidebar{background:var(--s)}`,
+    'high-contrast': `
       :root{--bg:#000;--s:#0a0a0a;--p:#111;--b:#fff;--b2:#ccc;
         --t:#fff;--t2:#eee;--t3:#aaa;--o:#ff6b1a;--o2:#ff9a3c;--o3:rgba(255,107,26,.15)}
-      body::before{opacity:.15}`;
-  }
+      body::before{opacity:.15}`,
+    'cyberpunk': `
+      :root{--bg:#0a0014;--s:#10001f;--p:#1a003a;--b:#4b0082;--b2:#7b00d4;
+        --t:#f0e0ff;--t2:#cc88ff;--t3:#7733aa;--o:#e040fb;--o2:#ea80fc;--o3:rgba(224,64,251,.12);
+        --ok:#00e5ff;--err:#ff1744;--warn:#ffea00}
+      #topbar{background:rgba(10,0,20,.97)} #sidebar{background:var(--s)}
+      .logo-text{color:#ea80fc} .logo-text b{color:#e040fb}`,
+    'ocean': `
+      :root{--bg:#040d1a;--s:#071525;--p:#0b2040;--b:#163a6b;--b2:#1e5090;
+        --t:#c0deff;--t2:#5599cc;--t3:#1e3a5f;--o:#00bcd4;--o2:#4dd0e1;--o3:rgba(0,188,212,.12);
+        --ok:#00e676;--err:#ff1744;--warn:#ffab40}
+      #topbar{background:rgba(4,13,26,.97)} #sidebar{background:var(--s)}
+      .logo-text{color:#c0deff} .logo-text b{color:#00bcd4}`,
+    'matrix': `
+      :root{--bg:#000;--s:#000;--p:#001100;--b:#003300;--b2:#005500;
+        --t:#00ff41;--t2:#00bb30;--t3:#005500;--o:#00ff41;--o2:#00cc30;--o3:rgba(0,255,65,.1);
+        --ok:#00ff41;--err:#ff0000;--warn:#ffff00;
+        --mono:'DM Mono',monospace;--display:'DM Mono',monospace;--body:'DM Mono',monospace}
+      #topbar{background:#000} #sidebar{background:#000}
+      .logo-text,.logo-text b{color:#00ff41}`,
+    'military': `
+      :root{--bg:#0f110a;--s:#161a0f;--p:#1e2414;--b:#3a4228;--b2:#4e5a34;
+        --t:#d4cc99;--t2:#8a8a5a;--t3:#4a4a2a;--o:#8ba446;--o2:#a8c254;--o3:rgba(139,164,70,.12);
+        --ok:#6ab04c;--err:#c0392b;--warn:#e67e22}
+      #topbar{background:rgba(15,17,10,.97)} #sidebar{background:var(--s)}
+      .logo-text{color:#d4cc99} .logo-text b{color:#8ba446}`,
+  };
+  el.textContent = themes[theme] || '';
   window._currentTheme = theme;
+  const sel = document.getElementById('set-theme');
+  if (sel) sel.value = theme;
+}
+
+// ── MOBILE SIDEBAR ──
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('sb-open');
 }
 
 // ── DOCKER WITH INSTALL BANNER ──
@@ -698,6 +729,7 @@ async function loadGameServers(withLogs=false) {
           <button class="btn btn-g btn-sm" onclick="gameAction('${s.id}','restart')">⟳</button>
           <button class="btn btn-r btn-sm" onclick="gameAction('${s.id}','stop')" ${!running?'disabled':''}>■ STOP</button>
           <button class="btn btn-g btn-sm" onclick="showServerLog('${s.id}')">📋 LOG</button>
+          <button class="btn btn-g btn-sm" onclick="openModsModal('${escapeHTML(s.id)}','${escapeHTML(s.name)}','${escapeHTML(s.kind)}')">🧩 MODS</button>
           <button class="sc-delete" onclick="deleteServer('${s.id}','${escapeHTML(s.name)}')">🗑 SLET</button>
         </div>
       </div>
@@ -1108,6 +1140,25 @@ async function loadDiskHealth() {
 }
 
 // ── AI ──
+const AI_SYSTEM = `Du er ByteForge AI assistant på Admins hjemmeserver. Serveren kører Linux med ByteForge, Docker, NFS NAS, RAID og game servers. Svar på dansk, kort og præcist. Brug teknisk sprog.`;
+
+function onAiEngineChange() {
+  const engine = document.getElementById('ai-engine').value;
+  const keyRow = document.getElementById('ai-key-row');
+  const modelRow = document.getElementById('ai-model-row');
+  const ollamaRow = document.getElementById('ai-ollama-row');
+  keyRow.style.display = engine === 'ollama' ? 'none' : '';
+  modelRow.style.display = engine === 'ollama' ? 'none' : '';
+  ollamaRow.style.display = engine === 'ollama' ? '' : 'none';
+  if (engine === 'openai') {
+    const sel = document.getElementById('ai-model');
+    sel.innerHTML = '<option value="gpt-4o">gpt-4o</option><option value="gpt-4o-mini">gpt-4o-mini</option><option value="gpt-3.5-turbo">gpt-3.5-turbo</option>';
+  } else {
+    const sel = document.getElementById('ai-model');
+    sel.innerHTML = '<option value="claude-sonnet-4-6">claude-sonnet-4-6</option><option value="claude-opus-4-7">claude-opus-4-7</option><option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option>';
+  }
+}
+
 async function sendAI() {
   const inp = document.getElementById('ai-input');
   const msg = inp.value.trim();
@@ -1115,22 +1166,41 @@ async function sendAI() {
   inp.value = '';
   appendMsg('user', msg);
   const thinking = appendMsg('bot', '<span class="thinking">⚒ Tænker...</span>');
+  const engine = document.getElementById('ai-engine')?.value || 'claude';
+  const key = document.getElementById('ai-api-key')?.value.trim() || '';
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:`Du er ByteForge AI assistant på Admins hjemmeserver. Serveren kører Linux med ByteForge, Docker, NFS NAS, RAID og game servers. Svar på dansk, kort og præcist. Brug teknisk sprog.`,
-        messages:[{role:'user',content:msg}]
-      })
-    });
-    const data = await resp.json();
-    const text = data.content?.[0]?.text || 'Ingen svar fra AI';
-    thinking.querySelector('.bubble').innerHTML = text.replace(/\n/g,'<br>');
+    let text = '';
+    if (engine === 'claude') {
+      const model = document.getElementById('ai-model')?.value || 'claude-sonnet-4-6';
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify({model, max_tokens:1000, system:AI_SYSTEM, messages:[{role:'user',content:msg}]})
+      });
+      const data = await resp.json();
+      text = data.content?.[0]?.text || data.error?.message || 'Ingen svar';
+    } else if (engine === 'openai') {
+      const model = document.getElementById('ai-model')?.value || 'gpt-4o';
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+        body: JSON.stringify({model, max_tokens:1000, messages:[{role:'system',content:AI_SYSTEM},{role:'user',content:msg}]})
+      });
+      const data = await resp.json();
+      text = data.choices?.[0]?.message?.content || data.error?.message || 'Ingen svar';
+    } else if (engine === 'ollama') {
+      const model = document.getElementById('ai-ollama-model')?.value || 'llama3';
+      const resp = await fetch(BASE+'/api/ai/ollama', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({model, prompt: AI_SYSTEM + '\n\nBruger: ' + msg})
+      });
+      const data = await resp.json();
+      text = data.response || data.error || 'Ingen svar fra Ollama';
+    }
+    thinking.querySelector('.bubble').innerHTML = escapeHTML(text).replace(/\n/g,'<br>');
   } catch(e) {
-    thinking.querySelector('.bubble').innerHTML = 'API fejl: ' + e.message;
+    thinking.querySelector('.bubble').innerHTML = 'Fejl: ' + escapeHTML(e.message);
   }
   document.getElementById('ai-msgs').scrollTop = 9999;
 }
@@ -1217,6 +1287,101 @@ async function installPrivacy(app) {
     const d = await r.json();
     toast(d.msg||(n[app]||app)+' deployet', d.ok);
   } catch(e) { toast('Fejl: '+e.message, false); }
+}
+
+// ── MODS & PLUGINS ──
+let _modsServerId = null;
+let _modsServerType = null;
+
+function openModsModal(serverId, serverName, serverType) {
+  _modsServerId = serverId;
+  _modsServerType = serverType;
+  document.getElementById('mods-modal-title').textContent = `MODS — ${serverName}`;
+  document.getElementById('mods-modal').style.display = 'flex';
+  document.getElementById('mods-results').innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--t3)">Søg efter mods ovenfor, eller installér fra URL herunder.</div>';
+  document.getElementById('mods-log').style.display = 'none';
+  document.getElementById('mods-log').innerHTML = '';
+  loadInstalledMods(serverId);
+}
+
+function closeModsModal() {
+  document.getElementById('mods-modal').style.display = 'none';
+}
+
+async function loadInstalledMods(serverId) {
+  const el = document.getElementById('mods-installed');
+  const data = await api(`/api/game-servers/${encodeURIComponent(serverId)}/mods`);
+  if (!data || !data.mods || !data.mods.length) {
+    el.innerHTML = '<span style="color:var(--t3)">Ingen mods installeret endnu.</span>';
+    return;
+  }
+  el.innerHTML = data.mods.map(m => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--b)">
+    <span style="color:var(--t2)">${escapeHTML(m)}</span>
+    <button class="btn btn-r btn-sm" onclick="deleteMod('${escapeHTML(serverId)}','${escapeHTML(m)}')">🗑</button>
+  </div>`).join('');
+}
+
+async function searchMods() {
+  const q = document.getElementById('mods-search').value.trim();
+  if (!q) return;
+  const el = document.getElementById('mods-results');
+  el.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--t3)">Søger Modrinth...</div>';
+  try {
+    const r = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(q)}&limit=10&facets=[["project_type:mod"]]`);
+    const data = await r.json();
+    if (!data.hits || !data.hits.length) { el.innerHTML = '<div style="color:var(--t3);font-family:var(--mono);font-size:10px">Ingen resultater</div>'; return; }
+    el.innerHTML = data.hits.map(h => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--b)">
+      <div>
+        <div style="font-family:var(--display);font-size:13px;letter-spacing:1px">${escapeHTML(h.title)}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:2px">${escapeHTML(h.description?.slice(0,80) || '')}...</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--o2);margin-top:2px">⬇ ${(h.downloads||0).toLocaleString()} downloads</div>
+      </div>
+      <button class="btn btn-o btn-sm" onclick="installModFromModrinth('${escapeHTML(h.slug)}','${escapeHTML(h.title)}')">⬇ INSTALL</button>
+    </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--err);font-family:var(--mono);font-size:10px">Modrinth fejl: ' + escapeHTML(e.message) + '</div>';
+  }
+}
+
+async function installModFromModrinth(slug, name) {
+  showModLog(`▶ Henter ${name} fra Modrinth...`);
+  const r = await fetch(BASE+'/api/game-servers/mods/install', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({server_id: _modsServerId, modrinth_slug: slug})});
+  const d = await r.json();
+  showModLog(d.ok ? `✓ ${name} installeret` : `✗ ${d.msg}`, !d.ok);
+  if (d.ok) loadInstalledMods(_modsServerId);
+}
+
+async function installModFromUrl() {
+  const url = document.getElementById('mods-url').value.trim();
+  if (!url) return;
+  showModLog(`▶ Downloader fra ${url}...`);
+  const r = await fetch(BASE+'/api/game-servers/mods/install', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({server_id: _modsServerId, url})});
+  const d = await r.json();
+  showModLog(d.ok ? '✓ Mod installeret' : `✗ ${d.msg}`, !d.ok);
+  if (d.ok) { document.getElementById('mods-url').value = ''; loadInstalledMods(_modsServerId); }
+}
+
+async function deleteMod(serverId, filename) {
+  const r = await fetch(BASE+'/api/game-servers/mods/delete', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({server_id: serverId, filename})});
+  const d = await r.json();
+  toast(d.msg || (d.ok ? 'Slettet' : 'Fejl'), d.ok);
+  if (d.ok) loadInstalledMods(serverId);
+}
+
+function showModLog(msg, isErr=false) {
+  const log = document.getElementById('mods-log');
+  log.style.display = 'block';
+  const div = document.createElement('div');
+  div.className = msg.startsWith('✓') ? 'log-ok' : isErr ? 'log-err' : '';
+  div.textContent = msg;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
 }
 
 async function nasRestart() {

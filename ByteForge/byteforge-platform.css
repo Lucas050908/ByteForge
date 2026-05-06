@@ -310,14 +310,33 @@ body::after{content:'';position:fixed;inset:0;
 .notif-empty{padding:14px;font-family:var(--mono);font-size:10px;color:var(--t3);text-align:center}
 
 @media(max-width:1100px){.g4,.g3{grid-template-columns:1fr 1fr}.setup-grid{grid-template-columns:1fr 1fr}.server-meta{grid-template-columns:1fr 1fr}}
-@media(max-width:900px){
+@media(max-width:768px){
   html,body{overflow:auto}
-  #topbar{height:auto;min-height:52px;flex-wrap:wrap;padding:10px 14px;gap:10px}
-  #sys-ticker{order:3;width:100%;flex-basis:100%;overflow-x:auto;padding-bottom:2px}
-  #layout{display:block;height:auto;padding-top:98px}
-  #sidebar{display:flex;position:sticky;top:0;z-index:120;border-right:none;border-bottom:1px solid var(--b);overflow-x:auto;flex-direction:row;background:rgba(17,17,17,.98)}
-  .sb-section{display:flex;padding:0}.sb-label,.sb-bottom{display:none}.sb-item{white-space:nowrap;border-left:none;border-bottom:2px solid transparent;padding:10px 14px}.sb-item.active{border-bottom-color:var(--o);border-left-color:transparent}
-  .page{padding:18px}.ph{align-items:flex-start}.ph-left h1{font-size:36px}.g4,.g3,.g2{grid-template-columns:1fr}.setup-grid,.file-toolbar,.file-row,.access-row{grid-template-columns:1fr}.file-row{gap:5px}.topbar-sep{display:none}
+  #hamburger{display:flex!important;align-items:center}
+  #topbar{height:auto;min-height:52px;flex-wrap:wrap;padding:8px 12px;gap:8px}
+  .logo-text{font-size:18px}
+  #sys-ticker{order:3;width:100%;flex-basis:100%;overflow-x:auto;padding-bottom:2px;font-size:10px}
+  .topbar-sep{display:none}
+  #layout{display:block;height:auto;padding-top:0}
+  #sidebar{position:fixed;top:52px;left:-220px;height:calc(100vh - 52px);z-index:200;transition:left .2s;background:rgba(13,13,13,.98);border-right:1px solid var(--o);overflow-y:auto;flex-direction:column;width:200px}
+  #sidebar.sb-open{left:0}
+  .sb-section{display:block;padding:8px 0}.sb-label{display:block}.sb-bottom{display:block}
+  .sb-item{padding:10px 16px;white-space:normal}
+  main{overflow-y:auto;padding-top:52px}
+  .page{padding:14px}
+  .ph{align-items:flex-start;flex-direction:column;gap:8px}
+  .ph-left h1{font-size:30px}
+  .ph-right{width:100%}
+  .g4,.g3,.g2{grid-template-columns:1fr}
+  .setup-grid,.file-toolbar,.file-row,.access-row{grid-template-columns:1fr}
+  .file-row{gap:5px}
+  .create-form-grid{grid-template-columns:1fr 1fr}
+  .game-picker-grid{grid-template-columns:repeat(2,1fr)}
+  .install-box{width:96vw;max-height:90vh}
+  .sc-actions{flex-wrap:wrap}
+  .sc-actions .btn{flex:1;min-width:60px;justify-content:center}
+  .app-tile-actions{flex-wrap:wrap}
+  .apps-tabs{overflow-x:auto}
 }
 
 /* Docker install progress */

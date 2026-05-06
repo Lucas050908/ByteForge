@@ -262,6 +262,78 @@ SERVER_TYPES = {
         "cover": _STEAM.format(227300),
         "category": "Andre",
     },
+    "minecraft-bedrock": {
+        "name": "Minecraft Bedrock",
+        "image": "itzg/minecraft-bedrock-server",
+        "env": {"EULA": "TRUE"},
+        "ports": ["19132:19132/udp"],
+        "data": "/data",
+        "cover": "https://www.minecraft.net/content/dam/games/minecraft/key-art/MC_Vanilla_Updatesart_Homepage-Subnav_816x232.jpg",
+        "category": "Minecraft",
+    },
+    "dont-starve-together": {
+        "name": "Don't Starve Together",
+        "image": "mathielo/dont-starve-together",
+        "env": {},
+        "ports": ["10999:10999/udp","10998:10998/udp"],
+        "data": "/home/steam/.klei",
+        "cover": _STEAM.format(322330),
+        "category": "Survival / Open World",
+    },
+    "barotrauma": {
+        "name": "Barotrauma",
+        "image": "ich777/steamcmd:barotrauma",
+        "env": {"GAME_ID": "1026340"},
+        "ports": ["27015:27015/udp"],
+        "data": "/serverdata",
+        "cover": _STEAM.format(1026340),
+        "category": "Survival / Open World",
+    },
+    "conan-exiles": {
+        "name": "Conan Exiles",
+        "image": "ich777/steamcmd:conanexiles",
+        "env": {"GAME_ID": "443030"},
+        "ports": ["7777:7777/udp","7778:7778/udp","27015:27015/udp"],
+        "data": "/serverdata",
+        "cover": _STEAM.format(440900),
+        "category": "Survival / Open World",
+    },
+    "arma-reforger": {
+        "name": "Arma Reforger",
+        "image": "ich777/steamcmd:armareforger",
+        "env": {"GAME_ID": "1874900"},
+        "ports": ["2001:2001/udp","17777:17777/udp"],
+        "data": "/serverdata",
+        "cover": _STEAM.format(1874900),
+        "category": "Shooter / Action",
+    },
+    "insurgency-sandstorm": {
+        "name": "Insurgency: Sandstorm",
+        "image": "ich777/steamcmd:insurgencysandstorm",
+        "env": {"GAME_ID": "581330"},
+        "ports": ["27102:27102/udp","27131:27131/udp"],
+        "data": "/serverdata",
+        "cover": _STEAM.format(581320),
+        "category": "Shooter / Action",
+    },
+    "minecraft-purpur": {
+        "name": "Minecraft Purpur",
+        "image": "itzg/minecraft-server",
+        "env": {"EULA": "TRUE", "TYPE": "PURPUR"},
+        "ports": ["25565:25565"],
+        "data": "/data",
+        "cover": "https://www.minecraft.net/content/dam/games/minecraft/key-art/MC_Vanilla_Updatesart_Homepage-Subnav_816x232.jpg",
+        "category": "Minecraft",
+    },
+    "stardew-valley": {
+        "name": "Stardew Valley",
+        "image": "lloesche/stardew-valley-server",
+        "env": {},
+        "ports": ["24642:24642/udp"],
+        "data": "/config",
+        "cover": _STEAM.format(413150),
+        "category": "Simulation / Builder",
+    },
     "custom": {
         "name": "Custom Game Server",
         "image": "ubuntu:latest",
@@ -411,3 +483,73 @@ def delete_game_server(server_id):
     config["servers"] = [s for s in config["servers"] if s["id"] != server_id]
     save_config(config)
     return {"ok": True, "msg": f"{server['name']} slettet"}
+
+
+# ── MODS & PLUGINS ──
+
+def _mods_dir(server_id):
+    config = load_config()
+    server = next((s for s in config.get("servers", []) if s["id"] == server_id), None)
+    if not server:
+        return None, None
+    profile = SERVER_TYPES.get(server.get("kind", ""), {})
+    data_path = SERVER_ROOT / server_id
+    # Minecraft Paper/Spigot/Forge use plugins or mods folder
+    kind = server.get("kind", "")
+    if "paper" in kind or "spigot" in kind:
+        mods_path = data_path / "plugins"
+    elif "forge" in kind or "fabric" in kind:
+        mods_path = data_path / "mods"
+    else:
+        mods_path = data_path / "mods"
+    return server, mods_path
+
+def list_server_mods(server_id):
+    server, mods_path = _mods_dir(server_id)
+    if not server:
+        return {"ok": False, "msg": "Server ikke fundet", "mods": []}
+    if not mods_path or not mods_path.exists():
+        return {"ok": True, "mods": []}
+    mods = [f.name for f in mods_path.iterdir() if f.suffix in (".jar", ".zip", ".dll", ".so") and f.is_file()]
+    return {"ok": True, "mods": sorted(mods)}
+
+def install_server_mod(server_id, url=None, modrinth_slug=None):
+    import urllib.request as urlreq
+    server, mods_path = _mods_dir(server_id)
+    if not server:
+        return {"ok": False, "msg": "Server ikke fundet"}
+    mods_path.mkdir(parents=True, exist_ok=True)
+    if modrinth_slug:
+        try:
+            with urlreq.urlopen(f"https://api.modrinth.com/v2/project/{modrinth_slug}/version?loaders=[\"fabric\",\"forge\",\"paper\",\"spigot\"]&limit=1", timeout=8) as r:
+                versions = __import__("json").loads(r.read())
+            if not versions:
+                with urlreq.urlopen(f"https://api.modrinth.com/v2/project/{modrinth_slug}/version?limit=1", timeout=8) as r:
+                    versions = __import__("json").loads(r.read())
+            if not versions:
+                return {"ok": False, "msg": "Ingen kompatibel version fundet på Modrinth"}
+            file_info = versions[0]["files"][0]
+            url = file_info["url"]
+            filename = file_info["filename"]
+        except Exception as e:
+            return {"ok": False, "msg": f"Modrinth fejl: {e}"}
+    else:
+        if not url:
+            return {"ok": False, "msg": "Ingen URL angivet"}
+        filename = url.split("/")[-1].split("?")[0] or "mod.jar"
+    dest = mods_path / filename
+    try:
+        urlreq.urlretrieve(url, str(dest))
+    except Exception as e:
+        return {"ok": False, "msg": f"Download fejl: {e}"}
+    return {"ok": True, "msg": f"{filename} installeret"}
+
+def delete_server_mod(server_id, filename):
+    _, mods_path = _mods_dir(server_id)
+    if not mods_path:
+        return {"ok": False, "msg": "Server ikke fundet"}
+    target = mods_path / Path(filename).name
+    if not target.exists():
+        return {"ok": False, "msg": "Fil ikke fundet"}
+    target.unlink()
+    return {"ok": True, "msg": f"{filename} slettet"}

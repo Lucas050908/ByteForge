@@ -39,6 +39,7 @@ from api.docker_mgr import get_docker, docker_container_action
 from api.game import (
     SERVER_TYPES, get_game_servers, legacy_minecraft,
     game_action, create_game_server, delete_game_server,
+    list_server_mods, install_server_mod, delete_server_mod,
 )
 from api.auth import (
     _session_user, auth_enabled, auth_status, auth_setup,
@@ -138,6 +139,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(get_proxy())
             elif path == "/api/game-servers":
                 self.send_json({"types": SERVER_TYPES, "servers": get_game_servers(qs.get("logs", ["0"])[0] == "1")})
+            elif path.startswith("/api/game-servers/") and path.endswith("/mods"):
+                server_id = path.split("/")[3]
+                self.send_json(list_server_mods(server_id))
             elif path == "/api/files":
                 self.send_json(list_files(qs.get("scope", ["public"])[0], qs.get("path", [""])[0]))
             elif path == "/api/users":
@@ -273,6 +277,19 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(create_game_server(body))
             elif parsed.path == "/api/game-servers/delete":
                 self.send_json(delete_game_server(body.get("id", "")))
+            elif parsed.path == "/api/game-servers/mods/install":
+                self.send_json(install_server_mod(body.get("server_id",""), body.get("url"), body.get("modrinth_slug")))
+            elif parsed.path == "/api/game-servers/mods/delete":
+                self.send_json(delete_server_mod(body.get("server_id",""), body.get("filename","")))
+            elif parsed.path == "/api/ai/ollama":
+                import urllib.request as _ur, json as _j
+                payload = _j.dumps({"model": body.get("model","llama3"), "prompt": body.get("prompt",""), "stream": False}).encode()
+                try:
+                    req = _ur.Request("http://localhost:11434/api/generate", data=payload, headers={"Content-Type":"application/json"}, method="POST")
+                    with _ur.urlopen(req, timeout=60) as r:
+                        self.send_json(_j.loads(r.read()))
+                except Exception as e:
+                    self.send_json({"ok": False, "error": str(e), "response": f"Ollama fejl: {e}"})
             elif parsed.path == "/api/files/action":
                 self.send_json(file_action(body))
             elif parsed.path == "/api/settings":
