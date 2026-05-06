@@ -10,5 +10,7 @@ sudo cp "$SRC/byteforge-server.py"       "$DEST/byteforge-server.py"
 sudo cp "$SRC/byteforge-platform.html"   "$DEST/byteforge-platform.html"
 sudo cp "$SRC/byteforge-platform.js"     "$DEST/byteforge-platform.js"
 sudo cp "$SRC/byteforge-platform.css"    "$DEST/byteforge-platform.css"
+sudo mkdir -p "$DEST/api"
+sudo cp -r "$SRC/api/." "$DEST/api/"
 sudo systemctl restart byteforge
 echo "Done. Running at http://localhost:8080"
