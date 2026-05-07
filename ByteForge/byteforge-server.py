@@ -6,8 +6,13 @@ Run with: sudo python3 byteforge-server.py
 Docker is used as the default runtime for game servers because it keeps setup, limits and restarts simple.
 """
 
+import gzip
 import json
+import logging
+import logging.handlers
 import mimetypes
+import platform as _platform
+import re
 import shlex
 import threading
 import time
@@ -44,7 +49,7 @@ from api.game import (
 from api.auth import (
     _session_user, auth_enabled, auth_status, auth_setup,
     auth_login, auth_logout, auth_change_password,
-    auth_2fa_setup, auth_2fa_enable,
+    auth_2fa_setup, auth_2fa_enable, cleanup_sessions,
 )
 from api.files import safe_path, list_files, search_files, file_action
 from api.proxy import (
@@ -57,23 +62,45 @@ from api.metrics import _metrics_collector, setup_status, install_docker_system,
 from api.system import get_smart
 
 
+_LOCAL_ORIGIN = re.compile(r'^https?://(localhost|127\.0\.0\.1)(:\d+)?$')
+_VERSION = "1.0.0"
+_START_TIME = time.time()
+
+_logger = logging.getLogger("byteforge")
+
+
+def _setup_logger():
+    _logger.setLevel(logging.INFO)
+    log_path = BASE_DIR / "byteforge.log"
+    fh = logging.handlers.RotatingFileHandler(log_path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8")
+    fh.setFormatter(logging.Formatter("%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"))
+    _logger.addHandler(fh)
+
+
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, *args):
-        pass
+    def log_message(self, fmt, *args):
+        _logger.info("%s - %s", self.client_address[0], fmt % args)
 
     def send_cors_headers(self):
-        origin = self.headers.get("Origin")
-        self.send_header("Access-Control-Allow-Origin", origin or "*")
-        self.send_header("Access-Control-Allow-Credentials", "true")
+        origin = self.headers.get("Origin", "")
+        if origin and _LOCAL_ORIGIN.match(origin):
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Access-Control-Allow-Credentials", "true")
+        else:
+            self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 
     def send_json(self, data, code=200, headers=None):
         body = json.dumps(data).encode()
+        extra = {}
+        if "gzip" in self.headers.get("Accept-Encoding", "") and len(body) > 1024:
+            body = gzip.compress(body)
+            extra["Content-Encoding"] = "gzip"
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_cors_headers()
-        for key, value in (headers or {}).items():
+        for key, value in {**extra, **(headers or {})}.items():
             self.send_header(key, value)
         self.send_header("Content-Length", len(body))
         self.end_headers()
@@ -96,7 +123,7 @@ class Handler(BaseHTTPRequestHandler):
     def auth_required(self, path):
         if not path.startswith("/api/"):
             return False
-        if path in ("/api/auth/status", "/api/auth/login", "/api/auth/setup", "/api/background"):
+        if path in ("/api/auth/status", "/api/auth/login", "/api/auth/setup", "/api/background", "/api/health", "/api/version"):
             return False
         return auth_enabled()
 
@@ -115,7 +142,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if not self.ensure_authenticated(path):
                 return
-            if path == "/api/auth/status":
+            if path == "/api/health":
+                self.send_json({"ok": True, "status": "healthy", "uptime_seconds": int(time.time() - _START_TIME), "version": _VERSION})
+            elif path == "/api/version":
+                self.send_json({"version": _VERSION, "python": _platform.python_version(), "platform": _platform.system()})
+            elif path == "/api/auth/status":
                 self.send_json(auth_status(self))
             elif path == "/api/system":
                 self.send_json(get_system())
@@ -143,7 +174,17 @@ class Handler(BaseHTTPRequestHandler):
                 server_id = path.split("/")[3]
                 self.send_json(list_server_mods(server_id))
             elif path == "/api/files":
-                self.send_json(list_files(qs.get("scope", ["public"])[0], qs.get("path", [""])[0]))
+                self.send_json(list_files(qs.get("scope", ["public"])[0], qs.get("path", [""])[0], qs.get("hidden", ["0"])[0] == "1"))
+            elif path == "/api/files/get":
+                from api.files import safe_path as _sp
+                try:
+                    _, fpath = _sp(qs.get("scope", ["public"])[0], qs.get("path", [""])[0])
+                    if not fpath.is_file():
+                        self.send_json({"error": "Fil ikke fundet"}, 404); return
+                    mime = mimetypes.guess_type(str(fpath))[0] or "application/octet-stream"
+                    self.send_file(fpath, mime)
+                except ValueError:
+                    self.send_json({"error": "Ugyldig sti"}, 400)
             elif path == "/api/users":
                 data = load_config()
                 self.send_json({"users": data["users"], "settings": data["settings"]})
@@ -256,7 +297,7 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == "/api/auth/setup":
                 self.send_json(auth_setup(body))
             elif parsed.path == "/api/auth/login":
-                token, result = auth_login(body)
+                token, result = auth_login(body, self.client_address[0])
                 headers = {}
                 if token:
                     headers["Set-Cookie"] = f"{SESSION_COOKIE}={token}; Path=/; HttpOnly; SameSite=Lax; Max-Age={SESSION_TTL}"
@@ -378,6 +419,8 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     ensure_dirs()
+    _setup_logger()
+
     def _guarded_metrics():
         while True:
             try:
@@ -385,8 +428,18 @@ if __name__ == "__main__":
             except Exception:
                 pass
             time.sleep(1)
+
+    def _session_cleaner():
+        while True:
+            time.sleep(60)
+            try:
+                cleanup_sessions()
+            except Exception:
+                pass
+
     threading.Thread(target=_guarded_metrics, daemon=True).start()
     threading.Thread(target=_uptime_collector, daemon=True).start()
+    threading.Thread(target=_session_cleaner, daemon=True).start()
     print("\033[38;5;208m")
     print("  ByteForge Platform starter på port", PORT)
     print("  Data:", BASE_DIR)

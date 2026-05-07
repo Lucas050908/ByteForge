@@ -185,7 +185,7 @@ check_port() {
 # ── Copy files ─────────────────────────────────────────────────────────────
 install_files() {
   run_p mkdir -p "$TARGET_DIR"
-  for f in byteforge-server.py byteforge-platform.html byteforge-platform.css byteforge-platform.js byteforge-logo.svg byteforge-icon.svg; do
+  for f in byteforge-server.py byteforge-platform.html byteforge-platform.css byteforge-custom.css byteforge-platform.js byteforge-logo.png byteforge-icon.png; do
     [ -f "$SRC_DIR/$f" ] && run_p cp "$SRC_DIR/$f" "$TARGET_DIR/$f"
   done
   # Copy api/ package directory (required since server.py was split into modules)
@@ -198,8 +198,10 @@ install_files() {
 
 # ── systemd service ────────────────────────────────────────────────────────
 install_systemd() {
-  local pw
-  pw="$(printf '%s' "$BYTEFORGE_ADMIN_PASSWORD" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+  run_p mkdir -p /etc/byteforge
+  run_p chmod 700 /etc/byteforge
+  printf 'BYTEFORGE_ADMIN_PASSWORD=%s\n' "$BYTEFORGE_ADMIN_PASSWORD" | run_p tee /etc/byteforge/env >/dev/null
+  run_p chmod 600 /etc/byteforge/env
   run_p tee /etc/systemd/system/byteforge.service >/dev/null <<EOF
 [Unit]
 Description=ByteForge Platform
@@ -211,8 +213,8 @@ WorkingDirectory=$TARGET_DIR
 ExecStart=$PYTHON_BIN $TARGET_DIR/byteforge-server.py
 Restart=always
 RestartSec=5
+EnvironmentFile=/etc/byteforge/env
 Environment="BYTEFORGE_PORT=$PORT"
-Environment="BYTEFORGE_ADMIN_PASSWORD=$pw"
 
 [Install]
 WantedBy=multi-user.target
@@ -225,11 +227,16 @@ EOF
 
 # ── Fallback: startup script (non-systemd) ─────────────────────────────────
 install_fallback() {
+  run_p mkdir -p /etc/byteforge
+  run_p chmod 700 /etc/byteforge
+  printf 'BYTEFORGE_ADMIN_PASSWORD=%s\n' "$BYTEFORGE_ADMIN_PASSWORD" | run_p tee /etc/byteforge/env >/dev/null
+  run_p chmod 600 /etc/byteforge/env
   local start_script="$TARGET_DIR/start.sh"
   run_p tee "$start_script" >/dev/null <<EOF
 #!/usr/bin/env bash
 export BYTEFORGE_PORT="$PORT"
-export BYTEFORGE_ADMIN_PASSWORD="$BYTEFORGE_ADMIN_PASSWORD"
+. /etc/byteforge/env
+export BYTEFORGE_ADMIN_PASSWORD
 exec "$PYTHON_BIN" "$TARGET_DIR/byteforge-server.py"
 EOF
   run_p chmod +x "$start_script"
@@ -270,8 +277,11 @@ main() {
 
   step "Setting admin password"
   if [ "${UPGRADING:-0}" -eq 1 ] && [ -z "${BYTEFORGE_ADMIN_PASSWORD:-}" ]; then
-    # On upgrade, keep existing password from the service file if possible
-    existing_pw="$(grep -oP '(?<=BYTEFORGE_ADMIN_PASSWORD=).*' /etc/systemd/system/byteforge.service 2>/dev/null | head -1 || true)"
+    # On upgrade, prefer /etc/byteforge/env; fall back to old inline service file (migration)
+    existing_pw="$(grep -oP '(?<=BYTEFORGE_ADMIN_PASSWORD=).*' /etc/byteforge/env 2>/dev/null | head -1 || true)"
+    if [ -z "$existing_pw" ]; then
+      existing_pw="$(grep -oP '(?<=BYTEFORGE_ADMIN_PASSWORD=)[^"]+' /etc/systemd/system/byteforge.service 2>/dev/null | head -1 || true)"
+    fi
     if [ -n "$existing_pw" ]; then
       BYTEFORGE_ADMIN_PASSWORD="$existing_pw"
       export BYTEFORGE_ADMIN_PASSWORD

@@ -57,6 +57,7 @@ LAUNCHD_SYS="/Library/LaunchDaemons/com.byteforge.plist"
 echo -e "  ${BLD}This will remove:${RST}"
 [ -n "$INSTALL_DIR" ]                                         && echo -e "    ${ORG}•${RST} Files:    $INSTALL_DIR"
 [ "$OS" = "Linux" ] && [ -f /etc/systemd/system/byteforge.service ] && echo -e "    ${ORG}•${RST} Service:  /etc/systemd/system/byteforge.service"
+[ "$OS" = "Linux" ] && [ -d /etc/byteforge ]                          && echo -e "    ${ORG}•${RST} Secrets:  /etc/byteforge"
 [ "$OS" = "Linux" ] && grep -q byteforge /etc/rc.local 2>/dev/null  && echo -e "    ${ORG}•${RST} rc.local: byteforge entry"
 [ "$OS" = "Darwin" ] && [ -f "$LAUNCHD_USER" ]                      && echo -e "    ${ORG}•${RST} LaunchAgent: $LAUNCHD_USER"
 [ "$OS" = "Darwin" ] && [ -f "$LAUNCHD_SYS"  ]                      && echo -e "    ${ORG}•${RST} LaunchDaemon: $LAUNCHD_SYS"
@@ -118,6 +119,12 @@ if [ -n "$INSTALL_DIR" ] && [ -d "$INSTALL_DIR" ]; then
   info "Removing $INSTALL_DIR..."
   run_p rm -rf "$INSTALL_DIR"
   ok "Install directory removed."
+fi
+
+# ── Remove credentials directory ──────────────────────────────────────────
+if [ -d /etc/byteforge ]; then
+  run_p rm -rf /etc/byteforge
+  ok "Credentials directory removed."
 fi
 
 # ── Done ───────────────────────────────────────────────────────────────────

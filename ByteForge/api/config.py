@@ -38,8 +38,8 @@ CADDY_CONTAINER = "byteforge-caddy"
 STATIC_FILES = {
     "/byteforge-platform.css": "byteforge-platform.css",
     "/byteforge-platform.js": "byteforge-platform.js",
-    "/byteforge-logo.svg": "byteforge-logo.svg",
-    "/byteforge-icon.svg": "byteforge-icon.svg",
+    "/byteforge-logo.png": "byteforge-logo.png",
+    "/byteforge-icon.png": "byteforge-icon.png",
 }
 
 

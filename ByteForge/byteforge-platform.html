@@ -31,16 +31,7 @@
   <button id="hamburger" onclick="toggleSidebar()" style="display:none;background:none;border:none;color:var(--t);font-size:20px;cursor:pointer;padding:0 8px">☰</button>
   <a class="logo" href="#">
     <span class="logo-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="30" height="30">
-        <rect width="200" height="200" rx="20" fill="#0D0D0D"/>
-        <polygon points="180,100 140,169.3 60,169.3 20,100 60,30.7 140,30.7" fill="#1A1A1A" stroke="#FF6B1A" stroke-width="3.5"/>
-        <polygon points="22,92 50,75 150,75 150,108 50,108" fill="#FF6B1A"/>
-        <rect x="72" y="108" width="56" height="30" fill="#FF6B1A"/>
-        <rect x="55" y="138" width="90" height="22" fill="#FF6B1A"/>
-        <circle cx="100" cy="60" r="2.5" fill="#FF9A3C" opacity="0.9"/>
-        <circle cx="115" cy="52" r="1.8" fill="#FF9A3C" opacity="0.7"/>
-        <circle cx="85" cy="54" r="1.5" fill="#FF9A3C" opacity="0.6"/>
-      </svg>
+      <img src="/byteforge-icon.png" width="30" height="30" style="border-radius:50%;display:block" alt="ByteForge"/>
     </span>
     <span class="logo-text">BYTE<b>FORGE</b></span>
   </a>
@@ -519,24 +510,24 @@
 
 <!-- ████ FILES ████ -->
 <div class="page" id="page-files">
-  <div class="ph"><div class="ph-left"><h1>FILE<span>SYSTEM</span></h1><p>// UPLOAD · SLET · FLYT · SØG · PRIVATE / DELTE OMRÅDER</p></div></div>
+  <div class="ph"><div class="ph-left"><h1>FILE<span>SYSTEM</span></h1><p>// BROWSE · UPLOAD · SLET · PRIVATE / DELTE OMRÅDER</p></div></div>
   <div class="card">
     <div class="file-toolbar">
-      <select class="select" id="file-scope" onchange="loadFiles()">
+      <select class="select" id="file-scope" onchange="_fileResetPath();loadFiles()">
+        <option value="home">Home</option>
         <option value="public">Public</option>
         <option value="private">Private</option>
         <option value="shared">Shared</option>
         <option value="servers">Servers</option>
       </select>
-      <input class="input" id="file-query" placeholder="Søg eller angiv mappe..."/>
-      <button class="btn btn-g btn-sm" onclick="searchFiles()">⌕ SØG</button>
-      <button class="btn btn-o btn-sm" onclick="makeFolder()">+ MAPPE</button>
+      <input class="input" id="file-query" placeholder="Søg filer..."/>
+      <button class="btn btn-g btn-sm" onclick="searchFiles()">⌕</button>
+      <button class="btn btn-g btn-sm" id="btn-hidden" onclick="toggleHidden()" title="Vis skjulte filer">⊙</button>
+      <button class="btn btn-g btn-sm" onclick="makeFolder()">+ MAPPE</button>
+      <label class="btn btn-o btn-sm" style="cursor:pointer;margin:0">↑ UPLOAD<input type="file" id="file-upload" style="display:none" onchange="uploadFile()" multiple/></label>
     </div>
-    <div class="file-toolbar" style="grid-template-columns:1fr auto">
-      <input class="input" type="file" id="file-upload"/>
-      <button class="btn btn-o btn-sm" onclick="uploadFile()">UPLOAD</button>
-    </div>
-    <div class="file-list" id="file-list"><div class="file-row"><strong>Indlæser...</strong></div></div>
+    <div id="file-breadcrumb" class="file-breadcrumb"></div>
+    <div class="file-grid" id="file-list"><div class="file-empty">Indlæser...</div></div>
   </div>
 </div>
 

@@ -6,7 +6,10 @@ import secrets
 import time
 
 from api.config import hash_password, load_config, save_config
-from api.state import SESSION_COOKIE, SESSION_TTL, _SESSIONS, _AUTH_LOCK
+from api.state import (
+    SESSION_COOKIE, SESSION_TTL, _SESSIONS, _AUTH_LOCK,
+    _LOGIN_ATTEMPTS, _RATE_LOCK, LOGIN_MAX_FAILURES, LOGIN_LOCKOUT_SECONDS,
+)
 
 
 def _parse_cookies(header):
@@ -124,15 +127,46 @@ def auth_setup(body):
     return {"ok": True, "msg": "Admin password configured. You can log in now."}
 
 
-def auth_login(body):
+def _check_rate_limit(client_ip):
+    now = time.time()
+    with _RATE_LOCK:
+        entry = _LOGIN_ATTEMPTS.get(client_ip)
+        if entry and entry["locked_until"] > now:
+            remaining = int(entry["locked_until"] - now)
+            return False, f"For mange fejlede forsøg. Prøv igen om {remaining} sekunder."
+    return True, ""
+
+
+def _record_failure(client_ip):
+    now = time.time()
+    with _RATE_LOCK:
+        entry = _LOGIN_ATTEMPTS.get(client_ip, {"failures": 0, "locked_until": 0})
+        entry["failures"] += 1
+        if entry["failures"] >= LOGIN_MAX_FAILURES:
+            entry["locked_until"] = now + LOGIN_LOCKOUT_SECONDS
+        _LOGIN_ATTEMPTS[client_ip] = entry
+
+
+def _clear_rate_limit(client_ip):
+    with _RATE_LOCK:
+        _LOGIN_ATTEMPTS.pop(client_ip, None)
+
+
+def auth_login(body, client_ip=""):
+    allowed, rate_msg = _check_rate_limit(client_ip)
+    if not allowed:
+        return None, {"ok": False, "msg": rate_msg}
     username = (body.get("username") or "").strip()
     password = body.get("password") or ""
     otp = body.get("otp") or ""
     user = _find_auth_user(username)
     if not user or not _verify_password(user, password):
+        _record_failure(client_ip)
         return None, {"ok": False, "msg": "Forkert brugernavn eller adgangskode"}
     if user.get("totp_enabled") and not _verify_totp(user.get("totp_secret", ""), otp):
+        _record_failure(client_ip)
         return None, {"ok": False, "requires_2fa": True, "msg": "Indtast gyldig 2FA kode"}
+    _clear_rate_limit(client_ip)
     token = secrets.token_urlsafe(32)
     with _AUTH_LOCK:
         _SESSIONS[token] = {"username": user["username"], "expires": time.time() + SESSION_TTL}
@@ -182,6 +216,18 @@ def auth_2fa_setup(handler):
     label = f"ByteForge:{user.get('username')}"
     uri = f"otpauth://totp/{label}?secret={secret}&issuer=ByteForge&digits=6&period=30"
     return {"ok": True, "secret": secret, "otpauth": uri}
+
+
+def cleanup_sessions():
+    now = time.time()
+    with _AUTH_LOCK:
+        expired = [k for k, v in _SESSIONS.items() if v["expires"] < now]
+        for k in expired:
+            del _SESSIONS[k]
+    with _RATE_LOCK:
+        stale = [ip for ip, e in _LOGIN_ATTEMPTS.items() if e["locked_until"] < now - LOGIN_LOCKOUT_SECONDS]
+        for ip in stale:
+            del _LOGIN_ATTEMPTS[ip]
 
 
 def auth_2fa_enable(handler, body):

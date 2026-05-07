@@ -929,60 +929,294 @@ async function deployNPM() {
   setTimeout(loadProxy, 1200);
 }
 
+let _filePath = '';
+let _showHidden = false;
+
+function _fileResetPath() { _filePath = ''; }
+
+function toggleHidden() {
+  _showHidden = !_showHidden;
+  const btn = document.getElementById('btn-hidden');
+  if (btn) btn.style.color = _showHidden ? 'var(--o)' : '';
+  loadFiles();
+}
+
+function _fileIcon(name, type) {
+  if (type === 'folder') return `<svg width="72" height="60" viewBox="0 0 72 60" fill="none">
+    <path d="M4 14C4 10.7 6.7 8 10 8H28L34 15H62C65.3 15 68 17.7 68 21V51C68 54.3 65.3 57 62 57H10C6.7 57 4 54.3 4 51V14Z" fill="#FF7A2A"/>
+    <path d="M4 25H68V51C68 54.3 65.3 57 62 57H10C6.7 57 4 54.3 4 51V25Z" fill="#FFAA55"/>
+    <rect x="26" y="37" width="20" height="3" rx="1.5" fill="rgba(255,255,255,.45)"/>
+  </svg>`;
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const types = [
+    {exts:['jpg','jpeg','png','gif','webp','svg','bmp','ico','tiff','heic','avif'], color:'#2ECC71', badge:'#1a7a43', label:'IMG'},
+    {exts:['mp4','mkv','avi','mov','webm','flv','wmv','m4v','ts'],                  color:'#9B59B6', badge:'#5b2d7a', label:'VID'},
+    {exts:['mp3','wav','flac','ogg','m4a','aac','wma','opus'],                      color:'#3498DB', badge:'#1a5c8a', label:'AUD'},
+    {exts:['pdf'],                                                                   color:'#E74C3C', badge:'#8a1a1a', label:'PDF'},
+    {exts:['doc','docx','odt','rtf'],                                               color:'#2980B9', badge:'#1a4a7a', label:'DOC'},
+    {exts:['xls','xlsx','ods','csv'],                                               color:'#27AE60', badge:'#145c30', label:'XLS'},
+    {exts:['txt','md','log'],                                                       color:'#95A5A6', badge:'#4a5a5a', label:'TXT'},
+    {exts:['py','js','ts','jsx','tsx','html','css','json','sh','bash','bat','ps1','yaml','yml','toml','ini','cfg','conf','php','go','rs','cpp','c','h','java','rb','swift','kt'], color:'#F39C12', badge:'#8a5500', label:'</>'},
+    {exts:['zip','tar','gz','bz2','xz','rar','7z','deb','rpm'],                    color:'#7F8C8D', badge:'#3a4a4a', label:'ZIP'},
+    {exts:['exe','msi','AppImage','dmg','pkg'],                                     color:'#E74C3C', badge:'#8a1a1a', label:'EXE'},
+  ];
+  let color = '#555', badge = '#2a2a2a', label = ext.slice(0,4).toUpperCase() || 'FILE';
+  for (const t of types) { if (t.exts.includes(ext)) { color = t.color; badge = t.badge; label = t.label; break; } }
+  const fs = label === '</>' ? 9 : label.length > 3 ? 8 : 10;
+  return `<svg width="58" height="70" viewBox="0 0 58 70" fill="none">
+    <path d="M5 3H37L53 19V63C53 65.8 50.8 68 48 68H10C7.2 68 5 65.8 5 63V5C5 3.9 5.9 3 7 3Z" fill="${color}" opacity=".12"/>
+    <path d="M5 3H37L53 19V63C53 65.8 50.8 68 48 68H10C7.2 68 5 65.8 5 63V5C5 3.9 5.9 3 7 3Z" stroke="${color}" stroke-width="1.5"/>
+    <path d="M37 3L53 19H39C37.9 19 37 18.1 37 17V3Z" fill="${color}" opacity=".4"/>
+    <rect x="8" y="44" width="42" height="17" rx="3" fill="${badge}"/>
+    <text x="29" y="56.5" font-family="'DM Mono',monospace" font-size="${fs}" fill="${color}" text-anchor="middle" font-weight="700">${label}</text>
+  </svg>`;
+}
+
+function _formatSize(b) {
+  if (!b) return '';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return Math.ceil(b/1024) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+function _renderBreadcrumb(scope) {
+  const bc = document.getElementById('file-breadcrumb');
+  if (!bc) return;
+  const parts = _filePath ? _filePath.split('/').filter(Boolean) : [];
+  let html = `<span class="fb-crumb${!parts.length?' active':''}" onclick="_navToPath('')">${escapeHTML(scope.toUpperCase())}</span>`;
+  let built = '';
+  for (let i = 0; i < parts.length; i++) {
+    built += (built ? '/' : '') + parts[i];
+    const p = built, active = i === parts.length - 1;
+    html += `<span class="fb-sep">/</span><span class="fb-crumb${active?' active':''}" onclick="_navToPath('${escapeHTML(p)}')">${escapeHTML(parts[i])}</span>`;
+  }
+  bc.innerHTML = html;
+}
+
+function _enterFolder(name) {
+  _filePath = _filePath ? _filePath + '/' + name : name;
+  loadFiles();
+}
+
+function _navToPath(path) {
+  _filePath = path;
+  loadFiles();
+}
+
 async function loadFiles() {
   const scope = document.getElementById('file-scope')?.value || 'public';
-  const data = await api('/api/files?scope=' + encodeURIComponent(scope));
   const out = document.getElementById('file-list');
-  if (!out || !data) return;
-  if (!data.items.length) { out.innerHTML = '<div class="file-row"><strong>Tom mappe</strong><span></span><span></span><span></span><span></span></div>'; return; }
-  out.innerHTML = data.items.map(item => `
-    <div class="file-row">
-      <span>${item.type === 'folder' ? '▸' : '□'}</span>
-      <strong>${escapeHTML(item.name)}</strong>
-      <span>${item.type}</span>
-      <span>${item.type === 'file' ? Math.ceil(item.size/1024) + ' KB' : '-'}</span>
-      <button class="btn btn-r btn-sm" onclick="deleteFile('${encodeURIComponent(item.name)}')">SLET</button>
-    </div>`).join('');
+  if (!out) return;
+  out.innerHTML = '<div class="file-empty">Indlæser...</div>';
+  _renderBreadcrumb(scope);
+  const data = await api('/api/files?scope=' + encodeURIComponent(scope) + '&path=' + encodeURIComponent(_filePath) + (_showHidden ? '&hidden=1' : ''));
+  if (!data) return;
+  const items = [...(data.items || [])].sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+  if (!items.length) { out.innerHTML = '<div class="file-empty">// TOM MAPPE</div>'; return; }
+  out.innerHTML = items.map(item => {
+    const enc = encodeURIComponent(item.name);
+    const n = escapeHTML(item.name);
+    const click = item.type === 'folder'
+      ? `_enterFolder('${n}')`
+      : `previewFile('${n}')`;
+    const meta = item.type === 'file'
+      ? _formatSize(item.size)
+      : (item.modified ? new Date(item.modified * 1000).toLocaleDateString('da-DK', {day:'2-digit',month:'short'}) : '');
+    return `<div class="file-item" onclick="${click}" oncontextmenu="_showCtxMenu(event,'${n}','${item.type}')" title="${n}">
+      <button class="file-item-del" onclick="event.stopPropagation();deleteFile('${enc}')" title="Slet">✕</button>
+      ${_fileIcon(item.name, item.type)}
+      <div class="file-item-name">${n}</div>
+      ${meta ? `<div class="file-item-meta">${meta}</div>` : ''}
+    </div>`;
+  }).join('');
+  _initDragDrop();
 }
 
 async function deleteFile(name) {
   const scope = document.getElementById('file-scope').value;
-  const r = await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',scope,path:decodeURIComponent(name)})});
+  const path = (_filePath ? _filePath + '/' : '') + decodeURIComponent(name);
+  const r = await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',scope,path})});
   const d = await r.json();
   toast(d.msg || 'Slettet', d.ok);
   loadFiles();
 }
 
 async function makeFolder() {
+  const name = prompt('Mappenavn:');
+  if (!name || !name.trim()) return;
   const scope = document.getElementById('file-scope').value;
-  const name = document.getElementById('file-query').value.trim();
-  if (!name) { toast('Skriv et mappenavn først', false); return; }
-  const r = await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'mkdir',scope,path:name})});
-  const d = await r.json();
+  const path = (_filePath ? _filePath + '/' : '') + name.trim();
+  const d = await (await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'mkdir',scope,path})})).json();
   toast(d.msg || 'Mappe oprettet', d.ok);
-  loadFiles();
+  if (d.ok) loadFiles();
 }
 
 async function searchFiles() {
   const scope = document.getElementById('file-scope').value;
   const query = document.getElementById('file-query').value.trim();
+  if (!query) { loadFiles(); return; }
+  const out = document.getElementById('file-list');
+  out.innerHTML = '<div class="file-empty">Søger...</div>';
+  document.getElementById('file-breadcrumb').innerHTML = `<span class="fb-crumb">Søgeresultater for "${escapeHTML(query)}"</span>`;
   const r = await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'search',scope,query})});
   const d = await r.json();
-  const out = document.getElementById('file-list');
-  out.innerHTML = (d.matches || []).map(m => `<div class="file-row"><span>${m.type === 'folder' ? '▸' : '□'}</span><strong>${escapeHTML(m.path)}</strong><span>${m.type}</span><span></span><span></span></div>`).join('') || '<div class="file-row"><strong>Ingen resultater</strong></div>';
+  const matches = d.matches || [];
+  if (!matches.length) { out.innerHTML = '<div class="file-empty">// INGEN RESULTATER</div>'; return; }
+  out.innerHTML = matches.map(m => {
+    const enc = encodeURIComponent(m.name || m.path);
+    return `<div class="file-item" title="${escapeHTML(m.path || m.name)}">
+      <button class="file-item-del" onclick="event.stopPropagation();deleteFile('${enc}')" title="Slet">✕</button>
+      ${_fileIcon(m.name || m.path, m.type)}
+      <div class="file-item-name">${escapeHTML(m.path || m.name)}</div>
+    </div>`;
+  }).join('');
 }
 
 async function uploadFile() {
   const input = document.getElementById('file-upload');
-  if (!input.files.length) { toast('Vælg en fil først', false); return; }
-  const form = new FormData();
-  form.append('scope', document.getElementById('file-scope').value);
-  form.append('file', input.files[0]);
-  const r = await fetch(BASE+'/api/files/upload',{method:'POST',body:form});
-  const d = await r.json();
-  toast(d.msg || 'Upload færdig', d.ok);
+  if (!input.files.length) return;
+  const scope = document.getElementById('file-scope').value;
+  for (const file of input.files) {
+    const form = new FormData();
+    form.append('scope', scope);
+    form.append('path', _filePath);
+    form.append('file', file);
+    const r = await fetch(BASE+'/api/files/upload',{method:'POST',body:form});
+    const d = await r.json();
+    toast(d.msg || file.name + ' uploadet', d.ok);
+  }
   input.value = '';
   loadFiles();
+}
+
+// ── Kontekstmenu ─────────────────────────────────────────────────────────────
+let _ctxName = '', _ctxType = '';
+
+function _showCtxMenu(e, name, type) {
+  e.preventDefault();
+  e.stopPropagation();
+  _ctxName = name;
+  _ctxType = type;
+  document.getElementById('file-ctx')?.remove();
+  const isFile = type === 'file';
+  const m = document.createElement('div');
+  m.className = 'ctx-menu';
+  m.id = 'file-ctx';
+  m.innerHTML = `
+    ${isFile ? `<div class="ctx-item" onclick="_ctxAction('preview')">👁 &nbsp;Forhåndsvis</div>
+    <div class="ctx-item" onclick="_ctxAction('download')">⬇ &nbsp;Download</div><div class="ctx-sep"></div>` : ''}
+    <div class="ctx-item" onclick="_ctxAction('rename')">✏ &nbsp;Omdøb</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item danger" onclick="_ctxAction('delete')">✕ &nbsp;Slet</div>`;
+  m.style.cssText = `left:${Math.min(e.clientX, innerWidth-180)}px;top:${Math.min(e.clientY, innerHeight-160)}px`;
+  document.body.appendChild(m);
+  setTimeout(() => document.addEventListener('click', () => document.getElementById('file-ctx')?.remove(), {once:true}), 0);
+}
+
+function _ctxAction(action) {
+  document.getElementById('file-ctx')?.remove();
+  const enc = encodeURIComponent(_ctxName);
+  if (action === 'preview') previewFile(_ctxName);
+  else if (action === 'download') downloadFile(enc);
+  else if (action === 'rename') renameFile(_ctxName);
+  else if (action === 'delete') deleteFile(enc);
+}
+
+// ── Rename ────────────────────────────────────────────────────────────────────
+async function renameFile(name) {
+  const newName = prompt('Nyt navn:', name);
+  if (!newName || newName === name) return;
+  const scope = document.getElementById('file-scope').value;
+  const path = (_filePath ? _filePath + '/' : '') + name;
+  const d = await (await fetch(BASE+'/api/files/action',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'rename',scope,path,new_name:newName})})).json();
+  toast(d.msg || 'Omdøbt', d.ok);
+  if (d.ok) loadFiles();
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+function previewFile(name) {
+  const scope = document.getElementById('file-scope').value;
+  const path = (_filePath ? _filePath + '/' : '') + name;
+  const url = BASE + '/api/files/get?scope=' + encodeURIComponent(scope) + '&path=' + encodeURIComponent(path);
+  const ext = name.split('.').pop().toLowerCase();
+  const IMGS = ['jpg','jpeg','png','gif','webp','svg','bmp','tiff','heic','avif'];
+  const VIDS = ['mp4','webm','mov','m4v'];
+  const AUDS = ['mp3','wav','ogg','flac','m4a','aac'];
+  const TXTS = ['txt','md','log','json','yaml','yml','toml','ini','cfg','conf','html','css','js','ts','jsx','py','sh','bat','ps1','php','go','rs','cpp','c','h','java','rb'];
+
+  let body;
+  if (IMGS.includes(ext))      body = `<img src="${url}" alt="${escapeHTML(name)}"/>`;
+  else if (VIDS.includes(ext)) body = `<video controls autoplay style="max-width:100%;max-height:65vh"><source src="${url}"></video>`;
+  else if (AUDS.includes(ext)) body = `<audio controls autoplay style="width:340px"><source src="${url}"></audio>`;
+  else if (TXTS.includes(ext)) body = `<pre id="fpreview-text">Indlæser...</pre>`;
+  else                         body = `<div style="padding:40px;color:var(--t2);font-family:var(--mono);text-align:center">Kan ikke forhåndsvise denne filtype.<br/>Brug download-knappen.</div>`;
+
+  const ov = document.createElement('div');
+  ov.className = 'fmodal-overlay';
+  ov.id = 'file-modal';
+  ov.innerHTML = `<div class="fmodal">
+    <div class="fmodal-head">
+      <div class="fmodal-title">${escapeHTML(name)}</div>
+      <button class="btn btn-g btn-sm" onclick="document.getElementById('file-modal').remove()">✕</button>
+    </div>
+    <div class="fmodal-body">${body}</div>
+    <div class="fmodal-foot">
+      <button class="btn btn-g btn-sm" onclick="downloadFile('${encodeURIComponent(name)}')">⬇ DOWNLOAD</button>
+      <button class="btn btn-g btn-sm" onclick="document.getElementById('file-modal').remove()">LUK</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('file-modal')?.remove(); }, {once:true});
+
+  if (TXTS.includes(ext)) {
+    fetch(url).then(r => r.text()).then(t => {
+      const el = document.getElementById('fpreview-text');
+      if (el) el.textContent = t.length > 100000 ? t.slice(0,100000) + '\n\n[afkortet…]' : t;
+    }).catch(() => { const el = document.getElementById('fpreview-text'); if (el) el.textContent = 'Kan ikke indlæse fil.'; });
+  }
+}
+
+// ── Download ──────────────────────────────────────────────────────────────────
+function downloadFile(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  const scope = document.getElementById('file-scope').value;
+  const path = (_filePath ? _filePath + '/' : '') + name;
+  const a = document.createElement('a');
+  a.href = BASE + '/api/files/get?scope=' + encodeURIComponent(scope) + '&path=' + encodeURIComponent(path);
+  a.download = name;
+  a.click();
+}
+
+// ── Drag-and-drop upload ──────────────────────────────────────────────────────
+function _initDragDrop() {
+  const grid = document.getElementById('file-list');
+  if (!grid || grid._dd) return;
+  grid._dd = true;
+  grid.addEventListener('dragover', e => { e.preventDefault(); grid.classList.add('drag-over'); });
+  grid.addEventListener('dragleave', e => { if (!grid.contains(e.relatedTarget)) grid.classList.remove('drag-over'); });
+  grid.addEventListener('drop', async e => {
+    e.preventDefault();
+    grid.classList.remove('drag-over');
+    const files = [...(e.dataTransfer?.files || [])];
+    if (!files.length) return;
+    const scope = document.getElementById('file-scope').value;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      toast(`Uploader ${i+1}/${files.length}: ${file.name}`, true);
+      const form = new FormData();
+      form.append('scope', scope);
+      form.append('path', _filePath);
+      form.append('file', file);
+      await fetch(BASE+'/api/files/upload',{method:'POST',body:form});
+    }
+    toast(`${files.length} fil${files.length>1?'er':''} uploadet`, true);
+    loadFiles();
+  });
 }
 
 async function loadAccess() {

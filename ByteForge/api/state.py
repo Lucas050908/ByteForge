@@ -7,6 +7,12 @@ OLD_OWNER_ID = "lu" + "cas"
 _SESSIONS = {}
 _AUTH_LOCK = threading.Lock()
 
+# Rate limiting: ip -> {"failures": int, "locked_until": float}
+_LOGIN_ATTEMPTS: dict = {}
+_RATE_LOCK = threading.Lock()
+LOGIN_MAX_FAILURES = 5
+LOGIN_LOCKOUT_SECONDS = 5 * 60
+
 _METRICS_HISTORY = []
 _METRICS_LOCK = threading.Lock()
 _NET_LAST = None

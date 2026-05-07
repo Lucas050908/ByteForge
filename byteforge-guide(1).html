@@ -206,14 +206,7 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
 <!-- NAV -->
 <nav>
   <a class="nav-logo" href="#">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="34" height="34">
-      <rect width="200" height="200" rx="20" fill="#0D0D0D"/>
-      <polygon points="180,100 140,169.3 60,169.3 20,100 60,30.7 140,30.7" fill="#1A1A1A" stroke="#FF6B1A" stroke-width="3.5"/>
-      <polygon points="22,92 50,75 150,75 150,108 50,108" fill="#FF6B1A"/>
-      <rect x="72" y="108" width="56" height="30" fill="#FF6B1A"/>
-      <rect x="55" y="138" width="90" height="22" fill="#FF6B1A"/>
-      <circle cx="100" cy="60" r="2.5" fill="#FF9A3C" opacity="0.9"/>
-    </svg>
+    <img src="ByteForge/byteforge-icon.png" width="34" height="34" style="border-radius:50%;display:block" alt="ByteForge"/>
     <div class="nav-brand">BYTE<span>FORGE</span></div>
   </a>
   <div class="nav-links">
@@ -348,6 +341,7 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
         <p><span>byteforge-server.py</span> — Python backend API-server</p>
         <p><span>install.sh</span> — Terminal-installer til Linux og macOS</p>
         <p><span>install.ps1 / install.bat</span> — Terminal-installer til Windows</p>
+        <p><span>start.bat</span> — Start serveren direkte på Windows (dobbeltklik)</p>
         <p><span>README.md</span> — Fuld dokumentation</p>
         <br/>
         <p style="color:var(--ash);font-family:var(--mono);font-size:11px;line-height:1.9">
@@ -396,7 +390,8 @@ footer{background:var(--coal);border-top:1px solid var(--iron);padding:40px;disp
         <div class="step-desc">Installeren spørger efter et ADMIN password, kopierer filerne, tilbyder Docker-installation og opsætter ByteForge som system-service hvor operativsystemet understøtter det.</div>
         <div class="step-code">Linux: sudo ./install.sh
 macOS: ./install.sh
-Windows: .\install.ps1</div>
+Windows: .\install.ps1   (eller dobbeltklik install.bat)</div>
+        <div class="step-code" style="margin-top:6px">Windows (hurtig start uden install): dobbeltklik start.bat</div>
       </div>
     </div>
     <div class="step">
@@ -483,9 +478,12 @@ sudo ./install.sh
 # macOS
 ./install.sh
 
-# Windows PowerShell
-.\install.ps1</div>
-            <div class="gs-tip"><div class="gs-tip-icon">⚠</div><div class="gs-tip-text">Har du ikke Python 3? Installeren stopper og fortæller det. På Windows skal Python være i PATH.</div></div>
+# Windows PowerShell (fuld installation som service)
+.\install.ps1
+
+# Windows — hurtig start uden installation (dobbeltklik)
+start.bat</div>
+            <div class="gs-tip"><div class="gs-tip-icon">⚠</div><div class="gs-tip-text">Har du ikke Python 3? Installeren stopper og fortæller det. På Windows skal Python være i PATH – hak "Add Python to PATH" under Python-installationen.</div></div>
           </div>
         </li>
         <li class="guide-step">
@@ -502,9 +500,12 @@ Password: det du valgte i terminalen</div>
           <div class="gs-num">→ 4</div>
           <div class="gs-content">
             <div class="gs-title">MANUEL START (VALGFRIT)</div>
-            <div class="gs-desc">Vil du teste uden service, kan du starte backend manuelt. Første login-skærm lader dig vælge ADMIN password hvis det ikke allerede findes.</div>
-            <div class="gs-code">cd ByteForge/ByteForge
+            <div class="gs-desc">Vil du teste uden service, kan du starte backend manuelt. Første login-skærm lader dig vælge ADMIN password hvis det ikke allerede findes. På Windows kan du <strong>dobbeltklikke på start.bat</strong> – den finder Python, åbner browseren og starter serveren automatisk.</div>
+            <div class="gs-code"># Linux / macOS
+cd ByteForge/ByteForge
 python3 byteforge-server.py</div>
+            <div class="gs-code" style="margin-top:6px"># Windows — dobbeltklik på filen i ByteForge-mappen:
+start.bat</div>
             <div class="gs-tip"><div class="gs-tip-icon">💡</div><div class="gs-tip-text">Kører ByteForge på en anden computer på dit netværk? Brug computerens lokale IP-adresse i stedet for "localhost" – f.eks. http://10.194.177.172:8080</div></div>
           </div>
         </li>
@@ -796,7 +797,7 @@ python3 byteforge-server.py</div>
       </div>
       <div class="faq-item" onclick="toggleFaq(this)">
         <div class="faq-q">Virker ByteForge på Windows?</div>
-        <div class="faq-a">Ja. Kør install.ps1 fra PowerShell eller brug install.bat. Game servers og app store kræver Docker Desktop for Windows, som installeren kan hjælpe med via winget.</div>
+        <div class="faq-a">Ja. For en hurtig start: dobbeltklik på <strong>start.bat</strong> – den finder Python, åbner browseren og starter serveren. For permanent installation: kør install.ps1 fra PowerShell eller brug install.bat. Game servers og app store kræver Docker Desktop for Windows, som installeren kan hjælpe med via winget.</div>
       </div>
     </div>
   </div>
