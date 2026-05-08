@@ -1,5 +1,4 @@
 @echo off
-@echo off
 setlocal EnableDelayedExpansion
 title ByteForge Server
 cd /d "%~dp0ByteForge"
@@ -71,17 +70,16 @@ echo  Python !PY_VER! fundet.
 echo  Lokal:     http://127.0.0.1:8080
 if defined LAN_IP echo  Netvaerk:  http://!LAN_IP!:8080
 echo.
-echo  Log gemmes til: ..\byteforge.log
 echo  Venter pa server er klar...
 
 :: ── 5. Abn browser automatisk nar port 8080 svarer ───────────────────────────
 start /b powershell -NoProfile -WindowStyle Hidden -Command "$t=0;while($t -lt 15){Start-Sleep 1;$t++;try{$c=New-Object Net.Sockets.TcpClient;$c.Connect('127.0.0.1',8080);$c.Close();Start-Process 'http://127.0.0.1:8080';break}catch{}}"
 
-:: ── 6. Start server med auto-restart og log til fil ──────────────────────────
+:: ── 6. Start server med auto-restart ─────────────────────────────────────────
 :loop
-%PY% byteforge-server.py >> "..\byteforge.log" 2>&1
+%PY% byteforge-server.py
 echo.
-echo  [!] Server stoppede uventet — genstarter om 3 sekunder...
+echo  [!] Server stoppede uventet - genstarter om 3 sekunder...
 echo      Tryk CTRL+C for at afslutte.
 echo.
 timeout /t 3 /nobreak >nul

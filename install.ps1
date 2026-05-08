@@ -76,19 +76,45 @@ $adminPassword = Get-AdminPassword
 $python = Find-Python
 
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-foreach ($file in @("byteforge-server.py","byteforge-platform.html","byteforge-platform.css","byteforge-platform.js","byteforge-logo.svg","byteforge-icon.svg")) {
+
+# Copy individual files
+foreach ($file in @(
+    "byteforge-server.py","byteforge-platform.html",
+    "byteforge-platform.css","byteforge-custom.css","byteforge-platform.js",
+    "byteforge-logo.png","byteforge-icon.png"
+)) {
     $source = Join-Path $src $file
     if (Test-Path $source) {
         Copy-Item $source (Join-Path $InstallDir $file) -Force
     }
 }
 
+# Copy api/ module directory (required — server imports from here)
+$apiSrc = Join-Path $src "api"
+if (Test-Path $apiSrc) {
+    $apiDest = Join-Path $InstallDir "api"
+    if (Test-Path $apiDest) { Remove-Item $apiDest -Recurse -Force }
+    Copy-Item $apiSrc $apiDest -Recurse -Force
+}
+
 Install-DockerDesktop
+
+# Store password in a separate file with restricted permissions
+$credFile = Join-Path $InstallDir "byteforge.env"
+"BYTEFORGE_ADMIN_PASSWORD=$adminPassword" | Set-Content -Path $credFile -Encoding UTF8
+$acl = Get-Acl $credFile
+$acl.SetAccessRuleProtection($true, $false)
+$adminRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+    "BUILTIN\Administrators","FullControl","Allow")
+$acl.SetAccessRule($adminRule)
+Set-Acl $credFile $acl
 
 $launcher = Join-Path $InstallDir "start-byteforge.ps1"
 @"
 `$env:BYTEFORGE_PORT = "$Port"
-`$env:BYTEFORGE_ADMIN_PASSWORD = "$adminPassword"
+Get-Content "$credFile" | ForEach-Object {
+    if (`$_ -match '^([^=]+)=(.*)$') { [System.Environment]::SetEnvironmentVariable(`$matches[1], `$matches[2]) }
+}
 Set-Location "$InstallDir"
 & "$python" "$InstallDir\byteforge-server.py"
 "@ | Set-Content -Path $launcher -Encoding UTF8
