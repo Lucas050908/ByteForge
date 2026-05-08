@@ -44,25 +44,65 @@ function Find-Python {
 }
 
 function Install-DockerDesktop {
-    $docker = Get-Command docker -ErrorAction SilentlyContinue
-    if ($docker) {
-        Write-Host "[OK] Docker CLI already installed."
+    # Already installed?
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        Write-Host "[OK] Docker already installed." -ForegroundColor Green
         return
     }
+
+    # Windows version check — Docker Desktop requires Windows 10 build 19041+
+    $build = [System.Environment]::OSVersion.Version.Build
+    $major = [System.Environment]::OSVersion.Version.Major
+    if ($major -lt 10 -or ($major -eq 10 -and $build -lt 19041)) {
+        Write-Host ""
+        Write-Host "  [!] Docker Desktop requires Windows 10 (build 19041) or newer." -ForegroundColor Yellow
+        Write-Host "      Game servers and Docker apps will not work on this system." -ForegroundColor Yellow
+        Write-Host "      ByteForge panel, file manager and NAS still work fine." -ForegroundColor Cyan
+        Write-Host ""
+        return
+    }
+
     if (-not $InstallDocker) {
-        $answer = Read-Host "Docker Desktop is not installed. Install with winget now? [y/N]"
+        $answer = Read-Host "  Docker is not installed. Install Docker Desktop automatically? [y/N]"
         if (@("y","Y","yes","YES") -notcontains $answer) {
-            Write-Host "Install Docker Desktop later from https://www.docker.com/products/docker-desktop/"
+            Write-Host "  Skipping Docker. Install later from: https://www.docker.com/products/docker-desktop/" -ForegroundColor Yellow
             return
         }
     }
+
+    # Try winget first (Windows 10 1709+ / Windows 11)
     $winget = Get-Command winget -ErrorAction SilentlyContinue
-    if (-not $winget) {
-        Write-Host "winget not found. Install Docker Desktop manually from https://www.docker.com/products/docker-desktop/" -ForegroundColor Yellow
-        return
+    if ($winget) {
+        Write-Host "  Installing Docker Desktop via winget..." -ForegroundColor Cyan
+        $result = & winget install --id Docker.DockerDesktop --accept-package-agreements --accept-source-agreements 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  [OK] Docker Desktop installed. Start it once from the Start Menu." -ForegroundColor Green
+            return
+        }
+        Write-Host "  winget install failed (exit $LASTEXITCODE). Trying direct download..." -ForegroundColor Yellow
     }
-    winget install --id Docker.DockerDesktop --accept-package-agreements --accept-source-agreements
-    Write-Host "Start Docker Desktop once after install so the Docker engine runs."
+
+    # Fallback: download installer directly
+    $url      = "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
+    $dest     = Join-Path $env:TEMP "DockerDesktopInstaller.exe"
+    Write-Host "  Downloading Docker Desktop installer (~600 MB)..." -ForegroundColor Cyan
+    try {
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $dest)
+        Write-Host "  Running installer (this may take a few minutes)..." -ForegroundColor Cyan
+        $proc = Start-Process $dest -ArgumentList "install --quiet --accept-license" -Wait -PassThru
+        if ($proc.ExitCode -eq 0) {
+            Write-Host "  [OK] Docker Desktop installed. Start it once from the Start Menu." -ForegroundColor Green
+        } else {
+            throw "Installer exited with code $($proc.ExitCode)"
+        }
+        Remove-Item $dest -ErrorAction SilentlyContinue
+    } catch {
+        Write-Host ""
+        Write-Host "  [!] Automatic Docker install failed: $_" -ForegroundColor Red
+        Write-Host "  Download manually from: https://www.docker.com/products/docker-desktop/" -ForegroundColor Yellow
+        Start-Process "https://www.docker.com/products/docker-desktop/"
+    }
 }
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
