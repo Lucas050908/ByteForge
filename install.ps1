@@ -51,7 +51,7 @@ function Install-DockerDesktop {
     }
     if (-not $InstallDocker) {
         $answer = Read-Host "Docker Desktop is not installed. Install with winget now? [y/N]"
-        if ($answer -notin @("y","Y","yes","YES")) {
+        if (@("y","Y","yes","YES") -notcontains $answer) {
             Write-Host "Install Docker Desktop later from https://www.docker.com/products/docker-desktop/"
             return
         }
@@ -119,12 +119,31 @@ Set-Location "$InstallDir"
 & "$python" "$InstallDir\byteforge-server.py"
 "@ | Set-Content -Path $launcher -Encoding UTF8
 
-$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$launcher`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn
-$settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
-Register-ScheduledTask -TaskName "ByteForge" -Action $action -Trigger $trigger -Settings $settings -Description "ByteForge Platform" -Force | Out-Null
-
-Start-ScheduledTask -TaskName "ByteForge"
+# Register scheduled task using schtasks.exe (compatible with PS 2.0 / Windows 7+)
+$psExe = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+$taskXml = @"
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><Description>ByteForge Platform</Description></RegistrationInfo>
+  <Triggers><LogonTrigger><Enabled>true</Enabled></LogonTrigger></Triggers>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <RestartOnFailure><Interval>PT1M</Interval><Count>3</Count></RestartOnFailure>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>$([System.Security.SecurityElement]::Escape($psExe))</Command>
+      <Arguments>-NoProfile -ExecutionPolicy Bypass -File "$([System.Security.SecurityElement]::Escape($launcher))"</Arguments>
+    </Exec>
+  </Actions>
+</Task>
+"@
+$xmlPath = Join-Path $env:TEMP "byteforge-task.xml"
+[System.IO.File]::WriteAllText($xmlPath, $taskXml, [System.Text.Encoding]::Unicode)
+& schtasks /create /tn "ByteForge" /xml $xmlPath /f 2>&1 | Out-Null
+Remove-Item $xmlPath -ErrorAction SilentlyContinue
+& schtasks /run /tn "ByteForge" 2>&1 | Out-Null
 
 Write-Host ""
 Write-Host "ByteForge installed." -ForegroundColor Green
