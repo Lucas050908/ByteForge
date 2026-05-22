@@ -150,10 +150,15 @@ def get_disks():
                     except Exception:
                         pass
         return disks
-    if PLATFORM == "Darwin":
-        cmd = f"df -g / {shlex.quote(str(FILES_ROOT))} 2>/dev/null || df -g /"
-    else:
-        cmd = f"df -BG / {shlex.quote(str(FILES_ROOT))} 2>/dev/null || df -BG /"
+    def kib_to_gib(value):
+        try:
+            kib = int(value)
+        except (TypeError, ValueError):
+            return "0"
+        gib = 1024 * 1024
+        return str((kib + gib - 1) // gib)
+
+    cmd = f"df -kP / {shlex.quote(str(FILES_ROOT))} 2>/dev/null || df -kP /"
     out, _, _ = run(cmd)
     seen = set()
     for line in out.splitlines()[1:]:
@@ -162,9 +167,9 @@ def get_disks():
             seen.add(parts[5])
             disks.append({
                 "mount": parts[5],
-                "total": parts[1].replace("G", ""),
-                "used": parts[2].replace("G", ""),
-                "free": parts[3].replace("G", ""),
+                "total": kib_to_gib(parts[1]),
+                "used": kib_to_gib(parts[2]),
+                "free": kib_to_gib(parts[3]),
                 "pct": parts[4].replace("%", ""),
             })
     return disks

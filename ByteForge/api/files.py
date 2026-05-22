@@ -19,6 +19,7 @@ HOME_ROOT = _real_home()
 
 
 def safe_path(scope, rel=""):
+    rel = str(rel or "")
     roots = {
         "home":    HOME_ROOT,
         "public":  PUBLIC_ROOT,
@@ -38,7 +39,12 @@ def safe_path(scope, rel=""):
 
 def list_files(scope, rel="", show_hidden=False):
     _, target = safe_path(scope, rel)
-    target.mkdir(parents=True, exist_ok=True)
+    if target.exists() and not target.is_dir():
+        return {"path": rel, "items": []}
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+    except (OSError, PermissionError):
+        return {"path": rel, "items": []}
     if not target.is_dir():
         return {"path": rel, "items": []}
     items = []
@@ -67,11 +73,17 @@ def search_files(scope, query):
     matches = []
     if not query:
         return matches
-    for path in root.rglob("*"):
-        if query.lower() in path.name.lower():
-            matches.append({"path": str(path.relative_to(root)), "type": "folder" if path.is_dir() else "file"})
-        if len(matches) >= 100:
-            break
+    try:
+        for path in root.rglob("*"):
+            try:
+                if query.lower() in path.name.lower():
+                    matches.append({"path": str(path.relative_to(root)), "type": "folder" if path.is_dir() else "file"})
+            except (OSError, PermissionError):
+                continue
+            if len(matches) >= 100:
+                break
+    except (OSError, PermissionError):
+        pass
     return matches
 
 
@@ -79,17 +91,23 @@ def file_action(body):
     action = body.get("action")
     scope = body.get("scope", "public")
     path = body.get("path", "")
-    _, target = safe_path(scope, path)
+    root, target = safe_path(scope, path)
     if action == "mkdir":
         target.mkdir(parents=True, exist_ok=True)
         return {"ok": True, "msg": "Mappe oprettet"}
     if action == "delete":
+        if target == root:
+            return {"ok": False, "msg": "Kan ikke slette storage-roden"}
         if target.is_dir():
             shutil.rmtree(target)
         elif target.exists():
             target.unlink()
         return {"ok": True, "msg": "Slettet"}
     if action == "rename":
+        if target == root:
+            return {"ok": False, "msg": "Kan ikke omdøbe storage-roden"}
+        if not target.exists():
+            return {"ok": False, "msg": "Fil ikke fundet"}
         new_name = body.get("new_name", "").strip()
         if not new_name or "/" in new_name or "\\" in new_name:
             return {"ok": False, "msg": "Ugyldigt navn"}
@@ -99,6 +117,10 @@ def file_action(body):
         target.rename(dest)
         return {"ok": True, "msg": f"Omdøbt til {new_name}"}
     if action == "move":
+        if target == root:
+            return {"ok": False, "msg": "Kan ikke flytte storage-roden"}
+        if not target.exists():
+            return {"ok": False, "msg": "Fil ikke fundet"}
         _, dest = safe_path(scope, body.get("dest", ""))
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(target), str(dest))

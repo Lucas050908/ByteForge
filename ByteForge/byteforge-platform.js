@@ -132,10 +132,16 @@ async function updateAuthPanel() {
 
 // ── NAV ──
 function nav(id, el) {
+  const page = document.getElementById('page-' + id);
+  if (!page) {
+    console.warn('Unknown page:', id);
+    return;
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(s => s.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  el.classList.add('active');
+  page.classList.add('active');
+  const navEl = el || document.querySelector(`[data-nav="${id}"]`) || document.querySelector(`[onclick*="nav('${id}'"]`);
+  if (navEl) navEl.classList.add('active');
   loadPage(id);
 }
 
@@ -252,8 +258,10 @@ async function loadOverview() {
   }
 
   // Disks — color coded by usage
+  const diskEl = document.getElementById('ov-disks');
+  if (!diskEl) return;
   if (d.disks?.length) {
-    document.getElementById('ov-disks').innerHTML = d.disks.map(dk => {
+    diskEl.innerHTML = d.disks.map(dk => {
       const pct = parseInt(dk.pct) || 0;
       const barColor = pct > 90 ? 'var(--err)' : pct > 75 ? 'var(--warn)' : 'var(--o)';
       const pctColor = pct > 90 ? 'var(--err)' : pct > 75 ? 'var(--warn)' : 'var(--o2)';
@@ -271,7 +279,7 @@ async function loadOverview() {
       </div>`;
     }).join('');
   } else {
-    document.getElementById('ov-disks').innerHTML = '<div class="card"><div class="cs">Ingen diskdata tilgængelig</div></div>';
+    diskEl.innerHTML = '<div class="card"><div class="cs">Ingen diskdata tilgængelig</div></div>';
   }
 }
 

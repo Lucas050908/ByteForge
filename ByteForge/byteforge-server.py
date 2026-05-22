@@ -20,7 +20,7 @@ from email.parser import BytesParser
 from email.policy import default as email_policy
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from api.config import (
     PORT, BASE_DIR, PLATFORM, STATIC_FILES,
@@ -226,6 +226,19 @@ class Handler(BaseHTTPRequestHandler):
                         self.send_file(p, f"image/{ext}")
                         return
                 self.send_json({"error": "No background image set"}, 404)
+            elif path == "/public" or path.startswith("/public/"):
+                rel = unquote(path[len("/public"):].lstrip("/"))
+                try:
+                    _, public_path = safe_path("public", rel)
+                    if public_path.is_dir():
+                        public_path = public_path / "index.html"
+                    if not public_path.is_file():
+                        self.send_json({"error": "Public file not found"}, 404)
+                        return
+                    mime = mimetypes.guess_type(str(public_path))[0] or "application/octet-stream"
+                    self.send_file(public_path, mime)
+                except ValueError:
+                    self.send_json({"error": "Ugyldig sti"}, 400)
             elif path in STATIC_FILES:
                 asset_path = Path(__file__).with_name(STATIC_FILES[path])
                 if not asset_path.exists():
@@ -271,6 +284,9 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 if parsed.path == "/api/background/upload":
                     ext = Path(file_part.get_filename()).suffix.lower() or ".jpg"
+                    if ext not in (".jpg", ".jpeg", ".png", ".gif", ".webp"):
+                        self.send_json({"ok": False, "msg": "Ugyldig billedtype"}, 400)
+                        return
                     for old_ext in ("jpg", "jpeg", "png", "gif", "webp"):
                         old_p = BASE_DIR / f"background.{old_ext}"
                         if old_p.exists():
@@ -285,7 +301,14 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 scope = fields.get("scope", "public")
                 rel = fields.get("path", "")
-                _, folder = safe_path(scope, rel)
+                try:
+                    _, folder = safe_path(scope, rel)
+                except ValueError:
+                    self.send_json({"ok": False, "msg": "Ugyldig sti"}, 400)
+                    return
+                if folder.exists() and not folder.is_dir():
+                    self.send_json({"ok": False, "msg": "Upload-stien er ikke en mappe"}, 400)
+                    return
                 folder.mkdir(parents=True, exist_ok=True)
                 dest = folder / Path(file_part.get_filename()).name
                 with dest.open("wb") as f:

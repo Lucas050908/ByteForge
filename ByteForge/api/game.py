@@ -492,13 +492,13 @@ def _mods_dir(server_id):
     server = next((s for s in config.get("servers", []) if s["id"] == server_id), None)
     if not server:
         return None, None
-    profile = SERVER_TYPES.get(server.get("kind", ""), {})
-    data_path = SERVER_ROOT / server_id
+    profile = SERVER_TYPES.get(server.get("type"), SERVER_TYPES["custom"])
+    data_path = Path(server.get("path") or (SERVER_ROOT / server_id))
     # Minecraft Paper/Spigot/Forge use plugins or mods folder
-    kind = server.get("kind", "")
-    if "paper" in kind or "spigot" in kind:
+    kind = f"{server.get('type', '')} {profile.get('name', '')}".lower()
+    if any(name in kind for name in ("paper", "spigot", "purpur")):
         mods_path = data_path / "plugins"
-    elif "forge" in kind or "fabric" in kind:
+    elif any(name in kind for name in ("forge", "fabric")):
         mods_path = data_path / "mods"
     else:
         mods_path = data_path / "mods"

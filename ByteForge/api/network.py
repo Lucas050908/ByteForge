@@ -75,18 +75,51 @@ def get_network():
 
 
 def get_network_devices():
-    out, _, _ = run("ip neigh show 2>/dev/null", shell=True, timeout=5)
+    def sort_key(ip):
+        try:
+            return [int(x) for x in ip.split(".")]
+        except Exception:
+            return [999, ip]
+
+    def is_unicast_ipv4(ip):
+        try:
+            parts = [int(x) for x in ip.split(".")]
+        except Exception:
+            return False
+        if len(parts) != 4 or any(part < 0 or part > 255 for part in parts):
+            return False
+        return 1 <= parts[0] <= 223 and parts[0] != 127
+
     devices = []
     seen = set()
-    for line in out.splitlines():
-        parts = line.split()
-        if len(parts) >= 5 and parts[3] == "lladdr" and parts[0] not in seen:
-            ip, mac = parts[0], parts[4]
-            seen.add(ip)
-            state = parts[-1] if parts[-1] in ("REACHABLE","STALE","DELAY","PERMANENT") else "UNKNOWN"
-            hostname, _, _ = run(f"getent hosts {ip} 2>/dev/null | awk '{{print $2}}'", shell=True, timeout=2)
-            devices.append({"ip": ip, "mac": mac, "hostname": hostname.strip() or "—", "state": state})
-    return sorted(devices, key=lambda d: [int(x) for x in d["ip"].split(".") if x.isdigit()])
+    if PLATFORM == "Linux":
+        out, _, _ = run("ip neigh show 2>/dev/null", shell=True, timeout=5)
+        for line in out.splitlines():
+            parts = line.split()
+            if len(parts) >= 5 and parts[3] == "lladdr" and is_unicast_ipv4(parts[0]) and parts[0] not in seen:
+                ip, mac = parts[0], parts[4]
+                seen.add(ip)
+                state = parts[-1] if parts[-1] in ("REACHABLE", "STALE", "DELAY", "PERMANENT") else "UNKNOWN"
+                hostname, _, _ = run(f"getent hosts {ip} 2>/dev/null | awk '{{print $2}}'", shell=True, timeout=2)
+                devices.append({"ip": ip, "mac": mac, "hostname": hostname.strip() or "—", "state": state})
+    elif PLATFORM == "Darwin":
+        out, _, _ = run("arp -a 2>/dev/null", shell=True, timeout=5)
+        for line in out.splitlines():
+            match = re.search(r"\((\d{1,3}(?:\.\d{1,3}){3})\)\s+at\s+([0-9a-f:]{11,17})", line, re.I)
+            if match and is_unicast_ipv4(match.group(1)) and match.group(1) not in seen:
+                ip, mac = match.group(1), match.group(2).lower()
+                seen.add(ip)
+                hostname = line.split("(", 1)[0].strip() or "—"
+                devices.append({"ip": ip, "mac": mac, "hostname": hostname, "state": "REACHABLE"})
+    elif PLATFORM == "Windows":
+        out, _, _ = run("arp -a", shell=True, timeout=5)
+        for line in out.splitlines():
+            match = re.search(r"^\s*(\d{1,3}(?:\.\d{1,3}){3})\s+([0-9a-f-]{17})\s+(\w+)", line, re.I)
+            if match and is_unicast_ipv4(match.group(1)) and match.group(1) not in seen:
+                ip, mac, state = match.group(1), match.group(2).replace("-", ":").lower(), match.group(3).upper()
+                seen.add(ip)
+                devices.append({"ip": ip, "mac": mac, "hostname": "—", "state": state})
+    return sorted(devices, key=lambda d: sort_key(d["ip"]))
 
 
 def get_dns_servers():
@@ -102,6 +135,8 @@ def get_uptime_checks():
     # Internet — ping Cloudflare DNS
     out, _, code = run("ping -c 1 -W 2 1.1.1.1 2>/dev/null", shell=True, timeout=5)
     m = re.search(r'time=(\d+\.?\d*)', out)
+    if not m:
+        m = re.search(r'(?:round-trip|rtt).*=\s*[\d.]+/([\d.]+)/', out)
     checks["inet"] = {"up": code == 0, "latency_ms": round(float(m.group(1))) if m else None}
     # NFS service
     nfs_out, _, _ = run(
